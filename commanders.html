@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Commanders</title>
+<script type="text/javascript" src="js/autocomplete.js"></script>
+<script type="text/javascript" src="data.js"></script>
+<script type="text/javascript">
+var langIds = { 'KR':0, 'JP':1, 'ZH':2, 'TW':3, 'EN':4, 'VN':5, 'TH':6 };
+var langArr = ['kr', 'jp', 'zh', 'tw', 'en', 'vn', 'th'];
+var selLang = 4; // default to english
+var selLang2 = -1;
+
+var wordlists = []; // wordlists for word filter autocomplete
+var usedPassiveIds = [];
+var filterUnitTypes = [];
+var filterPassives = [];
+
+function toLocalize(tkey) {
+	return localize[tkey][selLang];
+}
+
+function toLocalizes(tkey, sep="<br/>") {
+	txtMsgs = localize[tkey];
+	txt = txtMsgs[selLang];
+	if (selLang2 !== -1) {
+		txt += sep;
+		txt += txtMsgs[selLang2];
+	}
+	return txt;
+}
+
+function createTdTextNode(txt) {
+	var td = document.createElement("td");
+	var txt = document.createTextNode(txt);
+	td.appendChild(txt);
+	return td;
+}
+
+function createTdHtmlNode(html) {
+	var td = document.createElement("td");
+	td.innerHTML = html;
+	return td;
+}
+
+function localizePassiveName(passiveId, val, sep="<br/>") {
+	var passive = passives[passiveId];
+	txt = toLocalize(passive['name']);
+	// list of passive that should have value
+	// 2200062: Critical Attack+
+	// 2200005: Expand AoE
+	// 2200002: Expand ATK RNG
+	value_pids = [2200062, 2200005, 2200002];
+	if (passive["desc"].indexOf("{0}") !== -1 || value_pids.indexOf(passiveId) !== -1) {
+		txt += " (" + val + ")";
+	}
+	
+	if (selLang2 !== -1) {
+		txt += sep;
+		txt += localize[passive['name']][selLang2];
+	}
+	return txt
+}
+
+function getPassiveDesc(passiveList, langId) {
+	var passive = passives[passiveList['passiveId']];
+	var desc = localize[passive['desc']][langId];
+	
+	while (desc.indexOf('{0}') !== -1) {
+		desc = desc.replace('{0}', passiveList['val']);
+	}
+	// {1} is terrain name
+	if (desc.indexOf('{1}') !== -1) {
+		desc = desc.replace('{1}', localize[tiles[passive['triggerTileValue']]][langId]);
+	}
+	if (desc.indexOf('{2}') !== -1) {
+		desc = desc.replace('{2}', passiveList['triggerRateValue']);
+	}
+	
+	// {3}, {4} are condition name
+	if (desc.indexOf('{3}') !== -1) {
+		condId = 2100000 + passiveList['conditionVal'][0];
+		if (condId in conditions)
+			desc = desc.replace('{3}', localize[conditions[condId]][langId]);
+	}
+	if (desc.indexOf('{4}') !== -1) {
+		condId = 2100000 + passiveList['conditionVal'][1];
+		if (condId in conditions)
+			desc = desc.replace('{4}', localize[conditions[condId]][langId]);
+	}
+	return desc
+}
+
+function popupPassive(td) {
+	var passiveList = td.passiveList;
+	var passive = passives[passiveList['passiveId']];
+	
+	document.getElementById("modalHeader").innerHTML = toLocalizes(passive['name'], " &nbsp; ");
+	
+	desc = getPassiveDesc(passiveList, selLang);
+	
+	txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
+	txt += "<b>Description:</b><br/>" + desc;
+	if (selLang2 !== -1) {
+		txt += "<br/>" + getPassiveDesc(passiveList, selLang2);
+	}
+	
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+function popupCommander(td) {
+	var unit = td.parentElement.unit;
+	
+	document.getElementById("modalHeader").innerHTML = toLocalizes(unit['name'], " &nbsp; ");
+	
+	txt = "Banner: " + toLocalizes(banners[unit["bannerId"]], " &nbsp; ") + "<br/>";
+	txt += "Gender: " + (unit["gender"] == 'M' ? "Male" : "Female") + "<br/>";
+	if (unit["gold"] !== 0) {
+		txt += "Gold: " + unit["gold"] + "<br/>";
+	}
+	txt += "Cost: " + unit["cost"] + "<br/>";
+	txt += "Type: " + toLocalizes(unitTypes[unit["jobTypeId"]], " &nbsp; ") + "<br/>";
+	
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+function generateCommanderRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	wordlists = [];
+	usedPassiveIds = [];
+	
+	for (var typeId in unitTypes) {
+		wordlists.push(toLocalize(unitTypes[typeId]));
+	}
+	wordlists.sort();
+	
+	// use object to remove duplication
+	var passiveIds = {};
+	units.forEach(function(unit) {
+		var tr = document.createElement("tr");
+		tr.id = unit["id"];
+		tr.unit = unit;
+		
+		var td = createTdHtmlNode('<span class="info" onclick="popupCommander(this.parentNode)">&#x1f6c8;</span>' + toLocalizes(unit["name"]));
+		if (unit["gender"] === 'F')
+			td.style.backgroundColor = "pink"; // female commander
+		tr.appendChild(td);
+		
+		tr.appendChild(createTdHtmlNode(toLocalizes(unitTypes[unit["jobTypeId"]])));
+		
+		td = createTdTextNode(unit["cost"]);
+		if (unit["gold"] !== 0)
+			td.style.backgroundColor = "gold"; // gold commander
+		tr.appendChild(td);
+		
+		for (var i = 0 ; i < unit["passiveListIds"].length; i++) {
+			var passiveList = passiveLists[unit["passiveListIds"][i]];
+			td = createTdHtmlNode('<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]));
+			td.passiveList = passiveList;
+			tr.appendChild(td);
+			passiveIds[passiveList["passiveId"]] = 0;
+		}
+				
+		tbody.appendChild(tr);
+	});
+	
+	var words = [];
+	for (var passiveId in passiveIds) {
+		usedPassiveIds.push(Number(passiveId));
+		words.push(toLocalize(passives[passiveId]["name"]));
+	}
+	words.sort();
+	wordlists = wordlists.concat(words);
+	
+	autocomplete(document.getElementById("filterWord"), wordlists, addFilterWord);
+
+	var txt = document.getElementById("filterTxt").value.trim();
+	if (txt !== "" || filterUnitTypes.length !== 0 || filterPassives !== 0)
+		doFilter(txt);
+}
+
+function inLocalizeText(ktxt, needle) {
+	if (ktxt in localize) {
+		txts = localize[ktxt];
+		searchTxt = needle.toUpperCase();
+		for (var i = 0; i < txts.length; i++) {
+			if (txts[i].toUpperCase().indexOf(searchTxt) !== -1)
+				return true;
+		}
+	}
+	
+	return false;
+}
+
+function hasLocalizeText(ktxt, wordUpper) {
+	if (ktxt in localize) {
+		txts = localize[ktxt];
+		for (var i = 0; i < txts.length; i++) {
+			if (txts[i].toUpperCase() === wordUpper)
+				return true;
+		}
+	}
+	
+	return false;
+}
+
+function doFilter(txt) {
+	txt = txt.trim();
+	
+	// quick case
+	if (txt === "" && filterUnitTypes.length === 0 && filterPassives === 0) {
+		units.forEach(function(unit) {
+			document.getElementById(unit["id"]).style.display = "";
+		});
+	}
+	
+	units.forEach(function(unit) {
+		// search in all languages
+		var tr = document.getElementById(unit["id"]);
+		
+		if (filterUnitTypes.length !== 0 ) {
+			if (filterUnitTypes.indexOf(unit["jobTypeId"]) === -1) {
+				tr.style.display = "none";
+				return;
+			}
+		}
+		
+		if (filterPassives.length !== 0) {
+			var cnt = 0;
+			for (var i = 0; i < unit["passiveListIds"].length; i++) {
+				var passiveId = passiveLists[unit["passiveListIds"][i]]["passiveId"];
+				if (filterPassives.indexOf(passiveId) !== -1) {
+					cnt++;
+				}
+			}
+			// and logic. commander must have all of filter passives
+			if (cnt !== filterPassives.length) {
+				tr.style.display = "none";
+				return;
+			}
+			// or logic, commander must have at least one of filter passives
+			/*if (cnt === 0) {
+				tr.style.display = "none";
+				return;
+			}*/
+		}
+		
+		if (txt === "") {
+			tr.style.display = "";
+			return;
+		}
+		
+		// search from name
+		if (inLocalizeText(unit["name"], txt)) {
+			tr.style.display = "";
+			return;
+		}
+		// unit types
+		if (inLocalizeText(unitTypes[unit["jobTypeId"]], txt)) {
+			tr.style.display = "";
+			return;
+		}
+		// search from passives
+		for (var i = 0; i < unit["passiveListIds"].length; i++) {
+			var passive = passives[passiveLists[unit["passiveListIds"][i]]["passiveId"]];
+			if (inLocalizeText(passive["name"], txt)) {
+				tr.style.display = "";
+				return;
+			}
+		}
+		tr.style.display = "none";
+	});
+}
+
+function parseUrl() {
+	var url = window.location.href;
+	var parts = url.split('#');
+	if (parts.length == 1) {
+		// no argument. do nothing
+		return;
+	}
+	
+	var paramTxt = parts[1];
+	var paramArr = paramTxt.split('&');
+	for (var i = 0; i < paramArr.length; i++) {
+		parts = paramArr[i].split('=');
+		if (parts[0] === "l") {
+			// language
+			val = parts[1].toUpperCase();
+			if (val in langIds) {
+				selLang = langIds[val];
+				document.getElementById("lang").selectedIndex = selLang;
+			}
+		}
+		if (parts[0] === "l2") {
+			// language
+			val = parts[1].toUpperCase();
+			if (val in langIds) {
+				selLang2 = langIds[val];
+				document.getElementById("lang2").selectedIndex = selLang2 + 1;
+			}
+		}
+	}
+}
+
+function setUrl() {
+	var url = window.location.href.split('#')[0];
+	var paramTxt = "#l=" + langArr[selLang];
+	if (selLang2 !== -1) {
+		paramTxt += "&l2=" + langArr[selLang2];
+	}
+	window.location.href = url + paramTxt;
+}
+
+function changeLang(selIdx) {
+	selLang = selIdx;
+	setUrl();
+	generateCommanderRows();
+}
+
+function changeLang2(selIdx) {
+	selLang2 = selIdx - 1;
+	setUrl();
+	generateCommanderRows();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	// When the user clicks on <span> (x), close the modal
+	document.getElementById("closeModal").onclick = function() {
+		document.getElementById("modalDiv").style.display = "none";
+	}
+
+	// When the user clicks anywhere outside of the modal, close it
+	window.onclick = function(event) {
+		var modal = document.getElementById("modalDiv");
+		if (event.target == modal) {
+			modal.style.display = "none";
+		}
+	}
+	
+	parseUrl();
+	generateCommanderRows();
+}, false);
+
+function removeFilterTag(span) {
+	if (span.id.startsWith("ut")) {
+		typeId = Number(span.id.substr(2));
+		var idx = filterUnitTypes.indexOf(typeId);
+		if (idx !== -1) { // extra check, should never happen
+			span.parentNode.removeChild(span);
+			filterUnitTypes.splice(idx, 1);
+			// update display
+			doFilter(document.getElementById("filterTxt").value);
+		}
+	}
+	else {
+		// passive
+		passiveId = Number(span.id.substr(1));
+		var idx = filterPassives.indexOf(passiveId);
+		if (idx !== -1) { // extra check, should never happen
+			span.parentNode.removeChild(span);
+			filterPassives.splice(idx, 1);
+			// update display
+			doFilter(document.getElementById("filterTxt").value);
+		}
+	}
+}
+
+function addFilterTag(tagId, tagType, word, idx) {
+	var span = document.createElement("span");
+	span.setAttribute("id", tagType + tagId);
+	span.setAttribute("class", "tag tag-"+tagType);
+	span.innerHTML = '<span>' + word + '</span><span class="tag-close" onclick="removeFilterTag(this.parentNode)"> &times; </span>';
+	
+	document.getElementById("filterTags-"+tagType).append(span);
+	
+	// update display
+	doFilter(document.getElementById("filterTxt").value);
+}
+
+function addFilterWord(word) {
+	word = word.trim();
+	
+	wordUpper = word.toUpperCase();
+	
+	// any language is allowed from manual input. so we have to lookup for every languages
+	for (var typeId in unitTypes) {
+		if (hasLocalizeText(unitTypes[typeId], wordUpper)) {
+			if (filterUnitTypes.indexOf(typeId) === -1) {
+				filterUnitTypes.push(Number(typeId));
+				addFilterTag(typeId, "ut", toLocalize(unitTypes[typeId]));
+			}
+			return true;
+		}
+	}
+	
+	for (var i = 0; i < usedPassiveIds.length; i++) {
+		var passiveId = usedPassiveIds[i];
+		var passive = passives[passiveId];
+		if (hasLocalizeText(passive["name"], wordUpper)) {
+			if (filterPassives.indexOf(passiveId) === -1) {
+				filterPassives.push(passiveId);
+				addFilterTag(passiveId, "p", toLocalize(passive["name"]));
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+function addFilterWordBtn() {
+	var word = document.getElementById("filterWord").value.trim();
+	if (word !== "") {
+		if (addFilterWord(word)) {
+			document.getElementById("filterWord").value = "";
+		}
+	}
+}
+
+function clearFilters() {
+	document.getElementById("filterTxt").value = "";
+	document.getElementById("filterWord").value = "";
+	document.getElementById("filterTags-ut").innerHTML = "";
+	document.getElementById("filterTags-p").innerHTML = "";
+	filterUnitTypes = [];
+	filterPassives = [];
+	
+	doFilter("");
+}
+</script>
+</head>
+
+<body>
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Quick Filter: <input type="text" id="filterTxt" oninput="doFilter(this.value)" />
+	</div>
+	<div class="topbar-right">
+	Lang: <select id="lang" onchange="changeLang(this.selectedIndex)">
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4" selected>EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	2nd Lang: <select id="lang2" onchange="changeLang2(this.selectedIndex)">
+		<option value="-1"></option>
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4">EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	</div>
+</div>
+<div id="advanceTool">
+	</div>Filter: <div class="autocomplete" style="width:250px;"><input type="text" id="filterWord" style="width:90%;" placeholder="Unit Type or Passive Name" /></div>
+	<button id="addFilter" onclick="addFilterWordBtn()">Add</button>
+	<button id="clearFilter" onclick="clearFilters()">Clear</button>
+	<p><span id="filterTags-ut"></span><span id="filterTags-p"></span></p>
+</div>
+<table class="table-container">
+  <thead>
+	<tr>
+	  <th>Name</th>
+	  <th>Type</th>
+	  <th>Cost</th>
+	  <th>Passive1</th>
+	  <th>Passive2</th>
+	  <th>Passive3</th>
+	  <th>Passive4</th>
+	</tr>
+  </thead>
+  <tbody id="cbody">
+  </tbody>
+</table>
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<span id="closeModal" class="close">&times;</span>
+			<h2 id="modalHeader">Modal Header</h2>
+		</div>
+		<div class="modal-body">
+			<p id="modalContent"></p>
+		</div>
+	</div>
+</div>
+</body>
+</html>
