@@ -7,7 +7,8 @@
 <title>ROTK LoCC - Commanders</title>
 <script type="text/javascript" src="js/autocomplete.js"></script>
 <script type="text/javascript" src="js/atkShape.js"></script>
-<script type="text/javascript" src="data.js"></script>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript">
 var langIds = { 'KR':0, 'JP':1, 'ZH':2, 'TW':3, 'EN':4, 'VN':5, 'TH':6 };
 var langArr = ['kr', 'jp', 'zh', 'tw', 'en', 'vn', 'th'];
@@ -20,11 +21,11 @@ var filterUnitTypes = [];
 var filterPassives = [];
 
 function toLocalize(tkey) {
-	return localize[tkey][selLang];
+	return localizes[tkey][selLang];
 }
 
 function toLocalizes(tkey, sep="<br/>") {
-	txtMsgs = localize[tkey];
+	txtMsgs = localizes[tkey];
 	txt = txtMsgs[selLang];
 	if (selLang2 !== -1) {
 		txt += sep;
@@ -60,21 +61,29 @@ function localizePassiveName(passiveId, val, sep="<br/>") {
 	
 	if (selLang2 !== -1) {
 		txt += sep;
-		txt += localize[passive['name']][selLang2];
+		txt += localizes[passive['name']][selLang2];
 	}
 	return txt
 }
 
+function getPassiveDescSimple(passive, passiveVal, langId) {
+	var desc = localizes[passive['desc']][langId];
+	while (desc.indexOf('{0}') !== -1) {
+		desc = desc.replace('{0}', passiveVal);
+	}
+	return desc;
+}
+
 function getPassiveDesc(passiveList, langId) {
 	var passive = passives[passiveList['passiveId']];
-	var desc = localize[passive['desc']][langId];
+	var desc = localizes[passive['desc']][langId];
 	
 	while (desc.indexOf('{0}') !== -1) {
 		desc = desc.replace('{0}', passiveList['val']);
 	}
 	// {1} is terrain name
 	if (desc.indexOf('{1}') !== -1) {
-		desc = desc.replace('{1}', localize[tiles[passive['triggerTileValue']]][langId]);
+		desc = desc.replace('{1}', localizes[tiles[passive['triggerTileValue']]][langId]);
 	}
 	if (desc.indexOf('{2}') !== -1) {
 		desc = desc.replace('{2}', passiveList['triggerRateValue']);
@@ -84,12 +93,12 @@ function getPassiveDesc(passiveList, langId) {
 	if (desc.indexOf('{3}') !== -1) {
 		condId = 2100000 + passiveList['conditionVal'][0];
 		if (condId in conditions)
-			desc = desc.replace('{3}', localize[conditions[condId]][langId]);
+			desc = desc.replace('{3}', localizes[conditions[condId]][langId]);
 	}
 	if (desc.indexOf('{4}') !== -1) {
 		condId = 2100000 + passiveList['conditionVal'][1];
 		if (condId in conditions)
-			desc = desc.replace('{4}', localize[conditions[condId]][langId]);
+			desc = desc.replace('{4}', localizes[conditions[condId]][langId]);
 	}
 	return desc
 }
@@ -127,7 +136,7 @@ function popupPassive(td) {
 	var passiveId = passiveList['passiveId'];
 	var passive = passives[passiveId];
 	
-	document.getElementById("modalHeader").innerHTML = toLocalizes(passive['name'], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = toLocalizes(passive["name"], " &nbsp; ");
 	
 	desc = getPassiveDesc(passiveList, selLang);
 	
@@ -148,18 +157,64 @@ function popupPassive(td) {
 	document.getElementById("modalDiv").style.display = "block";
 }
 
+function popupUnitType(td) {
+	var unit = td.parentElement.unit;
+	var unitType = unitTypes[unit["jobTypeId"]]
+	
+	document.getElementById("modalHeader").innerHTML = toLocalizes(unitType['name'], " &nbsp; ");
+	
+	var utypePassives = unitType["job5"]["passives"]
+	txt = "";
+	txt += '<p class="header">Growth Level</p>';
+	txt += '<table class="stats"><tr><th>ATK</th><th>WIS</th><th>DEF</th><th>AGI</th><th>MRL</th></tr>';
+	txt += "<tr>";
+	txt += "<td>" + unitType["atkLv"] + "</td>";
+	txt += "<td>" + unitType["wisLv"] + "</td>";
+	txt += "<td>" + unitType["defLv"] + "</td>";
+	txt += "<td>" + unitType["agiLv"] + "</td>";
+	txt += "<td>" + unitType["mrlLv"] + "</td>";
+	txt += "</tr></table>";
+	txt += '<p class="header">Passives</p>';
+	for (var i = 0; i < utypePassives.length; i++) {
+		var passive = passives[utypePassives[i][0]];
+		var passiveVal = utypePassives[i][1];
+		
+		txt += "<p><strong>&#x2022; " + toLocalizes(passive["name"], " &nbsp; ") + "</strong></p>";
+		txt += "" + getPassiveDescSimple(passive, passiveVal, selLang);
+		if (selLang2 !== -1) {
+			txt += "<br/>" + getPassiveDescSimple(passive, passiveVal, selLang2);
+		}
+	}
+		
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
 function popupCommander(td) {
 	var unit = td.parentElement.unit;
 	
 	document.getElementById("modalHeader").innerHTML = toLocalizes(unit['name'], " &nbsp; ");
 	
-	txt = "Banner: " + toLocalizes(banners[unit["bannerId"]], " &nbsp; ") + "<br/>";
+	txt = "";
+	txt += '<table class="stats"><tr><th>STR</th><th>INT</th><th>CMD</th><th>DEX</th><th>LCK</th></tr>';
+	txt += "<tr>";
+	txt += "<td>" + unit["str"] + "</td>";
+	txt += "<td>" + unit["int"] + "</td>";
+	txt += "<td>" + unit["cmd"] + "</td>";
+	txt += "<td>" + unit["dex"] + "</td>";
+	txt += "<td>" + unit["lck"] + "</td>";
+	txt += "</tr></table>";
+	
+	txt += "<p>";
+	txt += "Banner: " + toLocalizes(banners[unit["bannerId"]], " &nbsp; ") + "<br/>";
 	txt += "Gender: " + (unit["gender"] == 'M' ? "Male" : "Female") + "<br/>";
 	if (unit["gold"] !== 0) {
 		txt += "Gold: " + unit["gold"] + "<br/>";
 	}
 	txt += "Cost: " + unit["cost"] + "<br/>";
-	txt += "Type: " + toLocalizes(unitTypes[unit["jobTypeId"]], " &nbsp; ") + "<br/>";
+	txt += "Type: " + toLocalizes(unitTypes[unit["jobTypeId"]]["name"], " &nbsp; ");
+	txt += "</p>";
+	
 	
 	document.getElementById("modalContent").innerHTML = txt;
 	document.getElementById("modalDiv").style.display = "block";
@@ -173,7 +228,7 @@ function generateCommanderRows() {
 	usedPassiveIds = [];
 	
 	for (var typeId in unitTypes) {
-		wordlists.push(toLocalize(unitTypes[typeId]));
+		wordlists.push(toLocalize(unitTypes[typeId]["name"]));
 	}
 	wordlists.sort();
 	
@@ -189,7 +244,8 @@ function generateCommanderRows() {
 			td.style.backgroundColor = "pink"; // female commander
 		tr.appendChild(td);
 		
-		tr.appendChild(createTdHtmlNode(toLocalizes(unitTypes[unit["jobTypeId"]])));
+		td = createTdHtmlNode('<span class="info" onclick="popupUnitType(this.parentNode)">&#x1f6c8;</span>' + toLocalizes(unitTypes[unit["jobTypeId"]]['name']));
+		tr.appendChild(td);
 		
 		td = createTdTextNode(unit["cost"]);
 		if (unit["gold"] !== 0)
@@ -223,8 +279,8 @@ function generateCommanderRows() {
 }
 
 function inLocalizeText(ktxt, needle) {
-	if (ktxt in localize) {
-		txts = localize[ktxt];
+	if (ktxt in localizes) {
+		txts = localizes[ktxt];
 		searchTxt = needle.toUpperCase();
 		for (var i = 0; i < txts.length; i++) {
 			if (txts[i].toUpperCase().indexOf(searchTxt) !== -1)
@@ -236,8 +292,8 @@ function inLocalizeText(ktxt, needle) {
 }
 
 function hasLocalizeText(ktxt, wordUpper) {
-	if (ktxt in localize) {
-		txts = localize[ktxt];
+	if (ktxt in localizes) {
+		txts = localizes[ktxt];
 		for (var i = 0; i < txts.length; i++) {
 			if (txts[i].toUpperCase() === wordUpper)
 				return true;
@@ -299,7 +355,7 @@ function doFilter(txt) {
 			return;
 		}
 		// unit types
-		if (inLocalizeText(unitTypes[unit["jobTypeId"]], txt)) {
+		if (inLocalizeText(unitTypes[unit["jobTypeId"]]["name"], txt)) {
 			tr.style.display = "";
 			return;
 		}
@@ -428,10 +484,10 @@ function addFilterWord(word) {
 	
 	// any language is allowed from manual input. so we have to lookup for every languages
 	for (var typeId in unitTypes) {
-		if (hasLocalizeText(unitTypes[typeId], wordUpper)) {
+		if (hasLocalizeText(unitTypes[typeId]["name"], wordUpper)) {
 			if (filterUnitTypes.indexOf(typeId) === -1) {
 				filterUnitTypes.push(Number(typeId));
-				addFilterTag(typeId, "ut", toLocalize(unitTypes[typeId]));
+				addFilterTag(typeId, "ut", toLocalize(unitTypes[typeId]["name"]));
 			}
 			return true;
 		}

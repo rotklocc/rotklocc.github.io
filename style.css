@@ -53,6 +53,29 @@ table.atkShape td.central {
   border: 1px solid #333333;
 }
 
+table.stats {
+  border-collapse: collapse;
+  border: 1px solid black;
+}
+
+table.stats th {
+  border: 1px solid black;
+  background: #cccc44;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+table.stats td {
+  border: 1px solid black;
+  text-align: center;
+}
+
+p.header {
+  font-size: 17px;
+  font-weight: bold;
+  padding: 0px 0px 0px 0px;
+}
+
 .info {
   float: right;
   cursor: pointer;
