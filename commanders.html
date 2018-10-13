@@ -6,6 +6,7 @@
 <link href="style.css" rel="stylesheet" type="text/css">
 <title>ROTK LoCC - Commanders</title>
 <script type="text/javascript" src="js/autocomplete.js"></script>
+<script type="text/javascript" src="js/atkShape.js"></script>
 <script type="text/javascript" src="data.js"></script>
 <script type="text/javascript">
 var langIds = { 'KR':0, 'JP':1, 'ZH':2, 'TW':3, 'EN':4, 'VN':5, 'TH':6 };
@@ -93,9 +94,38 @@ function getPassiveDesc(passiveList, langId) {
 	return desc
 }
 
+function getShapeHtml(arr, markCenter) {
+	var numY = arr.length;
+	var numX = arr[0].length;
+	
+	var cenY = Math.floor(numY / 2);
+	var cenX = Math.floor(numX / 2);
+	
+	html = '<table class="atkShape">';
+	html += '<tr>' + '<td></td>'.repeat(numX+2) + '</tr>';
+	for (var i = 0; i < numY; i++) {
+		html += '<tr><td></td>';
+		for (var j = 0; j < numX; j++) {
+			var clsTxt = '';
+			if (arr[i][j] !== 0) {
+				if (markCenter && cenY === i && cenX === j)
+					clsTxt = ' class="central"';
+				else
+					clsTxt = ' class="mark"';
+			}
+			html += '<td' + clsTxt +'></td>';
+		}
+		html += '<td></td></tr>';
+	}
+	html += '<tr>' + '<td></td>'.repeat(numX+2) + '</tr>';
+	html += '</table>';
+	return html;
+}
+
 function popupPassive(td) {
 	var passiveList = td.passiveList;
-	var passive = passives[passiveList['passiveId']];
+	var passiveId = passiveList['passiveId'];
+	var passive = passives[passiveId];
 	
 	document.getElementById("modalHeader").innerHTML = toLocalizes(passive['name'], " &nbsp; ");
 	
@@ -105,6 +135,13 @@ function popupPassive(td) {
 	txt += "<b>Description:</b><br/>" + desc;
 	if (selLang2 !== -1) {
 		txt += "<br/>" + getPassiveDesc(passiveList, selLang2);
+	}
+	
+	if (passiveId == 2200005) {  // Expand AoE
+		txt += '<p>' + getShapeHtml(aoeShapes[passiveList["val"]], false) + '</p>';
+	}
+	else if (passiveId == 2200002) {  // Expand ATK RNG
+		txt += '<p>' + getShapeHtml(rngShapes[passiveList["val"]], true) + '</p>';
 	}
 	
 	document.getElementById("modalContent").innerHTML = txt;

@@ -31,6 +31,28 @@ table.table-container tr:hover, table.table-container tr:active {
   background-color: #eeeeee;
 }
 
+table.atkShape {
+  border-collapse: collapse;
+  border: 2px solid black;
+  background-color: #eeeeee;
+  table-layout:fixed;
+}
+
+table.atkShape td {
+  width: 13px;
+  height: 13px;
+  border: 1px solid #555555;
+}
+
+table.atkShape td.mark {
+  background-color: #ff8888;
+}
+
+table.atkShape td.central {
+  background-color: #ff4444;
+  border: 1px solid #333333;
+}
+
 .info {
   float: right;
   cursor: pointer;
