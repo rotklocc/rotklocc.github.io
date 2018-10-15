@@ -1,3 +1,15 @@
+div#searchBar {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  padding-top: 5px;
+  background-color: white;
+}
+
+div#content {
+  margin-top: 80px;
+}
+
 .topbar {
   overflow: hidden;
 }
@@ -8,6 +20,7 @@
 
 .topbar-right {
   float: right;
+  padding-right: 20px;
 }
 
 table.table-container {
@@ -19,6 +32,7 @@ table.table-container {
 table.table-container th {
   text-align: center;
   border: 1.5px solid #888;
+  background-color: #ffff88;
 }
 
 table.table-container td {
@@ -27,8 +41,16 @@ table.table-container td {
   vertical-align: center;
 }
 
-table.table-container tr:hover, table.table-container tr:active {
+table.table-container tbody tr:hover, table.table-container tbody tr:active {
   background-color: #eeeeee;
+}
+
+table#header-fixed {
+  position: fixed;
+  top: 0;
+  z-index: 1;
+  overflow: hidden;
+  /*display: none;*/
 }
 
 table.atkShape {
@@ -173,23 +195,21 @@ p.header {
 }
 
 .tag-ut { /* for unit types */
-  background-color: red;
+  background-color: #6666ff;
 }
 
 .tag-p { /* for passives */
-  background-color: green;
+  background-color: #66ff66;
 }
 
 .tag-close {
   color: white;
   font-size: 16px;
-  /*font-weight: bold;*/
+  font-weight: bold;
 }
 
 .tag-close:hover,
 .tag-close:focus {
   color: red;
-  /*font-size: 18px;*/
-  font-weight: bold;
   cursor: pointer;
 }
