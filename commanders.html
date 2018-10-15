@@ -103,7 +103,23 @@ function getPassiveDesc(passiveList, langId) {
 	return desc
 }
 
-function getShapeHtml(arr, markCenter) {
+function getShapeHtml(shapeId, isRange) {
+	console.log(shapeId);
+	console.log(isRange);
+	var arr;
+	var markCenter = isRange;
+	if (shapeId === 0) {
+		arr = [ [1] ];
+	}
+	else {
+		if (isRange) {
+			arr = rngShapes[shapeId];
+		}
+		else {
+			arr = aoeShapes[shapeId];
+		}
+	}
+	
 	var numY = arr.length;
 	var numX = arr[0].length;
 	
@@ -147,10 +163,10 @@ function popupPassive(td) {
 	}
 	
 	if (passiveId == 2200005) {  // Expand AoE
-		txt += '<p>' + getShapeHtml(aoeShapes[passiveList["val"]], false) + '</p>';
+		txt += '<p>' + getShapeHtml(passiveList["val"], false) + '</p>';
 	}
 	else if (passiveId == 2200002) {  // Expand ATK RNG
-		txt += '<p>' + getShapeHtml(rngShapes[passiveList["val"]], true) + '</p>';
+		txt += '<p>' + getShapeHtml(passiveList["val"], true) + '</p>';
 	}
 	
 	document.getElementById("modalContent").innerHTML = txt;
@@ -174,6 +190,7 @@ function popupUnitType(td) {
 	txt += "<td>" + unitType["agiLv"] + "</td>";
 	txt += "<td>" + unitType["mrlLv"] + "</td>";
 	txt += "</tr></table>";
+	
 	txt += '<p class="header">Passives</p>';
 	for (var i = 0; i < utypePassives.length; i++) {
 		var passive = passives[utypePassives[i][0]];
@@ -185,6 +202,12 @@ function popupUnitType(td) {
 			txt += "<br/>" + getPassiveDescSimple(passive, passiveVal, selLang2);
 		}
 	}
+
+	txt += '<p class="header">Attack Range</p>';
+	txt += getShapeHtml(unitType["job5"]["targetArea"], true);
+	
+	txt += '<p class="header">Effect Area</p>';
+	txt += getShapeHtml(unitType["job5"]["effectArea"], false);
 		
 	document.getElementById("modalContent").innerHTML = txt;
 	document.getElementById("modalDiv").style.display = "block";
