@@ -610,8 +610,8 @@ function clearFilters() {
 <div id="searchBar">
 <div id="filterTool" class="topbar">
 	<div class="topbar-left">
-		Quick Filter: <input type="text" id="filterTxt" oninput="doFilter()" />
-		&nbsp; Max Cost: <select id="cost" onchange="changeCost(this)">
+		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+		&nbsp; Max Cost: <select id="cost" tabindex="3" onchange="changeCost(this)">
 			<option value="0" selected></option>
 			<option value="4">4</option>
 			<option value="5">5</option>
@@ -650,7 +650,7 @@ function clearFilters() {
 	</div>
 </div>
 <div id="advanceTool">
-	Filter: <div class="autocomplete" style="width:250px;"><input type="text" id="filterWord" style="width:90%;" placeholder="Unit Type or Passive Name" /></div>
+	Filter: <div class="autocomplete" style="width:250px;"><input type="text" id="filterWord" style="width:90%;" tabindex="2" placeholder="Unit Type or Passive Name" /></div>
 	<button id="addFilter" onclick="addFilterWordBtn()">Add</button>
 	<button id="clearFilter" onclick="clearFilters()">Clear</button>
 	<p><span id="filterTags-ut"></span><span id="filterTags-p"></span></p>
