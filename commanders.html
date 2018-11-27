@@ -14,6 +14,7 @@ var langIds = { 'KR':0, 'JP':1, 'ZH':2, 'TW':3, 'EN':4, 'VN':5, 'TH':6 };
 var langArr = ['kr', 'jp', 'zh', 'tw', 'en', 'vn', 'th'];
 var selLang = 4; // default to english
 var selLang2 = -1;
+var maxCost = 0;
 
 var wordlists = []; // wordlists for word filter autocomplete
 var usedPassiveIds = [];
@@ -315,11 +316,7 @@ function generateCommanderRows() {
 	
 	autocomplete(document.getElementById("filterWord"), wordlists, addFilterWord);
 
-	var txt = document.getElementById("filterTxt").value.trim();
-	if (txt !== "" || filterUnitTypes.length !== 0 || filterPassives !== 0)
-		doFilter(txt);
-	else
-		fixTableHeader();
+	doFilter();
 }
 
 function inLocalizeText(ktxt, needle) {
@@ -347,13 +344,19 @@ function hasLocalizeText(ktxt, wordUpper) {
 	return false;
 }
 
-function doFilter(txt) {
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+	fixTableHeader();
+}
+
+function doFilter2(txt) {
 	document.getElementById("content").style.marginTop = document.getElementById("searchBar").offsetHeight + "px";
 
 	txt = txt.trim();
 	
 	// quick case
-	if (txt === "" && filterUnitTypes.length === 0 && filterPassives === 0) {
+	if (txt === "" && filterUnitTypes.length === 0 && filterPassives === 0 && maxCost !== 0) {
 		units.forEach(function(unit) {
 			document.getElementById(unit["id"]).style.display = "";
 		});
@@ -363,11 +366,16 @@ function doFilter(txt) {
 		// search in all languages
 		var tr = document.getElementById(unit["id"]);
 		
-		if (filterUnitTypes.length !== 0 ) {
+		if (filterUnitTypes.length !== 0) {
 			if (filterUnitTypes.indexOf(unit["jobTypeId"]) === -1) {
 				tr.style.display = "none";
 				return;
 			}
+		}
+		
+		if (maxCost !== 0 && unit["cost"] > maxCost) {
+			tr.style.display = "none";
+			return;
 		}
 		
 		if (filterPassives.length !== 0) {
@@ -379,15 +387,15 @@ function doFilter(txt) {
 				}
 			}
 			// and logic. commander must have all of filter passives
-			if (cnt !== filterPassives.length) {
-				tr.style.display = "none";
-				return;
-			}
-			// or logic, commander must have at least one of filter passives
-			/*if (cnt === 0) {
+			/*if (cnt !== filterPassives.length) {
 				tr.style.display = "none";
 				return;
 			}*/
+			// or logic, commander must have at least one of filter passives
+			if (cnt === 0) {
+				tr.style.display = "none";
+				return;
+			}
 		}
 		
 		if (txt === "") {
@@ -415,8 +423,6 @@ function doFilter(txt) {
 		}
 		tr.style.display = "none";
 	});
-	
-	fixTableHeader();
 }
 
 function parseUrl() {
@@ -439,12 +445,21 @@ function parseUrl() {
 				document.getElementById("lang").selectedIndex = selLang;
 			}
 		}
-		if (parts[0] === "l2") {
+		else if (parts[0] === "l2") {
 			// language
 			val = parts[1].toUpperCase();
 			if (val in langIds) {
 				selLang2 = langIds[val];
 				document.getElementById("lang2").selectedIndex = selLang2 + 1;
+			}
+		}
+		else if (parts[0] === "c") {
+			// cost
+			maxCost = parseInt(parts[1]);
+			document.getElementById("cost").value = maxCost;
+			if (document.getElementById("cost").selectedIndex == -1) {
+				document.getElementById("cost").value = 0;
+				maxCost = 0;
 			}
 		}
 	}
@@ -456,7 +471,16 @@ function setUrl() {
 	if (selLang2 !== -1) {
 		paramTxt += "&l2=" + langArr[selLang2];
 	}
+	if (maxCost !== 0) {
+		paramTxt += "&c=" + maxCost;
+	}
 	window.location.href = url + paramTxt;
+}
+
+function changeCost(ele) {
+	maxCost = Number(ele.options[ele.selectedIndex].value);
+	setUrl();
+	doFilter();
 }
 
 function changeLang(selIdx) {
@@ -501,7 +525,7 @@ function removeFilterTag(span) {
 			span.parentNode.removeChild(span);
 			filterUnitTypes.splice(idx, 1);
 			// update display
-			doFilter(document.getElementById("filterTxt").value);
+			doFilter();
 		}
 	}
 	else {
@@ -512,7 +536,7 @@ function removeFilterTag(span) {
 			span.parentNode.removeChild(span);
 			filterPassives.splice(idx, 1);
 			// update display
-			doFilter(document.getElementById("filterTxt").value);
+			doFilter();
 		}
 	}
 }
@@ -526,7 +550,7 @@ function addFilterTag(tagId, tagType, word, idx) {
 	document.getElementById("filterTags-"+tagType).append(span);
 	
 	// update display
-	doFilter(document.getElementById("filterTxt").value);
+	doFilter();
 }
 
 function addFilterWord(word) {
@@ -577,7 +601,7 @@ function clearFilters() {
 	filterUnitTypes = [];
 	filterPassives = [];
 	
-	doFilter("");
+	doFilter();
 }
 </script>
 </head>
@@ -586,7 +610,22 @@ function clearFilters() {
 <div id="searchBar">
 <div id="filterTool" class="topbar">
 	<div class="topbar-left">
-		Quick Filter: <input type="text" id="filterTxt" oninput="doFilter(this.value)" />
+		Quick Filter: <input type="text" id="filterTxt" oninput="doFilter()" />
+		&nbsp; Max Cost: <select id="cost" onchange="changeCost(this)">
+			<option value="0" selected></option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+			<option value="10">10</option>
+			<option value="11">11</option>
+			<option value="12">12</option>
+			<option value="13">13</option>
+			<option value="14">14</option>
+			<option value="15">15</option>
+		</select>
 	</div>
 	<div class="topbar-right">
 	Lang: <select id="lang" onchange="changeLang(this.selectedIndex)">
