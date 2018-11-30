@@ -244,23 +244,16 @@ function popupCommander(td) {
 	document.getElementById("modalDiv").style.display = "block";
 }
 
-function fixTableHeader() {
-	// TODO: fix table header is on top of autocomplete list. have to hide fix table header before showing autocomplete list
-	return;
-	
-	var tableContent = document.getElementById("table-content");
-	var header = tableContent.firstElementChild; // thead is first child of table
-	var fixedHeader = document.getElementById("header-fixed");
-	fixedHeader.innerHTML = "";
-	fixedHeader.appendChild(header.cloneNode(true));
-	fixedHeader.style.top = tableContent.offsetTop + "px";
-	fixedHeader.style.width = (header.clientWidth + 1) + "px";
-	
-	var ths = header.getElementsByTagName("th");
-	var fixThs = fixedHeader.getElementsByTagName("th");
-	for (var i = 0; i < ths.length; i++) {
-		fixThs[i].style.width = (ths[i].clientWidth) + "px";
-	}
+function markPassive(passiveId) {
+	document.getElementsByName("up"+passiveId).forEach(function(td) {
+		td.style.backgroundColor = "palegreen";
+	});
+}
+
+function unmarkPassive(passiveId) {
+	document.getElementsByName("up"+passiveId).forEach(function(td) {
+		td.style.backgroundColor = "";
+	});
 }
 
 function generateCommanderRows() {
@@ -299,6 +292,7 @@ function generateCommanderRows() {
 			var passiveList = passiveLists[unit["passiveListIds"][i]];
 			td = createTdHtmlNode('<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]));
 			td.passiveList = passiveList;
+			td.setAttribute("name", "up"+passiveList["passiveId"]);
 			tr.appendChild(td);
 			passiveIds[passiveList["passiveId"]] = 0;
 		}
@@ -315,6 +309,8 @@ function generateCommanderRows() {
 	wordlists = wordlists.concat(words);
 	
 	autocomplete(document.getElementById("filterWord"), wordlists, addFilterWord);
+	
+	filterPassives.forEach(markPassive);
 
 	doFilter();
 }
@@ -347,7 +343,6 @@ function hasLocalizeText(ktxt, wordUpper) {
 function doFilter() {
 	var txt = document.getElementById("filterTxt").value.trim();
 	doFilter2(txt);
-	fixTableHeader();
 }
 
 function doFilter2(txt) {
@@ -378,6 +373,7 @@ function doFilter2(txt) {
 			return;
 		}
 		
+		var highlight_idx = -1;
 		if (filterPassives.length !== 0) {
 			var cnt = 0;
 			for (var i = 0; i < unit["passiveListIds"].length; i++) {
@@ -501,10 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		document.getElementById("modalDiv").style.display = "none";
 	}
 	
-	window.onresize = function() {
-		fixTableHeader();
-	}
-
 	// When the user clicks anywhere outside of the modal, close it
 	window.onclick = function(event) {
 		var modal = document.getElementById("modalDiv");
@@ -535,6 +527,7 @@ function removeFilterTag(span) {
 		if (idx !== -1) { // extra check, should never happen
 			span.parentNode.removeChild(span);
 			filterPassives.splice(idx, 1);
+			unmarkPassive(passiveId);
 			// update display
 			doFilter();
 		}
@@ -577,6 +570,7 @@ function addFilterWord(word) {
 			if (filterPassives.indexOf(passiveId) === -1) {
 				filterPassives.push(passiveId);
 				addFilterTag(passiveId, "p", toLocalize(passive["name"]));
+				markPassive(passiveId);
 			}
 			return true;
 		}
@@ -599,6 +593,7 @@ function clearFilters() {
 	document.getElementById("filterTags-ut").innerHTML = "";
 	document.getElementById("filterTags-p").innerHTML = "";
 	filterUnitTypes = [];
+	filterPassives.forEach(unmarkPassive);
 	filterPassives = [];
 	
 	doFilter();
@@ -649,32 +644,61 @@ function clearFilters() {
 	</select>
 	</div>
 </div>
-<div id="advanceTool">
-	Filter: <div class="autocomplete" style="width:250px;"><input type="text" id="filterWord" style="width:90%;" tabindex="2" placeholder="Unit Type or Passive Name" /></div>
-	<button id="addFilter" onclick="addFilterWordBtn()">Add</button>
-	<button id="clearFilter" onclick="clearFilters()">Clear</button>
-	<p><span id="filterTags-ut"></span><span id="filterTags-p"></span></p>
-</div>
+<div id="advanceTool" style="padding-top: 2px">
+	<div class="topbar-left">
+	  Filter: <div class="autocomplete" style="width:250px;"><input type="text" id="filterWord" style="width:90%;" tabindex="2" placeholder="Unit Type or Passive Name" /></div>
+	  <button id="addFilter" onclick="addFilterWordBtn()">Add</button>
+	  <button id="clearFilter" onclick="clearFilters()">Clear</button>
+	  <p><span id="filterTags-ut"></span><span id="filterTags-p"></span></p>
+	</div>
+	<div class="topbar-right">
+	  <!--<button id="switchView" onclick="">Switch View</button>-->
+	</div>
 </div>
 
-<div id="content">
-<table id="table-content" class="table-container">
+<div class="table-header">
+<table class="table-container">
+  <colgroup>
+	<col style="width:170px"/>
+	<col style="width:160px"/>
+	<col style="width:40px"/>
+	<col/>
+	<col/>
+	<col/>
+	<col/>
+  </colgroup>
   <thead>
 	<tr>
-	  <th width="170px">Name</th>
-	  <th width="160px">Type</th>
-	  <th width="40px">Cost</th>
+	  <th>Name</th>
+	  <th>Type</th>
+	  <th>Cost</th>
 	  <th>Lv30 Passive</th>
 	  <th>Lv50 Passive</th>
 	  <th>Lv70 Passive</th>
 	  <th>Lv90 Passive</th>
 	</tr>
   </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col style="width:170px"/>
+	<col style="width:160px"/>
+	<col style="width:40px"/>
+	<col/>
+	<col/>
+	<col/>
+	<col/>
+  </colgroup>
   <tbody id="cbody">
   </tbody>
 </table>
 </div>
-<table id="header-fixed" class="table-container"></table>
 
 <!-- Modal box -->
 <div id="modalDiv" class="modal">
