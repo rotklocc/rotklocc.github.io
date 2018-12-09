@@ -11,6 +11,11 @@ function createTdHtmlNode(html) {
 	return td;
 }
 
+function createTdNumberColorTagNode(spanClass, num) {
+	var txt = '<span class="'+spanClass+'">&#x25AE;</span>&nbsp;' + (num ? num : '-')
+	return createTdHtmlNode(txt);
+}
+
 function setCookie(cname, cvalue, exdays) {
 	var d = new Date();
 	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));

@@ -51,6 +51,13 @@ table.table-container tbody tr:hover, table.table-container tbody tr:active {
   background-color: #eeeeee;
 }
 
+.statAtk { color: #df0000; }
+.statWis { color: #ff9a00; }
+.statDef { color: #0040ff; }
+.statAgi { color: #ffed00; }
+.statMrl { color: #a03eff; }
+.statSpd { color: Cyan; }
+
 table.atkShape {
   border-collapse: collapse;
   border: 2px solid black;
