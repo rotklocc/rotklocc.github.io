@@ -12,6 +12,33 @@
 <script type="text/javascript" src="js/utils.js"></script>
 <script type="text/javascript">
 
+function popupInfo() {
+	document.getElementById("modalHeader").innerHTML = "Field Info";
+	
+	txt = "<p><b>Power:</b> The tactics power modifier.</p>";
+	txt += "<p><b>Max Acc:</b> The tactics accuracy modifier.</p>";
+	
+	txt += "<p><b>Dmg Type:</b><br/>";
+	txt += '- <b>Normal</b>: base tactics damage is calculated from attacker and defender WIS stat.<br/>';
+	txt += '- <b>Fixed</b>: base tactics damage is calculated from attacker WIS stat only.<br/>';
+	txt += '- <b>None</b>: tactics has no damage.<br/>';
+	txt += '- <b>Physical</b>: base tactics damage is calculated same as base physcial attack damage (from attacker ATK stat and defender WIS stat).<br/>';
+	txt += "</p>";
+	
+	txt += "<p><b>Acc Type:</b><br/>";
+	txt += "- <b>Normal</b>: base tactics accuracy is calculated as normal.<br/>";
+	txt += '- <b>Except Leader</b>: base tactics accuracy is calculated as normal but cannot hit leader.<br/>';
+	txt += '- <b>Max Acc</b>: base tactics accuracy is "Max Acc" value.<br/>';
+	txt += '- <b>Always Hit</b>: tactics cannot miss.<br/>';
+	txt += "</p>";
+	
+	txt += '<p><b>Double?:</b> Is it possible to cast double tactics. If this field value is "NO", critical attack is always disabled.</p>';
+	txt += '<p><b>Interrupt?:</b> Is it interrupt tactics. The interrupt tactics can be casted twice if caster has "Interrupt Tactics Mastery %" passive.</p>';
+	
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
 function popupTactic(td, idx) {
 	var tactic = td.parentNode.tactic;
 	
@@ -20,9 +47,7 @@ function popupTactic(td, idx) {
 	txt = "<b>Attribute:</b> " + toLocalizes(skillTypes[tactic['skillType']], " &nbsp; ") + "<br/>";
 	txt += "<b>Description:</b><br/>" + toLocalizes(tactic['desc'], "<br/>");
 	
-	console.log(tactic['targetArea']);
 	txt += '<p>Cast Range:<br/>' + getShapeHtml(tactic['targetArea'], true) + '</p>';
-	console.log(tactic['effectArea']);
 	txt += '<p>Effect Range:<br/>' + getShapeHtml(tactic['effectArea'], false) + '</p>';
 	
 	document.getElementById("modalContent").innerHTML = txt;
@@ -56,6 +81,9 @@ function generateTableRows() {
 		tr.appendChild(createTdHtmlNode(tactic['damageType']));
 		tr.appendChild(createTdHtmlNode(tactic['healType']));
 		tr.appendChild(createTdHtmlNode(tactic['accuType']));
+		
+		tr.appendChild(createTdHtmlNode(tactic['canStreakCast'] ? 'Y' : 'N'));
+		tr.appendChild(createTdHtmlNode(tactic['obstructiveSkill'] ? 'Y' : 'N'));
 		
 		tbody.appendChild(tr);
 	});
@@ -151,10 +179,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		<option value="5">VN</option>
 		<option value="6">TH</option>
 	</select>
+	<p style="text-align: right; margin: 5px 0 0 0"><button onclick="popupInfo()">Info</button></p>
 	</div>
 </div>
 
-<div id="advanceTool" style="padding-top: 15px">
+<div id="advanceTool" style="padding-top: 5px">
 </div>
 
 <div class="table-header" style="padding-top: 5px">
@@ -162,13 +191,15 @@ document.addEventListener('DOMContentLoaded', function() {
   <colgroup>
 	<col/>
 	<col/>
-	<col style="width:60px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
+	<col style="width:70px"/>
+	<col style="width:70px"/>
+	<col style="width:100px"/>
+	<col style="width:100px"/>
+	<col style="width:120px"/>
 	<col style="width:80px"/>
-	<col style="width:120px"/>
-	<col style="width:120px"/>
-	<col style="width:120px"/>
+	<col style="width:90px"/>
   </colgroup>
   <thead>
 	<tr>
@@ -181,6 +212,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	  <th>Dmg Type</th>
 	  <th>Heal Type</th>
 	  <th>Acc Type</th>
+	  <th>Double?</th>
+	  <th>Interrupt?</th>
 	</tr>
   </thead>
 </table>
@@ -194,13 +227,15 @@ document.addEventListener('DOMContentLoaded', function() {
   <colgroup>
 	<col/>
 	<col/>
-	<col style="width:60px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
+	<col style="width:70px"/>
+	<col style="width:70px"/>
+	<col style="width:100px"/>
+	<col style="width:100px"/>
+	<col style="width:120px"/>
 	<col style="width:80px"/>
-	<col style="width:120px"/>
-	<col style="width:120px"/>
-	<col style="width:120px"/>
+	<col style="width:90px"/>
   </colgroup>
   <tbody id="cbody">
   </tbody>
