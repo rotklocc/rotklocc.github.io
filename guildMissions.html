@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Alliance Weekly Missions</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="js/guildMissions.js"></script>
+<script type="text/javascript">
+
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	guildMissions.forEach(function(mission) {
+		var tr = document.createElement("tr");
+		tr.id = mission["id"];
+		tr.mission = mission;
+		
+		var td = createTdHtmlNode(mission['order']);
+		td.style.textAlign = "center"
+		tr.appendChild(td);
+
+		tr.appendChild(createTdHtmlNode(toLocalizes(mission['name'])));
+		tr.appendChild(createTdHtmlNode(toLocalizes(mission['desc'])));
+		
+		tbody.appendChild(tr);
+	});
+}
+
+function checkSelectValues() {
+	document.getElementById("lang").value = selLang;
+	document.getElementById("lang2").value = selLang2;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	setLangChangeCallback(generateTableRows);
+	getUserLangs();
+	checkSelectValues();
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+	</div>
+	<div class="topbar-right">
+	Lang: <select id="lang" onchange="setLang(this.value)">
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4" selected>EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	2nd Lang: <select id="lang2" onchange="setLang2(this.value)">
+		<option value="-1" selected></option>
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4">EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	</div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col style="width:70px"/>
+	<col style="width:300px"/>
+	<col/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th>Order</th>
+	  <th>Name</th>
+	  <th>Description</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col style="width:70px"/>
+	<col style="width:300px"/>
+	<col/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+</body>
+</html>
