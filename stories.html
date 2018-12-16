@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Stories</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/stories.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+var currStoryIdx = 0;
+var currStageIdx = 0;
+var missionLangSep = ' &nbsp; ';
+
+function unitIds2Names(unitIds) {
+	var names = [];
+	for (var i = 0; i < unitIds.length; i++) {
+		names.push(toLocalizes(storyUnits[unitIds[i]], " "));
+	}
+	return names.join(', ');
+}
+
+function toLocalizeFormat(tkey, localizeFn, params) {
+	var args = []
+	// localize all string params
+	for (var i = 0; i < params.length; i++) {
+		if (typeof params[i] === 'string' || params[i] instanceof String)
+			args.push(localizeFn(params[i]));
+		else
+			args.push(params[i]);
+	}
+	var fmt = localizeFn(tkey);
+	return fmt.format.apply(fmt, args);
+}
+
+function toLocalizesFormat(tkey, ...params) {
+	var txt = toLocalizeFormat(tkey, toLocalize, params);
+	if (selLang2 !== -1) {
+		txt += missionLangSep + toLocalizeFormat(tkey, toLocalize2, params);
+	}
+	return txt;
+}
+
+function missionText(info) {
+	var mission = info['mission'];
+	var unit1 = (info['unitId01'] > 0) ? storyUnits[info['unitId01']] : 0;
+	var unit2 = (info['unitId02'] > 0) ? storyUnits[info['unitId02']] : 0;
+	var unit3 = (info['unitId03'] > 0) ? storyUnits[info['unitId03']] : 0;
+	var forceType = forceTypes[info['forceType']];
+	var count = info['count'];
+	var limitTurn = info['limitTurn'];
+	
+	if (mission === 0) { // Win
+		if (limitTurn > 0) {
+			return toLocalizes("{0}턴 이내 전투 승리", missionLangSep).format(limitTurn);
+		}
+		return toLocalizes("전투 승리", missionLangSep);
+	}
+	else if (mission === 1) { // EntryCount
+		return toLocalizes("출진 장수 {0}인 이하", missionLangSep).format(count);
+	}
+	else if (mission === 2) { // DuelCount
+		if (limitTurn > 0)
+			return toLocalizes("{0}턴 이내 일기토 {1}회 이상 진행", missionLangSep).format(limitTurn, count);
+		return toLocalizes("일기토 {0}회 이상 진행", missionLangSep).format(count);
+	}
+	else if (mission === 3) { // Duel
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1}VS{2} 일기토 진행", limitTurn, unit1, unit2);
+		return toLocalizesFormat("{0}VS{1} 일기토 진행", unit1, unit2);
+	}
+	else if (mission === 4) { // Meet
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1}, {2}의 대화", limitTurn, unit1, unit2);
+		return toLocalizesFormat("{0}, {1}의 대화", unit1, unit2);
+	}
+	else if (mission === 5) { // Kill
+		if (limitTurn > 0) {
+			if (unit3 !== 0)
+				return toLocalizesFormat("{0}턴 이내 {1},{2},{3} 퇴각", limitTurn, unit1, unit2, unit3);
+			if (unit2 !== 0)
+				return toLocalizesFormat("{0}턴 이내 {1},{2} 퇴각", limitTurn, unit1, unit2);
+			return toLocalizesFormat("{0}턴 이내 {1} 퇴각", limitTurn, unit1);
+		}
+		if (unit3 !== 0)
+			return toLocalizesFormat("{0},{1},{2} 퇴각", unit1, unit2, unit3);
+		if (unit2 !== 0)
+			return toLocalizesFormat("{0},{1} 퇴각", unit1, unit2);
+		return toLocalizesFormat("{0} 퇴각", unit1);
+	}
+	else if (mission === 6) { // KillTarget
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1}이(가) {2} 처치", limitTurn, unit1, unit2);
+		return toLocalizesFormat("{0}이(가) {1} 처치", unit1, unit2);
+	}
+	else if (mission === 7) { // KillCount
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1} {2}부대 이상 퇴각", limitTurn, forceType, count);
+		return toLocalizesFormat("{0} {1}부대 이상 퇴각", forceType, count);
+	}
+	else if (mission === 8) { // KillAll
+		return toLocalizesFormat("{0} 전원 퇴각", forceType);
+	}
+	else if (mission === 9) { // Survive
+		if (unit3 !== 0)
+			return toLocalizesFormat("{0},{1},{2} 생존", unit1, unit2, unit3);
+		if (unit2 !== 0)
+			return toLocalizesFormat("{0},{1} 생존", unit1, unit2);
+		return toLocalizesFormat("{0} 생존", unit1);
+	}
+	else if (mission === 10) { // SurviveAll
+		return toLocalizesFormat("{0} 전원 생존", forceType);
+	}
+	else if (mission === 11) { // SurviveCount
+		return toLocalizesFormat("{0} 전원 생존", forceType, count);
+	}
+	else if (mission === 13) { // NoPocket
+		return toLocalizes("주머니 미착용", missionLangSep);
+	}
+	else if (mission === 14) { // NoConsumables
+		return toLocalizes("소모품 미사용", missionLangSep);
+	}
+	else if (mission === 15) { // NoTreasure
+		return toLocalizes("전략보물 미착용", missionLangSep);
+	}
+	
+	return null;
+}
+
+function missionsHtml(missionIds) {
+	var txts = [];
+	for (var i = 0; i < missionIds.length; i++) {
+		missionInfo = missions[missionIds[i]];
+		txts.push('- ' + missionText(missionInfo));
+	}
+	return txts.join('<br/>');
+}
+
+function displayStageDetail() {
+	var story = stories[currStoryIdx];
+	var scenario = story['scenarios'][currStageIdx];
+	
+	document.getElementById('scenarioName').innerHTML = toLocalizes(scenario['accidentName'], " &nbsp; ");
+	document.getElementById('scenarioTime').innerText = scenario['time'];
+	document.getElementById('unitCount').innerText = scenario['unitCount'];
+	
+	var allUnitIds = story['needUnit'].concat(story['whitelist']);
+	var optionalUnitIds = allUnitIds.filter(function(uid) {
+		return (scenario['needUnitIds'].indexOf(uid) === -1) && (scenario['banUnitIds'].indexOf(uid) === -1);
+	});
+	
+	document.getElementById('needUnits').innerHTML = unitIds2Names(scenario['needUnitIds']);
+	document.getElementById('optionalUnits').innerHTML = unitIds2Names(optionalUnitIds);
+	document.getElementById('banUnits').innerHTML = unitIds2Names(scenario['banUnitIds']);
+	
+	document.getElementById('recommendLv').innerText = scenario['recommendLv'];
+	document.getElementById('missions').innerHTML = missionsHtml(scenario['missionIds']);
+	
+	document.getElementById('recommendLvHard').innerText = scenario['recommendLvHard'];
+	document.getElementById('missionsHard').innerHTML = missionsHtml(scenario['missionIdsHard']);
+}
+
+function selectStory(idx) {
+	currStoryIdx = Number(idx);
+	currStageIdx = 0;
+	createStageSelection();
+}
+
+function selectStage(idx) {
+	currStageIdx = Number(idx);
+	displayStageDetail();
+}
+
+function createStageSelection() {
+	var eleSel = document.getElementById('selStage');
+	eleSel.innerHTML = '';
+	var scenarios = stories[currStoryIdx]['scenarios'];
+	for (var i = 0; i < scenarios.length; i++) {
+		var option = document.createElement("option");
+		var txt = scenarios[i]['episodeNo'] + ' ' + toLocalize(scenarios[i]['accidentName']);
+		if (currStoryIdx === 1) // only cao cao story need chapter no
+			txt = scenarios[i]['chapterNo'] + '-' + txt;
+		option.text = txt;
+		option.value = i;
+		eleSel.add(option);
+	}
+	eleSel.value = currStageIdx;
+	
+	displayStageDetail();
+}
+
+function createStorySelection() {
+	var eleSel = document.getElementById('selStory');
+	eleSel.innerHTML = '';
+	for (var i = 0; i < stories.length; i++) {
+		var option = document.createElement("option");
+		option.text = toLocalize(stories[i]['name']);
+		option.value = i;
+		eleSel.add(option);
+	}
+	eleSel.value = currStoryIdx;
+	
+	createStageSelection();
+}
+
+function checkSelectValues() {
+	document.getElementById("lang").value = selLang;
+	document.getElementById("lang2").value = selLang2;
+	createStorySelection();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	setLangChangeCallback(createStorySelection);
+	getUserLangs();
+	checkSelectValues();
+	
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight+5) + "px";
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Story: <select id="selStory" tabindex="1" onchange="selectStory(this.value)"></select><br/>
+		Scenario: <select id="selStage" tabindex="2" onchange="selectStage(this.value)"></select>
+	</div>
+	<div class="topbar-right">
+	Lang: <select id="lang" onchange="setLang(this.value)">
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4" selected>EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	2nd Lang: <select id="lang2" onchange="setLang2(this.value)">
+		<option value="-1"></option>
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4">EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	</div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+</div>
+
+<div id="content">
+
+<p><b>Scenario:</b> <span id='scenarioName'></span></p>
+<p><b>Estimated time:</b> <span id='scenarioTime'></span> Min</p>
+<p><b>Max Unit:</b> <span id='unitCount'></span></p>
+
+<p><b>Required units:</b> <span id='needUnits'></span></p>
+<p><b>Optional units:</b> <span id='optionalUnits'></span></p>
+<p><b>Not allowed units:</b> <span id='banUnits'></span></p>
+</p>
+
+<p style="padding-top: 5px">
+<p><b>Normal Mode:</b></p>
+<b>Recommended Lv:</b> <span id='recommendLv'></span><br/>
+<b>Missions:</b><br/>
+<span id='missions'></span>
+</p>
+
+<p style="padding-top: 5px">
+<p><b>Extreme Mode:</b></p>
+<b>Recommended Lv:</b> <span id='recommendLvHard'></span><br/>
+<b>Missions:</b><br/>
+<span id='missionsHard'></span>
+</p>
+
+</div>
+
+</body>
+</html>

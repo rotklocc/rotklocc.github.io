@@ -16,6 +16,14 @@ function createTdNumberColorTagNode(spanClass, num) {
 	return createTdHtmlNode(txt);
 }
 
+String.prototype.format = function() {
+	var a = this;
+	for (var k in arguments) {
+		a = a.replace(new RegExp("\\{" + k + "\\}", 'g'), arguments[k]);
+	}
+	return a
+}
+
 function setCookie(cname, cvalue, exdays) {
 	var d = new Date();
 	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));

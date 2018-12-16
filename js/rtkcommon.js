@@ -69,8 +69,12 @@ function toLocalize(tkey) {
 	return toLocalizeLang(tkey, selLang);
 }
 
+function toLocalize2(tkey) {
+	return toLocalizeLang(tkey, selLang2);
+}
+
 function toLocalizes(tkey, sep="<br/>") {
-	txt = toLocalizeLang(tkey, selLang);
+	var txt = toLocalizeLang(tkey, selLang);
 	if (selLang2 !== -1) {
 		txt += sep;
 		txt += toLocalizeLang(tkey, selLang2);
