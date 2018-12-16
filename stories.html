@@ -115,7 +115,7 @@ function missionText(info) {
 		return toLocalizesFormat("{0} 전원 생존", forceType);
 	}
 	else if (mission === 11) { // SurviveCount
-		return toLocalizesFormat("{0} 전원 생존", forceType, count);
+		return toLocalizesFormat("{0} {1}부대 미만 퇴각", forceType, count);
 	}
 	else if (mission === 13) { // NoPocket
 		return toLocalizes("주머니 미착용", missionLangSep);
