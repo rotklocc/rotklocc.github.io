@@ -1,11 +1,19 @@
 
 function autocomplete(inp, wordlists, cbOnEnter) {
+	// just update wordlists for duplicate
+	if ('wordlists' in inp) {
+		inp.wordlists = wordlists;
+		return;
+	}
+	
+	inp.wordlists = wordlists;
 	// the autocomplete function takes two arguments,
 	// the text field element and an array of possible autocompleted values
 	var currentFocus;
 	// execute a function when someone writes in the text field:
 	inp.addEventListener("input", function(e) {
 		var a, b, i, val = this.value;
+		var wordlists = this.wordlists;
 		// close any already open lists of autocompleted values
 		closeAllLists();
 		if (!val) { return false; }

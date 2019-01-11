@@ -41,6 +41,10 @@ table.table-container th {
   background-color: #ffff88;
 }
 
+th.clickable {
+  cursor: pointer;
+}
+
 table.table-container td {
   padding: 4px 8px 4px 8px;
   border: 1px solid #c2c2e7;
@@ -218,3 +222,4 @@ p.header {
   color: red;
   cursor: pointer;
 }
+

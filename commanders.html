@@ -13,11 +13,34 @@
 <script type="text/javascript" src="js/utils.js"></script>
 <script type="text/javascript">
 var maxCost = 0;
-
-var wordlists = []; // wordlists for word filter autocomplete
-var usedPassiveIds = [];
+var tableViewId = 0; // 0 = passives, 1 = stat/prefect/lord
+var usedPassiveIds = []; // passive ids (no duplicated)
 var filterUnitTypes = [];
 var filterPassives = [];
+
+function _popupSkill(skill) {
+	document.getElementById("modalHeader").innerHTML = toLocalizes(skill["name"], " &nbsp; ");
+	
+	var lvs = [ 1, 30, 50, 70, 90 ];
+	var txt = "<b>Description:</b><br/>";
+	txt += toLocalizes(skill["desc"], "<br/>").format('N');
+	txt += '<p><table class="stats">';
+	txt += '<tr><th>Lv</th><th>Value</th></tr>';
+	for (var i = 0; i < 5; i++) {
+		txt += '<tr><td>'+lvs[i]+'</td><td>'+skill['vals'][i]+'</td></tr>';
+	}
+	txt += '</table></p>';
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+function popupWarlord(td) {
+	_popupSkill(warlordSkills[td.warlordId]);
+}
+
+function popupPrefect(td) {
+	_popupSkill(prefectSkills[td.prefectId]);
+}
 
 function popupPassive(td) {
 	var passiveList = td.passiveList;
@@ -91,7 +114,9 @@ function popupCommander(td) {
 		txt += "Gold: " + unit["gold"] + "<br/>";
 	}
 	txt += "Cost: " + unit["cost"] + "<br/>";
-	txt += "Type: " + toLocalizes(unitTypes[unit["jobTypeId"]]["name"], " &nbsp; ");
+	txt += "Type: " + toLocalizes(unitTypes[unit["jobTypeId"]]["name"], " &nbsp; ") + "<br/>";
+	txt += "Prefect: " + toLocalizes(prefectSkills[unit["prefectId"]]["name"], " &nbsp; ") + "<br/>";
+	txt += "Warlord: " + toLocalizes(warlordSkills[unit["warlordId"]]["name"], " &nbsp; ");
 	txt += "</p>";
 	
 	
@@ -111,17 +136,85 @@ function unmarkPassive(passiveId) {
 	});
 }
 
-function generateTableRows() {
-	var tbody = document.getElementById("cbody");
-	tbody.innerHTML = "";
-	
-	wordlists = [];
-	usedPassiveIds = [];
-	
+function updateAutocompleteWordlist() {
+	// need to update when language is changed
+	var wordlists = [];  // wordlists for word filter autocomplete
 	for (var typeId in unitTypes) {
 		wordlists.push(toLocalize(unitTypes[typeId]["name"]));
 	}
 	wordlists.sort();
+	var words = [];
+	for (var i = 0; i < usedPassiveIds.length; i++) {
+		words.push(toLocalize(passives[usedPassiveIds[i]]["name"]));
+	}
+	words.sort();
+	wordlists = wordlists.concat(words);
+
+	autocomplete(document.getElementById("filterWord"), wordlists, addFilterWord);
+}
+
+function replaceDisplayLanguage() {
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 0; i < nrow; i++) {
+		var tr = rows[i];
+		var cells = tr.cells;
+		var unit = tr.unit;
+		
+		cells[0].getElementsByTagName('span')[1].innerHTML = toLocalizes(unit["name"]);
+		cells[0].svalue = toLocalizes(unit["name"]);
+		cells[1].getElementsByTagName('span')[1].innerHTML = toLocalizes(unitTypes[unit["jobTypeId"]]['name']);
+		cells[1].svalue = toLocalize(unitTypes[unit["jobTypeId"]]['name']);
+		for (var j = 0; j < unit["passiveListIds"].length; j++) {
+			var passiveList = passiveLists[unit["passiveListIds"][j]];
+			cells[j+3].getElementsByTagName('span')[1].innerHTML = localizePassiveName(passiveList["passiveId"], passiveList["val"]);
+		}
+		
+		cells[12].getElementsByTagName('span')[1].innerHTML = toLocalizes(prefectSkills[unit["prefectId"]]['name'])
+		cells[12].svalue = toLocalize(prefectSkills[unit["prefectId"]]['name']);
+		cells[13].getElementsByTagName('span')[1].innerHTML = toLocalizes(warlordSkills[unit["warlordId"]]['name'])
+		cells[13].svalue = toLocalize(warlordSkills[unit["warlordId"]]['name']);
+	}
+	
+	updateAutocompleteWordlist();
+}
+
+function switchTableView() {
+	if (tableViewId === 0)
+		tableViewId = 1;
+	else
+		tableViewId = 0;
+	
+	var head_cols = document.getElementById('chead-colgrp').getElementsByTagName('col');
+	var body_cols = document.getElementById('cbody-colgrp').getElementsByTagName('col');
+	var head_cells = document.getElementById("table-header").rows[0].cells;
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 3; i < head_cells.length; i++) {
+		var show = (i <= 6 && tableViewId === 0) || (i >= 7 && tableViewId === 1);
+		head_cols[i].style.display = show ? 'table-column' : 'none';
+		body_cols[i].style.display = show ? 'table-column' : 'none';
+		head_cells[i].style.display = show ? '' : 'none';
+	}
+	
+	for (var i = 0; i < nrow; i++) {
+		var cells = rows[i].cells;		
+		for (var j = 3; j < cells.length; j++) {
+			var show = (j <= 6 && tableViewId === 0) || (j >= 7 && tableViewId === 1);
+			cells[j].style.display = show ? '' : 'none';
+		}
+	}
+}
+
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	usedPassiveIds = [];
 	
 	// use object to remove duplication
 	var passiveIds = {};
@@ -130,43 +223,72 @@ function generateTableRows() {
 		tr.id = unit["id"];
 		tr.unit = unit;
 		
-		var td = createTdHtmlNode('<span class="info" onclick="popupCommander(this.parentNode)">&#x1f6c8;</span>' + toLocalizes(unit["name"]));
+		var td = createTdHtmlNode('<span class="info" onclick="popupCommander(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(unit["name"]) + '</span>');
 		if (unit["gender"] === 'F')
 			td.style.backgroundColor = "pink"; // female commander
+		td.svalue = toLocalize(unit["name"]);
 		tr.appendChild(td);
 		
-		td = createTdHtmlNode('<span class="info" onclick="popupUnitType(this.parentNode)">&#x1f6c8;</span>' + toLocalizes(unitTypes[unit["jobTypeId"]]['name']));
+		td = createTdHtmlNode('<span class="info" onclick="popupUnitType(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(unitTypes[unit["jobTypeId"]]['name']) + '</span>');
+		td.svalue = toLocalize(unitTypes[unit["jobTypeId"]]['name']);
 		tr.appendChild(td);
 		
 		td = createTdTextNode(unit["cost"]);
 		if (unit["gold"] !== 0)
 			td.style.backgroundColor = "gold"; // gold commander
+		td.svalue = Number(unit['cost']);
 		tr.appendChild(td);
 		
 		for (var i = 0 ; i < unit["passiveListIds"].length; i++) {
 			var passiveList = passiveLists[unit["passiveListIds"][i]];
-			td = createTdHtmlNode('<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]));
+			td = createTdHtmlNode('<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span><span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</span>');
 			td.passiveList = passiveList;
 			td.setAttribute("name", "up"+passiveList["passiveId"]);
 			tr.appendChild(td);
 			passiveIds[passiveList["passiveId"]] = 0;
 		}
+		
+		td = createTdNumberColorTagNode('statAtk', unit['str']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		
+		td = createTdNumberColorTagNode('statWis', unit['int']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		
+		td = createTdNumberColorTagNode('statDef', unit['cmd']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		
+		td = createTdNumberColorTagNode('statAgi', unit['dex']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		
+		td = createTdNumberColorTagNode('statMrl', unit['lck']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		
+		td = createTdHtmlNode('<span class="info" onclick="popupPrefect(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(prefectSkills[unit["prefectId"]]['name']) + '</span>');
+		td.prefectId = unit["prefectId"];
+		td.svalue = toLocalize(prefectSkills[unit["prefectId"]]['name']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		
+		td = createTdHtmlNode('<span class="info" onclick="popupWarlord(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(warlordSkills[unit["warlordId"]]['name']) + '</span>');
+		td.warlordId = unit["warlordId"];
+		td.svalue = toLocalize(warlordSkills[unit["warlordId"]]['name']);
+		td.style.display = "none";
+		tr.appendChild(td);
 				
 		tbody.appendChild(tr);
 	});
 	
-	var words = [];
 	for (var passiveId in passiveIds) {
 		usedPassiveIds.push(Number(passiveId));
-		words.push(toLocalize(passives[passiveId]["name"]));
 	}
-	words.sort();
-	wordlists = wordlists.concat(words);
 	
-	autocomplete(document.getElementById("filterWord"), wordlists, addFilterWord);
+	updateAutocompleteWordlist();
 	
-	filterPassives.forEach(markPassive);
-
 	doFilter();
 }
 
@@ -246,6 +368,17 @@ function doFilter2(txt) {
 				return;
 			}
 		}
+		// search from prefect
+		if (inLocalizeText(prefectSkills[unit["prefectId"]]['name'], txt)) {
+			tr.style.display = "";
+			return;
+		}
+		// search from warlor
+		if (inLocalizeText(warlordSkills[unit["warlordId"]]['name'], txt)) {
+			tr.style.display = "";
+			return;
+		}
+
 		tr.style.display = "none";
 	});
 }
@@ -275,7 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	}
 	
-	setLangChangeCallback(generateTableRows);
+	//setLangChangeCallback(generateTableRows);
+	setLangChangeCallback(replaceDisplayLanguage);
 	getUserLangs();
 	checkSelectValues();
 	generateTableRows();
@@ -370,6 +504,50 @@ function clearFilters() {
 	
 	doFilter();
 }
+
+// TODO: move to another file as library
+var sortedCol = -1;
+var sortedAsc = true;
+
+function compareSortTable(a, b) {
+	var aval = a.cells[sortedCol].svalue;
+	var bval = b.cells[sortedCol].svalue;
+	
+	var ret = 0;
+	if (aval < bval)
+		ret = -1;
+	else if (aval > bval)
+		ret = 1;
+	return sortedAsc ? ret : -ret;
+}
+
+function sortTable(n) {
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var rowParent = rows[0].parentNode;
+	var nrow = rows.length;
+	
+	var orderAsc = true;
+	if (sortedCol === n) {
+		// Note: can do reverse instead of sorting (should be faster for large table)
+		orderAsc = !sortedAsc;
+	}
+	sortedCol = n;
+	sortedAsc = orderAsc;
+	
+	// copy all rows to array
+	var rowArr = new Array(nrow);
+	for (var i = 0; i < nrow; i++) {
+		rowArr[i] = rows[i];
+	}
+	// sort
+	rowArr.sort(compareSortTable);
+	// re-add all rows back (much faster than using parentNode.insertBefore() for swapping rows)
+	rowParent.innerHTML = "";
+	for (var i = 0; i < nrow; i++) {
+		rowParent.appendChild(rowArr[i]);
+	}
+}
 </script>
 </head>
 
@@ -424,13 +602,13 @@ function clearFilters() {
 	  <p><span id="filterTags-ut"></span><span id="filterTags-p"></span></p>
 	</div>
 	<div class="topbar-right">
-	  <!--<button id="switchView" onclick="">Switch View</button>-->
+	  <button id="switchView" onclick="switchTableView()">Switch View</button>
 	</div>
 </div>
 
 <div class="table-header">
-<table class="table-container">
-  <colgroup>
+<table id="table-header" class="table-container">
+  <colgroup id="chead-colgrp">
 	<col style="width:170px"/>
 	<col style="width:160px"/>
 	<col style="width:40px"/>
@@ -438,16 +616,30 @@ function clearFilters() {
 	<col/>
 	<col/>
 	<col/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none"/>
+	<col style="display:none"/>
   </colgroup>
   <thead>
 	<tr>
-	  <th>Name</th>
-	  <th>Type</th>
-	  <th>Cost</th>
+	  <th class="clickable" onclick="sortTable(0)">Name</th>
+	  <th class="clickable" onclick="sortTable(1)">Type</th>
+	  <th class="clickable" onclick="sortTable(2)">Cost</th>
 	  <th>Lv30 Passive</th>
 	  <th>Lv50 Passive</th>
 	  <th>Lv70 Passive</th>
 	  <th>Lv90 Passive</th>
+	  <th style="display:none">STR</th>
+	  <th style="display:none">INT</th>
+	  <th style="display:none">CMD</th>
+	  <th style="display:none">DEX</th>
+	  <th style="display:none">LCK</th>
+	  <th class="clickable" onclick="sortTable(12)" style="display:none">Prefect Passive</th>
+	  <th class="clickable" onclick="sortTable(13)" style="display:none">Warlord Passive</th>
 	</tr>
   </thead>
 </table>
@@ -458,7 +650,7 @@ function clearFilters() {
 <div id="content">
 
 <table id="table-content" class="table-container">
-  <colgroup>
+  <colgroup id="cbody-colgrp">
 	<col style="width:170px"/>
 	<col style="width:160px"/>
 	<col style="width:40px"/>
@@ -466,6 +658,13 @@ function clearFilters() {
 	<col/>
 	<col/>
 	<col/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none"/>
+	<col style="display:none"/>
   </colgroup>
   <tbody id="cbody">
   </tbody>
