@@ -39,6 +39,7 @@ table.table-container th {
   text-align: center;
   border: 1.5px solid #888;
   background-color: #ffff88;
+  padding: 1px 1px 1px 1px;
 }
 
 th.clickable {
@@ -53,6 +54,30 @@ table.table-container td {
 
 table.table-container tbody tr:hover, table.table-container tbody tr:active {
   background-color: #eeeeee;
+}
+
+table.table-terrain {
+  font-size: 12px;
+  width: auto;
+  table-layout: auto;
+}
+
+table.table-terrain th.terrain-name {
+  min-width: 70px;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+table.table-terrain td.terrain-val {
+  min-width: 56px;
+  max-width: 56px;
+  text-align: right;
+}
+
+label.terrain-name {
+  display: inline-block;
+  min-width: 130px;
 }
 
 .statAtk { color: #df0000; }

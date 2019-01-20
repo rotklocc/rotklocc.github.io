@@ -505,48 +505,9 @@ function clearFilters() {
 	doFilter();
 }
 
-// TODO: move to another file as library
-var sortedCol = -1;
-var sortedAsc = true;
-
-function compareSortTable(a, b) {
-	var aval = a.cells[sortedCol].svalue;
-	var bval = b.cells[sortedCol].svalue;
-	
-	var ret = 0;
-	if (aval < bval)
-		ret = -1;
-	else if (aval > bval)
-		ret = 1;
-	return sortedAsc ? ret : -ret;
-}
-
 function sortTable(n) {
 	var table = document.getElementById("table-content");
-	var rows = table.rows;
-	var rowParent = rows[0].parentNode;
-	var nrow = rows.length;
-	
-	var orderAsc = true;
-	if (sortedCol === n) {
-		// Note: can do reverse instead of sorting (should be faster for large table)
-		orderAsc = !sortedAsc;
-	}
-	sortedCol = n;
-	sortedAsc = orderAsc;
-	
-	// copy all rows to array
-	var rowArr = new Array(nrow);
-	for (var i = 0; i < nrow; i++) {
-		rowArr[i] = rows[i];
-	}
-	// sort
-	rowArr.sort(compareSortTable);
-	// re-add all rows back (much faster than using parentNode.insertBefore() for swapping rows)
-	rowParent.innerHTML = "";
-	for (var i = 0; i < nrow; i++) {
-		rowParent.appendChild(rowArr[i]);
-	}
+	sortTableRows(table, n);
 }
 </script>
 </head>
@@ -649,7 +610,7 @@ function sortTable(n) {
 
 <div id="content">
 
-<table id="table-content" class="table-container">
+<table id="table-content" class="table-container" defaultSortAsc="1">
   <colgroup id="cbody-colgrp">
 	<col style="width:170px"/>
 	<col style="width:160px"/>

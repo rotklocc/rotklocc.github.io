@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Terrains</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+/*
+4200005 Mountain
+4200003 Forest
+4200008 Snowy Field
+4200033 Ice
+4200001 Plains
+4200002 Grassland
+4200004 Wastelands
+4200032 Desert
+4200017 Courtyard
+4200024 House
+4200014 River
+4200011 Swamp
+
+4200052 Ruins
+4200053 Azure Temple
+4200054 Summon Circle (Azure)
+4200009 Bridge
+4200058 Vermilion Bird's Flame
+4200059 Vermilion Bird Temple Interior
+*/
+var pvpMaps = [
+	{ name: '익주, 산지 전투', tiles: [4200005, 4200003] }, // mountain
+	{ name: '병주, 설원 전투', tiles: [4200008, 4200033] }, // snow
+	{ name: '기주, 초원 전투', tiles: [4200001, 4200002] }, // grassland
+	{ name: '옹주, 사막 전투', tiles: [4200004, 4200032] }, // desert
+	{ name: '사주, 도성 전투', tiles: [4200017, 4200024] }, // castle
+	{ name: '양주, 장강 전투', tiles: [4200014, 4200011] }  // river
+];
+var godMaps = [
+	{ name: '청룡', tiles: [4200053, 4200054, 4200009] },
+	{ name: '주작', tiles: [4200058, 4200059] },
+];
+
+// initial variables
+var tileOrders = []; // display order
+var filterTiles = {}; // true if displaying
+for (var i = 0; i < pvpMaps.length; i++) {
+	var tileIds = pvpMaps[i]['tiles'];
+	for (var j = 0; j < tileIds.length; j++) {
+		tileOrders.push(tileIds[j]);
+		filterTiles[tileIds[j]] = true;
+	}
+}
+for (var tileId in tiles) {
+	var tid = Number(tileId);
+	if (tid in filterTiles)
+		continue;
+	tileOrders.push(tid);
+	filterTiles[tid] = false;
+}
+
+var advColors = {
+	135: '0000FF',
+	130: '0000FF',
+	125: '0044FF',
+	120: '0088FF',
+	115: '4488FF',
+	110: '8888FF',
+	105: 'CCCCFF',
+	100: 'FFFFFF',
+	95:  'FFCCCC',
+	90:  'FFCC88',
+	85:  'FF8888',
+	80:  'FF8844',
+	75:  'FF4444',
+	70:  'FF4400',
+	65:  'FF2200',
+	60:  'FF0000',
+};
+
+function popupFilter() {
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+function _adjustContentPos() {
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+}
+
+function sortTable() {
+	var table = document.getElementById("table-content");
+	var tileId = Number(this.id.substring(4));
+	var colIdx = tileOrders.indexOf(tileId) + 1; // +1 to skip unit type column
+	sortTableRows(table, colIdx);
+}
+
+function generateTableRows() {
+	var table = document.getElementById("table-header");
+	var table_content = document.getElementById("table-content");
+	var colgrp = document.getElementById("chead-cols");
+	var colgrp_body = document.getElementById("cbody-cols");
+	var thead_row = table.rows[0];
+
+	for (var i = 0; i < tileOrders.length; i++) {
+		var tileId = tileOrders[i];
+		var col = document.createElement('col');
+		col.style.width = '76px';
+		var col2 = document.createElement('col');
+		col2.style.width = '76px';
+		var th = createHtmlNode("th", toLocalizes(tiles[tileId]));
+		th.id = 'chdr' + tileId; // for changing language
+		th.className = "terrain-name clickable";
+		var colIdx = i + 1;
+		th.onclick = sortTable;
+		if (!filterTiles[tileId]) {
+			col.style.display = 'none';
+			col2.style.display = 'none';
+			th.style.display = 'none';
+		}
+		colgrp.appendChild(col);
+		colgrp_body.appendChild(col2);
+		thead_row.appendChild(th);
+	}
+	
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var utid in unitTypes) {
+		var unitType = unitTypes[utid];
+		var tr = document.createElement("tr");
+		tr.id = utid;
+		tr.item = unitType;
+		
+		var td = createTdHtmlNode(toLocalizes(unitType["name"]));
+		td.style.minWidth = "116px";
+		td.id = "rhdr" + utid; // for changing language
+		tr.appendChild(td);
+		
+		var ut_tiles = unitType['tiles'];
+		for (var i = 0; i < tileOrders.length; i++) {
+			var tid = tileOrders[i];
+			var tileInfo = ut_tiles[tid];
+			td = createTdTextNode(tileInfo[0]+'_'+tileInfo[1]);
+			td.svalue = tileInfo[0];
+			td.className = "terrain-val";
+			td.style.backgroundColor = "#" + advColors[tileInfo[0]];
+			if (!filterTiles[tid]) {
+				td.style.display = 'none';
+			}
+			tr.appendChild(td);			
+		}
+		
+		tbody.appendChild(tr);
+	}
+
+	doFilter();
+}
+
+function _findMapTileIndex(mapArr, tileId) {
+	for (var i = 0; i < mapArr.length; i++) {
+		if (mapArr[i]['tiles'].indexOf(tileId) !== -1)
+			return i; // found
+	}
+	return -1;
+}
+
+function _isAllTilesChecked(tileIdArr) {
+	for (var i = 0; i < tileIdArr.length; i++) {
+		if (!filterTiles[tileIdArr[i]])
+			return false;
+	}
+	return true;
+}
+
+function _setColumnDisplay(tileId, visible) {
+	var colIdx = tileOrders.indexOf(tileId) + 1; // +1 to skip unit type column
+	var colDisplay = visible ? 'table-column' : 'none';
+	var cellDisplay = visible ? '' : 'none';
+	
+	var table = document.getElementById("table-header");
+	var cols = document.getElementById("chead-cols").getElementsByTagName('col');
+	cols[colIdx].style.display = colDisplay;
+	table.rows[0].cells[colIdx].style.display = cellDisplay;
+	
+	cols = document.getElementById("cbody-cols").getElementsByTagName('col');
+	cols[colIdx].style.display = colDisplay;
+	rows = document.getElementById("table-content").rows;
+	for (var i = 0; i < rows.length; i++) {
+		rows[i].cells[colIdx].style.display = cellDisplay;
+	}
+	
+	_adjustContentPos();
+}
+
+function onTileChange() {
+	var tileId = Number(this.value);
+	filterTiles[tileId] = this.checked;
+	
+	// if tileId is in map, check/uncheck that map
+	var mapIdx = _findMapTileIndex(pvpMaps, tileId);
+	if (mapIdx !== -1) {
+		document.getElementById("mapP"+mapIdx).checked = _isAllTilesChecked(pvpMaps[mapIdx]['tiles']);
+	}
+	else {
+		// check god map, now god map has no same tile in pvp map
+		mapIdx = _findMapTileIndex(godMaps, tileId);
+		if (mapIdx !== -1) {
+			document.getElementById("mapG"+mapIdx).checked = _isAllTilesChecked(godMaps[mapIdx]['tiles']);
+		}
+	}
+	
+	// toggle visibility of table column
+	_setColumnDisplay(tileId, this.checked);
+}
+
+
+function onMapChange() {
+	// Note: assume only pvp map or 4gods map
+	var maps = this.id.startsWith("mapP") ? pvpMaps : godMaps;
+	var tileIdArr = maps[this.value]['tiles'];
+	for (var i = 0; i < tileIdArr.length; i++) {
+		var tileId = tileIdArr[i];
+		if (filterTiles[tileId] !== this.checked) {
+			document.getElementById("tile"+tileId).checked = this.checked;
+			filterTiles[tileId] = this.checked;
+			_setColumnDisplay(tileId, this.checked);
+		}
+	}
+}
+
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+}
+
+function doFilter2(txt) {
+	_adjustContentPos();
+
+	txt = txt.trim();
+	
+	for (var utid in unitTypes) {
+		// search in all languages
+		var tr = document.getElementById(utid);
+		var unitType = tr.item;
+		
+		if (txt === "") {
+			tr.style.display = "";
+			continue;
+		}
+		
+		if (inLocalizeText(unitType["name"], txt)) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		tr.style.display = "none";
+	}
+}
+
+function onLangChanged() {
+	for (var i = 0; i < pvpMaps.length; i++) {
+		document.getElementById("txtPvp"+i).innerText = toLocalize(pvpMaps[i]['name']);
+	}
+	for (var i = 0; i < godMaps.length; i++) {
+		document.getElementById("txtGod"+i).innerText = toLocalize(godMaps[i]['name']);
+	}
+	for (var tileId in tiles) {
+		document.getElementById("txtT"+tileId).innerText = toLocalize(tiles[tileId]);
+		document.getElementById("chdr"+tileId).innerHTML = toLocalizes(tiles[tileId]);
+	}
+	for (var utid in unitTypes) {
+		document.getElementById("rhdr"+utid).innerHTML = toLocalizes(unitTypes[utid]["name"]);
+	}
+	
+	_adjustContentPos();
+}
+
+function appendCheckBoxAndLabel(node, value, id, onChange, checked, labelId, labelTxt) {
+	var checkbox = document.createElement('input');
+	checkbox.type = "checkbox";
+	checkbox.value = value;
+	checkbox.id = id;
+	checkbox.onclick = onChange;
+	checkbox.checked = checked;
+
+	var label = document.createElement('label');
+	label.htmlFor = id;
+	label.id = labelId;
+	label.className = "terrain-name";
+	label.appendChild(document.createTextNode(labelTxt));
+	
+	node.appendChild(checkbox);
+	node.appendChild(label);
+}
+
+function checkSelectValues() {
+	document.getElementById("lang").value = selLang;
+	document.getElementById("lang2").value = selLang2;
+	
+	// create checkboxes for all
+	var grp = document.getElementById("grpPvp");
+	for (var i = 0; i < pvpMaps.length; i++) {
+		var name = pvpMaps[i]['name'];
+		appendCheckBoxAndLabel(grp, i, "mapP"+i, onMapChange, true, "txtPvp"+i, toLocalize(name));
+		if (i == 2)
+			grp.appendChild(document.createElement('br'));
+	}
+
+	var grp = document.getElementById("grpGod");
+	for (var i = 0; i < godMaps.length; i++) {
+		var name = godMaps[i]['name'];
+		appendCheckBoxAndLabel(grp, i, "mapG"+i, onMapChange, false, "txtGod"+i, toLocalize(name));
+	}
+	
+	var grp = document.getElementById("grpTile");
+	var i = 0;
+	for (var tileId in tiles) {
+		if (i > 0 && (i % 5) == 0)
+			grp.appendChild(document.createElement('br'));
+		var tile = tiles[tileId];
+		appendCheckBoxAndLabel(grp, tileId, "tile"+tileId, onTileChange, filterTiles[tileId], "txtT"+tileId, toLocalize(tile));
+		i++;
+	}
+}
+
+var tableHdrBar;
+document.addEventListener('DOMContentLoaded', function() {
+	// When the user clicks on <span> (x), close the modal
+	document.getElementById("closeModal").onclick = function() {
+		document.getElementById("modalDiv").style.display = "none";
+	}
+	
+	// When the user clicks anywhere outside of the modal, close it
+	window.onclick = function(event) {
+		var modal = document.getElementById("modalDiv");
+		if (event.target == modal) {
+			modal.style.display = "none";
+		}
+	}
+	
+	tableHdrBar = document.getElementById("table-header");
+	// Note: might be able to optimize by enable onscroll event when vertial scrollbar is visible
+	window.onscroll = function(event) {
+		var x = document.documentElement.scrollLeft || document.body.scrollLeft;
+		if (tableHdrBar.style.marginLeft != -x)
+			tableHdrBar.style.marginLeft = -x + "px";
+	}
+	
+	setLangChangeCallback(onLangChanged);
+	getUserLangs();
+	checkSelectValues();
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Quick Unit Type Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+		&nbsp; <button tabindex="2" onclick="popupFilter()">Filter Terrains</button>
+	</div>
+	<div class="topbar-right">
+	Lang: <select id="lang" onchange="setLang(this.value)">
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4" selected>EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	2nd Lang: <select id="lang2" onchange="setLang2(this.value)">
+		<option value="-1"></option>
+		<option value="0">KR</option>
+		<option value="1">JP</option>
+		<option value="2">ZH</option>
+		<option value="3">ZH-TW</option>
+		<option value="4">EN</option>
+		<option value="5">VN</option>
+		<option value="6">TH</option>
+	</select>
+	</div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table id="table-header" class="table-container table-terrain">
+  <colgroup id="chead-cols">
+	<col style="width:130px"/>
+  </colgroup>
+  <thead id="chead">
+	<tr>
+	  <th style="min-width:130px">Unit Type</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container table-terrain" defaultSortAsc="0">
+  <colgroup id="cbody-cols">
+	<col id="colb0" style="width:130px"/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+	<span id="closeModal" class="close">&times;</span>
+	<h2 id="modalHeader">Modal Header</h2>
+	</div>
+    <div class="modal-body">
+    <p id="modalContent">
+	  <b>PvP Map:</b><br/>
+	  <span id="grpPvp"></span>
+	  <br/><br/>
+	  
+	  <b>4Gods Map:</b><br/>
+	  <span id="grpGod"></span>
+	  <br/><br/>
+	  
+  	  <b>Tile:</b><br/>
+  	  <span id="grpTile"></span>
+    </p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
