@@ -1,11 +1,57 @@
-var langIds = { 'KR':0, 'JP':1, 'ZH':2, 'TW':3, 'EN':4, 'VN':5, 'TH':6 };
 var langArr = ['kr', 'jp', 'zh', 'tw', 'en', 'vn', 'th'];
+var langTxt = ['KR', 'JP', 'ZH', 'ZH-TW', 'EN', 'VN', 'TH'];
 var selLang = 4; // default to english
 var selLang2 = -1;
 
 var cbLangChanged = null;
 function setLangChangeCallback(cb) {
 	cbLangChanged = cb;
+}
+
+function rtkWebCommonInit() {
+	getUserLangs();
+	createHtmlLangSelection();
+	
+	// set modal close functionality if existed
+	var modal = document.getElementById("modalDiv");
+	if (modal) {
+		// When the user clicks on <span> (x), close the modal
+		document.getElementById("closeModal").onclick = function() {
+			document.getElementById("modalDiv").style.display = "none";
+		}
+		
+		// When the user clicks anywhere outside of the modal, close it
+		window.onclick = function(event) {
+			var modal = document.getElementById("modalDiv");
+			if (event.target == modal) {
+				modal.style.display = "none";
+			}
+		}
+	}
+}
+
+function createHtmlLangSelection() {
+	var ele = document.getElementById("langSelection");
+	ele.appendChild(createTextNode("label", "Lang: "));
+	var sel = document.createElement("select");
+	sel.id = "lang";
+	sel.onchange = setLang;
+	for (var i = 0; i < langTxt.length; i++) {
+		sel.appendChild(createOptionNode(langTxt[i], i));
+	}
+	sel.value = selLang;
+	ele.appendChild(sel);
+	
+	ele.appendChild(createTextNode("label", " Lang2: "));
+	sel = document.createElement("select");
+	sel.id = "lang2";
+	sel.onchange = setLang2;
+	sel.appendChild(createOptionNode("", -1));
+	for (var i = 0; i < langTxt.length; i++) {
+		sel.appendChild(createOptionNode(langTxt[i], i));
+	}
+	sel.value = selLang2;
+	ele.appendChild(sel);
 }
 
 function getUserLangs() {
@@ -21,16 +67,14 @@ function getUserLangs() {
 	for (var i = 0; i < paramArr.length; i++) {
 		parts = paramArr[i].split('=');
 		if (parts[0] === "l") {
-			val = parts[1].toUpperCase();
-			if (val in langIds) {
-				selLang = langIds[val];
-			}
+			var idx = langArr.indexOf(parts[1].toLowerCase());
+			if (idx !== -1)
+				selLang = idx;
 		}
 		else if (parts[0] === "l2") {
-			val = parts[1].toUpperCase();
-			if (val in langIds) {
-				selLang2 = langIds[val];
-			}
+			var idx = langArr.indexOf(parts[1].toLowerCase());
+			if (idx !== -1)
+				selLang2 = idx;
 		}
 	}
 }
@@ -44,15 +88,15 @@ function setUserLang() {
 	window.location.href = url + paramTxt;
 }
 
-function setLang(val) {
-	selLang = Number(val);
+function setLang() {
+	selLang = Number(this.value);
 	setUserLang();
 	if (cbLangChanged)
 		cbLangChanged();
 }
 
-function setLang2(val) {
-	selLang2 = Number(val);
+function setLang2() {
+	selLang2 = Number(this.value);
 	setUserLang();
 	if (cbLangChanged)
 		cbLangChanged();

@@ -31,15 +31,9 @@ function generateTableRows() {
 	});
 }
 
-function checkSelectValues() {
-	document.getElementById("lang").value = selLang;
-	document.getElementById("lang2").value = selLang2;
-}
-
 document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
 	setLangChangeCallback(generateTableRows);
-	getUserLangs();
-	checkSelectValues();
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
 	generateTableRows();
 }, false);
@@ -51,27 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="filterTool" class="topbar">
 	<div class="topbar-left">
 	</div>
-	<div class="topbar-right">
-	Lang: <select id="lang" onchange="setLang(this.value)">
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4" selected>EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
-	2nd Lang: <select id="lang2" onchange="setLang2(this.value)">
-		<option value="-1" selected></option>
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4">EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
-	</div>
+	<div class="topbar-right" id="langSelection"></div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">

@@ -196,10 +196,7 @@ function createStorySelection() {
 	var eleSel = document.getElementById('selStory');
 	eleSel.innerHTML = '';
 	for (var i = 0; i < stories.length; i++) {
-		var option = document.createElement("option");
-		option.text = toLocalize(stories[i]['name']);
-		option.value = i;
-		eleSel.add(option);
+		eleSel.add(createOptionNode(toLocalize(stories[i]['name']), i));
 	}
 	eleSel.value = currStoryIdx;
 	
@@ -207,14 +204,12 @@ function createStorySelection() {
 }
 
 function checkSelectValues() {
-	document.getElementById("lang").value = selLang;
-	document.getElementById("lang2").value = selLang2;
 	createStorySelection();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
 	setLangChangeCallback(createStorySelection);
-	getUserLangs();
 	checkSelectValues();
 	
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight+5) + "px";
@@ -229,27 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		Story: <select id="selStory" tabindex="1" onchange="selectStory(this.value)"></select><br/>
 		Scenario: <select id="selStage" tabindex="2" onchange="selectStage(this.value)"></select>
 	</div>
-	<div class="topbar-right">
-	Lang: <select id="lang" onchange="setLang(this.value)">
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4" selected>EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
-	2nd Lang: <select id="lang2" onchange="setLang2(this.value)">
-		<option value="-1"></option>
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4">EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
-	</div>
+	<div class="topbar-right" id="langSelection"></div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">

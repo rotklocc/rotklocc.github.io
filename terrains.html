@@ -296,9 +296,6 @@ function appendCheckBoxAndLabel(node, value, id, onChange, checked, labelId, lab
 }
 
 function checkSelectValues() {
-	document.getElementById("lang").value = selLang;
-	document.getElementById("lang2").value = selLang2;
-	
 	// create checkboxes for all
 	var grp = document.getElementById("grpPvp");
 	for (var i = 0; i < pvpMaps.length; i++) {
@@ -327,18 +324,7 @@ function checkSelectValues() {
 
 var tableHdrBar;
 document.addEventListener('DOMContentLoaded', function() {
-	// When the user clicks on <span> (x), close the modal
-	document.getElementById("closeModal").onclick = function() {
-		document.getElementById("modalDiv").style.display = "none";
-	}
-	
-	// When the user clicks anywhere outside of the modal, close it
-	window.onclick = function(event) {
-		var modal = document.getElementById("modalDiv");
-		if (event.target == modal) {
-			modal.style.display = "none";
-		}
-	}
+	rtkWebCommonInit();
 	
 	tableHdrBar = document.getElementById("table-header");
 	// Note: might be able to optimize by enable onscroll event when vertial scrollbar is visible
@@ -349,7 +335,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	
 	setLangChangeCallback(onLangChanged);
-	getUserLangs();
 	checkSelectValues();
 	generateTableRows();
 }, false);
@@ -363,27 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		Quick Unit Type Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
 		&nbsp; <button tabindex="2" onclick="popupFilter()">Filter Terrains</button>
 	</div>
-	<div class="topbar-right">
-	Lang: <select id="lang" onchange="setLang(this.value)">
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4" selected>EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
-	2nd Lang: <select id="lang2" onchange="setLang2(this.value)">
-		<option value="-1"></option>
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4">EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
-	</div>
+	<div class="topbar-right" id="langSelection"></div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">

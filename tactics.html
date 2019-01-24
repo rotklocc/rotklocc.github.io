@@ -126,28 +126,10 @@ function doFilter2(txt) {
 	});
 }
 
-function checkSelectValues() {
-	document.getElementById("lang").value = selLang;
-	document.getElementById("lang2").value = selLang2;
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-	// When the user clicks on <span> (x), close the modal
-	document.getElementById("closeModal").onclick = function() {
-		document.getElementById("modalDiv").style.display = "none";
-	}
-	
-	// When the user clicks anywhere outside of the modal, close it
-	window.onclick = function(event) {
-		var modal = document.getElementById("modalDiv");
-		if (event.target == modal) {
-			modal.style.display = "none";
-		}
-	}
-	
+	rtkWebCommonInit();
+
 	setLangChangeCallback(generateTableRows);
-	getUserLangs();
-	checkSelectValues();
 	generateTableRows();
 }, false);
 </script>
@@ -160,25 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
 	</div>
 	<div class="topbar-right">
-	Lang: <select id="lang" onchange="setLang(this.value)">
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4" selected>EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
-	2nd Lang: <select id="lang2" onchange="setLang2(this.value)">
-		<option value="-1" selected></option>
-		<option value="0">KR</option>
-		<option value="1">JP</option>
-		<option value="2">ZH</option>
-		<option value="3">ZH-TW</option>
-		<option value="4">EN</option>
-		<option value="5">VN</option>
-		<option value="6">TH</option>
-	</select>
+	<span id="langSelection"></span>
 	<p style="text-align: right; margin: 5px 0 0 0"><button onclick="popupInfo()">Info</button></p>
 	</div>
 </div>

@@ -24,6 +24,13 @@ function createTdHtmlNode(html) {
 	return td;
 }
 
+function createOptionNode(txt, val) {
+	var option = document.createElement("option");
+	option.text = txt;
+	option.value = val;
+	return option;
+}
+
 function createTdNumberColorTagNode(spanClass, num) {
 	var txt = '<span class="'+spanClass+'">&#x25AE;</span>&nbsp;' + (num ? num : '-')
 	return createTdHtmlNode(txt);
