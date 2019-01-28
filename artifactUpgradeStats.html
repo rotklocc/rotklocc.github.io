@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Artifact Upgrade Stats</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+var filterTiers = new Array(7).fill(false);
+var filterTypes = { 1: true, 3: true, 5: true, 8: true };  // physical weapon, tactic weapon, armor, accessory
+var filterLevels = new Array(12).fill(true); // 1 - 12
+
+function popupPassive(td, idx) {
+	var item = td.parentNode.item;
+	var passiveList = passiveLists[item['passiveListId']];
+	var passiveId = passiveList['passiveId'];
+	var passive = passives[passiveId];
+	
+	document.getElementById("modalHeader").innerHTML = toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+var enhanceTypeTxt = {
+	1: "Physical",
+	3: "Tactic",
+	5: "Armor",
+	8: "Accessory"
+}
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var enhanceId in itemEnhances) {
+		var item = itemEnhances[enhanceId];
+		var tr = document.createElement("tr");
+		tr.id = enhanceId;
+		tr.item = item;
+		
+		var td = createTdTextNode(item['itemTier']);
+		td.svalue = item['itemTier'];
+		tr.appendChild(td);
+		
+		td = createTdTextNode(enhanceTypeTxt[item['enhanceType']]);
+		td.svalue = item['enhanceType'];
+		tr.appendChild(td);
+		
+		td = createTdTextNode(item['enhanceLv']);
+		td.svalue = item['enhanceLv'];
+		tr.appendChild(td);
+		
+		tr.appendChild(createTdNumberColorTagNode('statAtk', item['atk']));
+		tr.appendChild(createTdNumberColorTagNode('statWis', item['wis']));
+		tr.appendChild(createTdNumberColorTagNode('statDef', item['def']));
+		tr.appendChild(createTdNumberColorTagNode('statAgi', item['agi']));
+		tr.appendChild(createTdNumberColorTagNode('statMrl', item['mrl']));
+		
+		var passiveList = passiveLists[item['passiveListId']];
+		//var html = '<span class="info" onclick="popupPassive(this.parentNode, 0)">&#x1f6c8;</span><span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</span>';
+		var html = localizePassiveName(passiveList["passiveId"], passiveList["val"]); // no need popup for these passives
+		tr.appendChild(createTdHtmlNode(html));
+		
+		tbody.appendChild(tr);
+	}
+
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+	
+	doFilter();
+}
+
+function checkFilterTierCheckbox() {
+	for (var i = 1; i <= 7; i++) {
+		var ele = document.getElementById('tier' + i);
+		filterTiers[i - 1] = ele.checked;
+	}
+}
+
+function onTierChange(ele) {
+	var idx = Number(ele.value) - 1;
+	if (filterTiers[idx] !== ele.checked) {
+		filterTiers[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function checkFilterTypeCheckbox() {
+	for (var i = 0; i < 4; i++) {
+		var ele = document.getElementById('type' + i);
+		filterTypes[ele.value] = ele.checked;
+	}
+}
+
+function onTypeChange(ele) {
+	var idx = ele.value;
+	if (filterTypes[idx] !== ele.checked) {
+		filterTypes[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function checkFilterLvCheckbox() {
+	for (var i = 1; i <= 12; i++) {
+		var ele = document.getElementById('lv' + i);
+		filterLevels[i - 1] = ele.checked;
+	}
+}
+
+function onLvChange(ele) {
+	var idx = Number(ele.value) - 1;
+	if (filterLevels[idx] !== ele.checked) {
+		filterLevels[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function doFilter() {
+	doFilter2('');
+}
+
+function doFilter2(txt) {	
+	for (var enhanceId in itemEnhances) {
+		var item = itemEnhances[enhanceId];
+		var tr = document.getElementById(enhanceId);
+		
+		// filter artifact types
+		if (filterTypes[item['enhanceType']] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		// filter artifact stars
+		if (filterTiers[item['itemTier']-1] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		// filter artifact level +x
+		if (filterLevels[item['enhanceLv']-1] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		tr.style.display = "";
+	}
+}
+
+function sortTable(n) {
+	var table = document.getElementById("table-content");
+	sortTableRows(table, n);
+}
+
+function checkSelectValues() {
+	checkFilterTierCheckbox();
+	checkFilterTypeCheckbox();
+	checkFilterLvCheckbox();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	setLangChangeCallback(generateTableRows);
+	checkSelectValues();
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Type: <input type="checkbox" id="type0" value="1" onchange="onTypeChange(this)" checked><label for="type0">Physical</label>
+		<input type="checkbox" id="type1" value="3" onchange="onTypeChange(this)" checked><label for="type1">Tatic</label>
+		<input type="checkbox" id="type2" value="5" onchange="onTypeChange(this)" checked><label for="type2">Armor</label>
+		<input type="checkbox" id="type3" value="8" onchange="onTypeChange(this)" checked><label for="type3">Accessory</label>
+		<br/>
+		Star: <input type="checkbox" id="tier7" value="7" onchange="onTierChange(this)" checked><label for="tier7">7</label>
+		<input type="checkbox" id="tier6" value="6" onchange="onTierChange(this)" checked><label for="tier6">6</label>
+		<input type="checkbox" id="tier5" value="5" onchange="onTierChange(this)"><label for="tier5">5</label>
+		<input type="checkbox" id="tier4" value="4" onchange="onTierChange(this)"><label for="tier4">4</label>
+		<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
+		<input type="checkbox" id="tier2" value="2" onchange="onTierChange(this)"><label for="tier2">2</label>
+		<input type="checkbox" id="tier1" value="1" onchange="onTierChange(this)"><label for="tier1">1</label>
+		<br/>
+		Lv: <input type="checkbox" id="lv12" value="12" onchange="onLvChange(this)" checked><label for="lv12">12</label>
+		<input type="checkbox" id="lv11" value="11" onchange="onLvChange(this)"><label for="lv11">11</label>
+		<input type="checkbox" id="lv10" value="10" onchange="onLvChange(this)"><label for="lv10">10</label>
+		<input type="checkbox" id="lv9" value="9" onchange="onLvChange(this)"><label for="lv9">9</label>
+		<input type="checkbox" id="lv8" value="8" onchange="onLvChange(this)"><label for="lv8">8</label>
+		<input type="checkbox" id="lv7" value="7" onchange="onLvChange(this)"><label for="lv7">7</label>
+		<input type="checkbox" id="lv6" value="6" onchange="onLvChange(this)"><label for="lv6">6</label>
+		<input type="checkbox" id="lv5" value="5" onchange="onLvChange(this)"><label for="lv5">5</label>
+		<input type="checkbox" id="lv4" value="4" onchange="onLvChange(this)"><label for="lv4">4</label>
+		<input type="checkbox" id="lv3" value="3" onchange="onLvChange(this)"><label for="lv3">3</label>
+		<input type="checkbox" id="lv2" value="2" onchange="onLvChange(this)"><label for="lv2">2</label>
+		<input type="checkbox" id="lv1" value="1" onchange="onLvChange(this)"><label for="lv1">1</label>
+	</div>
+	<div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:100px"/>
+	<col style="width:40px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th class="clickable" onclick="sortTable(0)">Star</th>
+	  <th class="clickable" onclick="sortTable(1)">Type</th>
+	  <th class="clickable" onclick="sortTable(2)">Lv</th>
+	  <th>ATK</th>
+	  <th>WIS</th>
+	  <th>DEF</th>
+	  <th>AGI</th>
+	  <th>MRL</th>
+	  <th>Passive</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container" defaultSortAsc="1">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:100px"/>
+	<col style="width:40px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<span id="closeModal" class="close">&times;</span>
+			<h2 id="modalHeader">Modal Header</h2>
+		</div>
+		<div class="modal-body">
+			<p id="modalContent"></p>
+		</div>
+	</div>
+</div>
+</body>
+</html>

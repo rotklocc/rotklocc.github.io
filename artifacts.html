@@ -70,7 +70,6 @@ function generateTableRows() {
 }
 
 function checkFilterTierCheckbox() {
-	filterTiers = [];
 	for (var i = 1; i <= 8; i++) {
 		var ele = document.getElementById('tier' + (i == 8 ? 'Commander' : i));
 		filterTiers[i - 1] = ele.checked;
