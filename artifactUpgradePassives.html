@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Artifact Upgrade Stats</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+var filterTiers = new Array(7).fill(false);
+var filterTypes = { 0: false, 1: true, 3: true, 5: true, 8: true };  // +6 all, +12 physical, +12 tactic, +12 armor, +12 accessory
+
+function popupPassive(td, idx) {
+	var item = td.parentNode.item;
+	var passiveList = passiveLists[item['passiveListId']];
+	var passiveId = passiveList['passiveId'];
+	var passive = passives[passiveId];
+	
+	document.getElementById("modalHeader").innerHTML = toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+var enhanceTypeTxt = {
+	1: "Physical",
+	3: "Tactic",
+	5: "Armor",
+	8: "Accessory"
+}
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var enhancePassiveId in itemEnhancePassives) {
+		var item = itemEnhancePassives[enhancePassiveId];
+		var tr = document.createElement("tr");
+		tr.id = enhancePassiveId;
+		tr.item = item;
+		
+		var td = createTdTextNode(item['enhanceLv']);
+		td.svalue = item['enhanceLv'];
+		tr.appendChild(td);
+		
+		td = createTdTextNode(enhanceTypeTxt[item['enhanceType']]);
+		td.svalue = item['enhanceType'];
+		tr.appendChild(td);
+		
+		td = createTdTextNode(item['itemTier']);
+		td.svalue = item['itemTier'];
+		tr.appendChild(td);
+				
+		var passiveList = passiveLists[item['passiveListId']];
+		var html = localizePassiveName(passiveList["passiveId"], -1);
+		td = createTdHtmlNode(html);
+		//td.svalue = (passiveList["passiveId"] * 1000) + passiveList["val"];
+		tr.appendChild(td);
+		
+		tr.appendChild(createTdHtmlNode(localizePassiveListDesc(passiveList)));
+		
+		tbody.appendChild(tr);
+	}
+
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+	
+	doFilter();
+}
+
+function checkFilterTierCheckbox() {
+	for (var i = 1; i <= 7; i++) {
+		var ele = document.getElementById('tier' + i);
+		filterTiers[i - 1] = ele.checked;
+	}
+}
+
+function onTierChange(ele) {
+	var idx = Number(ele.value) - 1;
+	if (filterTiers[idx] !== ele.checked) {
+		filterTiers[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function checkFilterTypeCheckbox() {
+	for (var i = 0; i < 5; i++) {
+		var ele = document.getElementById('type' + i);
+		filterTypes[ele.value] = ele.checked;
+	}
+}
+
+function onTypeChange(ele) {
+	var idx = ele.value;
+	if (filterTypes[idx] !== ele.checked) {
+		filterTypes[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function doFilter() {
+	doFilter2('');
+}
+
+function doFilter2(txt) {	
+	for (var enhancePassiveId in itemEnhancePassives) {
+		var item = itemEnhancePassives[enhancePassiveId];
+		var tr = document.getElementById(enhancePassiveId);
+		
+		// filter passive types
+		var typeIdx = (item['enhanceLv'] === 12) ? item['enhanceType'] : 0;
+		if (filterTypes[typeIdx] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		// filter artifact stars
+		if (filterTiers[item['itemTier']-1] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		tr.style.display = "";
+	}
+}
+
+function sortTable(n) {
+	var table = document.getElementById("table-content");
+	sortTableRows(table, n);
+}
+
+function checkSelectValues() {
+	checkFilterTierCheckbox();
+	checkFilterTypeCheckbox();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	setLangChangeCallback(generateTableRows);
+	checkSelectValues();
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Type: <input type="checkbox" id="type0" value="0" onchange="onTypeChange(this)" checked><label for="type0">+6 All</label>
+		<input type="checkbox" id="type1" value="1" onchange="onTypeChange(this)" checked><label for="type1">+12 Physical</label>
+		<input type="checkbox" id="type2" value="3" onchange="onTypeChange(this)" checked><label for="type2">+12 Tatic</label>
+		<input type="checkbox" id="type3" value="5" onchange="onTypeChange(this)" checked><label for="type3">+12 Armor</label>
+		<input type="checkbox" id="type4" value="8" onchange="onTypeChange(this)" checked><label for="type4">+12 Accessory</label>
+		<br/>
+		Star: <input type="checkbox" id="tier7" value="7" onchange="onTierChange(this)" checked><label for="tier7">7</label>
+		<input type="checkbox" id="tier6" value="6" onchange="onTierChange(this)" checked><label for="tier6">6</label>
+		<input type="checkbox" id="tier5" value="5" onchange="onTierChange(this)" checked><label for="tier5">5</label>
+		<input type="checkbox" id="tier4" value="4" onchange="onTierChange(this)"><label for="tier4">4</label>
+		<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
+		<input type="checkbox" id="tier2" value="2" onchange="onTierChange(this)"><label for="tier2">2</label>
+		<input type="checkbox" id="tier1" value="1" onchange="onTierChange(this)"><label for="tier1">1</label>
+		<br/>
+	</div>
+	<div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:100px"/>
+	<col style="width:40px"/>
+	<col style="width:350px"/>
+	<col/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th class="clickable" onclick="sortTable(0)">Lv</th>
+	  <th class="clickable" onclick="sortTable(1)">Type</th>
+	  <th class="clickable" onclick="sortTable(2)">Star</th>
+	  <th>Passive</th>
+	  <th>Desc</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container" defaultSortAsc="1">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:100px"/>
+	<col style="width:40px"/>
+	<col style="width:350px"/>
+	<col/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<span id="closeModal" class="close">&times;</span>
+			<h2 id="modalHeader">Modal Header</h2>
+		</div>
+		<div class="modal-body">
+			<p id="modalContent"></p>
+		</div>
+	</div>
+</div>
+</body>
+</html>

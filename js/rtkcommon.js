@@ -134,7 +134,7 @@ function localizePassiveName(passiveId, val, sep="<br/>") {
 	// 2200005: Expand AoE
 	// 2200002: Expand ATK RNG
 	value_pids = [2200062, 2200005, 2200002];
-	if (passive["desc"].indexOf("{0}") !== -1 || value_pids.indexOf(passiveId) !== -1) {
+	if (val !== -1 && (passive["desc"].indexOf("{0}") !== -1 || value_pids.indexOf(passiveId) !== -1)) {
 		txt += " (" + val + ")";
 	}
 	
@@ -182,10 +182,17 @@ function getPassiveDesc(passiveList, langId) {
 	return desc
 }
 
-function getHtmlPassiveDesc(passiveId, passiveVal)
-{
+function localizePassiveListDesc(passiveList, sep="<br/>") {
+	var txt = getPassiveDesc(passiveList, selLang);
+	if (selLang2 !== -1) {
+		txt += sep + getPassiveDesc(passiveList, selLang2);
+	}
+	return txt;
+}
+
+function getHtmlPassiveDesc(passiveId, passiveVal) {
 	var passive = passives[passiveId];
-	txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
+	var txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
 	txt += "<b>Description:</b><br/>" + getPassiveDescSimple(passive, passiveVal, selLang);
 	if (selLang2 !== -1) {
 		txt += "<br/>" + getPassiveDescSimple(passive, passiveVal, selLang2);
@@ -201,12 +208,11 @@ function getHtmlPassiveDesc(passiveId, passiveVal)
 	return txt;
 }
 
-function getHtmlPassiveListDesc(passiveList)
-{
+function getHtmlPassiveListDesc(passiveList) {
 	var passiveId = passiveList['passiveId'];
 	var passive = passives[passiveId];
 	
-	txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
+	var txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
 	txt += "<b>Description:</b><br/>" + getPassiveDesc(passiveList, selLang);
 	if (selLang2 !== -1) {
 		txt += "<br/>" + getPassiveDesc(passiveList, selLang2);
@@ -257,7 +263,7 @@ function getShapeHtml(shapeId, isRange) {
 	var cenY = Math.floor(numY / 2);
 	var cenX = Math.floor(numX / 2);
 	
-	html = '<table class="atkShape">';
+	var html = '<table class="atkShape">';
 	html += '<tr>' + borderCell.repeat(numX+2) + '</tr>';
 	for (var i = 0; i < numY; i++) {
 		html += '<tr>' + borderCell;
@@ -280,8 +286,8 @@ function getShapeHtml(shapeId, isRange) {
 
 function inLocalizeText(ktxt, needle) {
 	if (ktxt in localizes) {
-		txts = localizes[ktxt];
-		searchTxt = needle.toUpperCase();
+		var txts = localizes[ktxt];
+		var searchTxt = needle.toUpperCase();
 		for (var i = 0; i < txts.length; i++) {
 			if (txts[i].toUpperCase().indexOf(searchTxt) !== -1)
 				return true;
@@ -293,7 +299,7 @@ function inLocalizeText(ktxt, needle) {
 
 function hasLocalizeText(ktxt, wordUpper) {
 	if (ktxt in localizes) {
-		txts = localizes[ktxt];
+		var txts = localizes[ktxt];
 		for (var i = 0; i < txts.length; i++) {
 			if (txts[i].toUpperCase() === wordUpper)
 				return true;
