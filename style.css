@@ -16,6 +16,7 @@ div#content {
 
 .topbar-left {
   float: left;
+  margin-left: 20px;
 }
 
 .topbar-right {
@@ -143,7 +144,7 @@ p.header {
 .modal {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
-  z-index: 1; /* Sit on top */
+  z-index: 10; /* Sit on top */
   left: 0;
   top: 0;
   width: 100%; /* Full width */
@@ -250,3 +251,53 @@ p.header {
   cursor: pointer;
 }
 
+.float-button {
+  position: fixed;
+  left: 0px;
+  top: 10px;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+}
+
+.float-button button {
+  background-color: #111;
+  color: #aabbcc;
+  border: none;
+  font-size: 24px !important;
+  padding: 0px 5px 6px 3px;
+  cursor: pointer;
+}
+
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 60px;
+}
+
+.sidenav a {
+  padding: 8px 8px 8px 12px;
+  text-decoration: none;
+  font-size: 16px;
+  color: #818181;
+  display: block;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+/* Position and style the close button (top right corner) */
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}

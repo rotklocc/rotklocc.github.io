@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="filterTool" class="topbar">
 	<div class="topbar-left">
 		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
-		<br/>
+		<div style="padding-top: 3px">
 		Type: <input type="checkbox" id="type0" value="0" onchange="onTypeChange(this)" checked><label for="type0">+6 All</label>
 		<input type="checkbox" id="type1" value="1" onchange="onTypeChange(this)" checked><label for="type1">+12 Physical</label>
 		<input type="checkbox" id="type2" value="3" onchange="onTypeChange(this)" checked><label for="type2">+12 Tatic</label>
@@ -199,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
 		<input type="checkbox" id="tier2" value="2" onchange="onTierChange(this)"><label for="tier2">2</label>
 		<input type="checkbox" id="tier1" value="1" onchange="onTierChange(this)"><label for="tier1">1</label>
+		</div>
 	</div>
 	<div class="topbar-right">
 	<span id="langSelection"></span>

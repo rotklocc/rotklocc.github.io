@@ -159,18 +159,21 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="filterTool" class="topbar">
 	<div class="topbar-left">
 		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+		
+		<div style="padding-top: 3px">
+		Gods: <input type="checkbox" id="god0" value="0" onchange="onGodChange(this)" checked><label id="g0Txt" for="god0">Dragon</label>
+		<input type="checkbox" id="god1" value="1" onchange="onGodChange(this)" checked><label id="g1Txt" for="god1">Bird</label>
+		&nbsp; &nbsp; &nbsp;
+		Star: <input type="checkbox" id="tier4" value="4" onchange="onTierChange(this)" checked><label for="tier4">4</label>
+		<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
+		<input type="checkbox" id="tier2" value="2" onchange="onTierChange(this)"><label for="tier2">2</label>
+		<input type="checkbox" id="tier1" value="1" onchange="onTierChange(this)"><label for="tier1">1</label>
+		</div>
 	</div>
 	<div class="topbar-right" id="langSelection"></div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">
-	Gods: <input type="checkbox" id="god0" value="0" onchange="onGodChange(this)" checked><label id="g0Txt" for="god0">Dragon</label>
-	<input type="checkbox" id="god1" value="1" onchange="onGodChange(this)" checked><label id="g1Txt" for="god1">Bird</label>
-	&nbsp; &nbsp; &nbsp;
-	Star: <input type="checkbox" id="tier4" value="4" onchange="onTierChange(this)" checked><label for="tier4">4</label>
-	<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
-	<input type="checkbox" id="tier2" value="2" onchange="onTierChange(this)"><label for="tier2">2</label>
-	<input type="checkbox" id="tier1" value="1" onchange="onTierChange(this)"><label for="tier1">1</label>
 </div>
 
 <div class="table-header" style="padding-top: 5px">

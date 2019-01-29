@@ -12,6 +12,8 @@ function rtkWebCommonInit() {
 	getUserLangs();
 	createHtmlLangSelection();
 	
+	createSideBarMenu();
+	
 	// set modal close functionality if existed
 	var modal = document.getElementById("modalDiv");
 	if (modal) {
@@ -307,4 +309,46 @@ function hasLocalizeText(ktxt, wordUpper) {
 	}
 	
 	return false;
+}
+
+function openNav() {
+  document.getElementById("mySidebar").style.width = "240px";
+}
+
+function closeNav() {
+  document.getElementById("mySidebar").style.width = "0";
+}
+
+function createSideBarMenu() {
+	var body = document.getElementsByTagName("BODY")[0];
+	
+	var ele = document.createElement("div");
+	ele.id = 'sideMenuBtn';
+	ele.className = 'float-button';
+	ele.innerHTML = '<button onclick="openNav()">☰</button>';
+	body.appendChild(ele);
+	
+	var ele = document.createElement("div");
+	ele.id = 'mySidebar';
+	ele.className = 'sidenav';
+	
+	var html = '<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>';
+	html += '<a href="commanders.html">Commanders</a>';
+	html += '<a href="tactics.html">Tactics</a>';
+	html += '<a href="terrains.html">Terrains</a>';
+	html += '<br/>';
+	html += '<a href="artifacts.html">Artifacts</a>';
+	html += '<a href="artifactUpgradeStats.html">Artifacts Upgrade</a>';
+	html += '<a href="artifactUpgradePassives.html">Artifact Passives</a>';
+	html += '<br/>';
+	html += '<a href="relics.html">Relics</a>';
+	html += '<a href="relicPassives.html">Relic Passives</a>';
+	html += '<a href="relicSets.html">Relic Sets</a>';
+	html += '<br/>';
+	html += '<a href="stories.html">Stories</a>';
+	html += '<br/>';
+	html += '<a href="guildMissions.html">Guild Missions</a>';
+	
+	ele.innerHTML = html;
+	body.appendChild(ele);
 }
