@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Relic Passives</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+
+function findRelic(tier, type, part) {
+	for (var relicId in relics) {
+		var relic = relics[relicId];
+		if (relic['type'] === type && relic['tier'] === tier && relic['mainStat'] === part)
+			return relic;
+	}
+	return null;
+}
+
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var relicSetId in relicSets) {
+		var relicSet = relicSets[relicSetId];
+		var tr = document.createElement("tr");
+		tr.id = relicSetId;
+		tr.relicSet = relicSet;
+		
+		tr.appendChild(createTdTextNode(relicSet['minTier']));
+		
+		for (var i = 0; i < 4; i++) {
+			var relic = findRelic(relicSet['minTier'], relicSet['type'][i], relicSet['mainStat'][i]);
+			var td = createTdHtmlNode(toLocalizes(relic['name']));
+			td.relic = relic;
+			tr.appendChild(td);
+		}
+		
+		var passiveList = passiveLists[relicSet['passiveListId']];
+		var td = createTdHtmlNode(localizePassiveName(passiveList["passiveId"], -1));
+		tr.appendChild(td);
+		
+		td = createTdHtmlNode(localizePassiveListDesc(passiveList));
+		tr.appendChild(td);
+		
+		tbody.appendChild(tr);
+	}
+
+	doFilter();
+}
+
+function replaceDisplayLanguage() {
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 0; i < nrow; i++) {
+		var tr = rows[i];
+		var cells = tr.cells;
+		var relicSet = tr.relicSet;
+		
+		for (var j = 1; j < 5; j++) {
+			var relic = cells[j].relic;
+			cells[j].innerHTML = toLocalizes(relic['name']);
+		}
+		
+		var passiveList = passiveLists[relicSet['passiveListId']];
+		
+		cells[5].innerHTML = localizePassiveName(passiveList["passiveId"], -1);
+		cells[6].innerHTML = localizePassiveListDesc(passiveList);
+	}
+}
+
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+}
+
+function doFilter2(txt) {
+	txt = txt.trim();
+	
+	for (var relicSetId in relicSets) {
+		var tr = document.getElementById(relicSetId);
+		var relicSet = tr.relicSet;
+
+		if (txt === "") {
+			tr.style.display = "";
+			continue;
+		}
+		
+		// search from passive name
+		var passiveList = passiveLists[relicSet['passiveListId']];
+		var passive = passives[passiveList['passiveId']];
+		if (inLocalizeText(passive["name"], txt)) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		// search from relic parts
+		var cells = tr.cells;
+		var matched = false;
+		for (var i = 1; i < 5; i++) {
+			var relic = cells[i].relic;
+			if (inLocalizeText(relic["name"], txt)) {
+				tr.style.display = "";
+				matched = true;
+				break;
+			}
+		}
+		if (matched)
+			continue;
+		
+		tr.style.display = "none";
+	}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	setLangChangeCallback(replaceDisplayLanguage);
+	
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";	
+	
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+	</div>
+	<div class="topbar-right">
+	<span id="langSelection"></span>
+	</div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:80px"/>
+	<col style="width:80px"/>
+	<col style="width:80px"/>
+	<col style="width:80px"/>
+	<col style="width:280px"/>
+	<col/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th>Star</th>
+	  <th>Relic1</th>
+	  <th>Relic2</th>
+	  <th>Relic3</th>
+	  <th>Relic4</th>
+	  <th>Name</th>
+	  <th>Description</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:80px"/>
+	<col style="width:80px"/>
+	<col style="width:80px"/>
+	<col style="width:80px"/>
+	<col style="width:280px"/>
+	<col/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+</body>
+</html>
