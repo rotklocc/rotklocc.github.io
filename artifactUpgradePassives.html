@@ -13,6 +13,26 @@
 var filterTiers = new Array(7).fill(false);
 var filterTypes = { 0: false, 1: true, 3: true, 5: true, 8: true };  // +6 all, +12 physical, +12 tactic, +12 armor, +12 accessory
 
+function popupInfo() {
+	document.getElementById("modalHeader").innerHTML = "Info";
+	
+	txt = "<p><b>Star:</b> Minimum artifact star to make the passive obtainable.</p>";
+	
+	txt += "<p><b>Number of passives</b> for each upgrade type:<br/>";
+	txt += '- +6 All: 57<br/>';
+	txt += '- +12 Physical: 232<br/>';
+	txt += '- +12 Tactic: 279<br/>';
+	txt += '- +12 Armor: 251<br/>';
+	txt += '- +12 Accessory: 390<br/>';
+	txt += "</p>";
+	// '옥선' jade fan,  '보도' legendary sword
+	txt += '<p><b>Note:</b> "' + toLocalize('옥선') + '" and "' + toLocalize('보도') + '" are both physical and tactic weapon.<br/>';
+	txt += 'So the number of +12 passives for these weapon are 232+279=511</p>';
+	
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
 function popupPassive(td, idx) {
 	var item = td.parentNode.item;
 	var passiveList = passiveLists[item['passiveListId']];
@@ -99,10 +119,13 @@ function onTypeChange(ele) {
 }
 
 function doFilter() {
-	doFilter2('');
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
 }
 
-function doFilter2(txt) {	
+function doFilter2(txt) {
+	txt = txt.trim();
+	
 	for (var enhancePassiveId in itemEnhancePassives) {
 		var item = itemEnhancePassives[enhancePassiveId];
 		var tr = document.getElementById(enhancePassiveId);
@@ -120,7 +143,20 @@ function doFilter2(txt) {
 			continue;
 		}
 		
-		tr.style.display = "";
+		if (txt === "") {
+			tr.style.display = "";
+			continue;
+		}
+		
+		// search from passive name
+		var passiveList = passiveLists[item['passiveListId']];
+		var passive = passives[passiveList['passiveId']];
+		if (inLocalizeText(passive["name"], txt)) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		tr.style.display = "none";
 	}
 }
 
@@ -148,6 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="searchBar">
 <div id="filterTool" class="topbar">
 	<div class="topbar-left">
+		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+		<br/>
 		Type: <input type="checkbox" id="type0" value="0" onchange="onTypeChange(this)" checked><label for="type0">+6 All</label>
 		<input type="checkbox" id="type1" value="1" onchange="onTypeChange(this)" checked><label for="type1">+12 Physical</label>
 		<input type="checkbox" id="type2" value="3" onchange="onTypeChange(this)" checked><label for="type2">+12 Tatic</label>
@@ -161,9 +199,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
 		<input type="checkbox" id="tier2" value="2" onchange="onTierChange(this)"><label for="tier2">2</label>
 		<input type="checkbox" id="tier1" value="1" onchange="onTierChange(this)"><label for="tier1">1</label>
-		<br/>
 	</div>
-	<div class="topbar-right" id="langSelection"></div>
+	<div class="topbar-right">
+	<span id="langSelection"></span>
+	<p style="text-align: right; margin: 5px 0 0 0"><button onclick="popupInfo()">Info</button></p>
+	</div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">

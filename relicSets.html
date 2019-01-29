@@ -135,9 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	<div class="topbar-left">
 		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
 	</div>
-	<div class="topbar-right">
-	<span id="langSelection"></span>
-	</div>
+	<div class="topbar-right" id="langSelection"></div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">
@@ -187,5 +185,17 @@ document.addEventListener('DOMContentLoaded', function() {
 </table>
 </div>
 
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<span id="closeModal" class="close">&times;</span>
+			<h2 id="modalHeader">Modal Header</h2>
+		</div>
+		<div class="modal-body">
+			<p id="modalContent"></p>
+		</div>
+	</div>
+</div>
 </body>
 </html>

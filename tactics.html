@@ -33,7 +33,7 @@ function popupInfo() {
 	txt += "</p>";
 	
 	txt += '<p><b>Double?:</b> Is it possible to cast double tactics. If this field value is "NO", critical attack is always disabled.</p>';
-	txt += '<p><b>Interrupt?:</b> Is it interrupt tactics. The interrupt tactics can be casted twice if caster has "Interrupt Tactics Mastery %" passive.</p>';
+	txt += '<p><b>Interrupt?:</b> Is it interrupt tactics. The interrupt tactics can be casted twice if caster has "' + toLocalize('방해 책략 전문화%') + '" passive.</p>';
 	
 	document.getElementById("modalContent").innerHTML = txt;
 	document.getElementById("modalDiv").style.display = "block";
