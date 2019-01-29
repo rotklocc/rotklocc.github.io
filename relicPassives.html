@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Relic Passives</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+function popupInfo() {
+	document.getElementById("modalHeader").innerHTML = "Info";
+	
+	txt = "<p><b>Lv?:</b> The maximum value for the passive on relic level.</p>";
+	
+	txt += "<p><b>Note:</b> the effect value is scaled from commander max stat value (200).<br/>"
+	txt += 'For example, if a commander has 110 STR and lv5 "Relic: Melee Attack +", the effect value is 110*20/200 = 11</p>';
+	
+	txt += "<p><b>Soul amount needed for upgrade:</b><br/>";
+	txt += '1* relic: 30<br/>';
+	txt += '2* relic: 40/100<br/>';
+	txt += '3* relic: 100/150/250<br/>';
+	txt += '4* relic: 150/250/800/2000<br/>';
+	txt += "</p>";
+	
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var relicPid in relicPassives) {
+		var relicPassive = relicPassives[relicPid];
+		var tr = document.createElement("tr");
+		tr.id = relicPid;
+		tr.relicPassive = relicPassive;
+		
+		var passive = passives[relicPassive['passiveId']];
+		
+		var td = createTdHtmlNode(toLocalizes(passive['name']));
+		tr.appendChild(td);
+		
+		for (var i = 0; i < 5; i++) {
+			tr.appendChild(createTdTextNode(relicPassive['vals'][i]/100));
+		}
+		
+		td = createTdHtmlNode(toLocalizes(passive['desc']).format('N'));
+		tr.appendChild(td);
+		
+		tbody.appendChild(tr);
+	}
+
+	doFilter();
+}
+
+function replaceDisplayLanguage() {
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 0; i < nrow; i++) {
+		var tr = rows[i];
+		var cells = tr.cells;
+		var relicPassive = tr.relicPassive;
+		
+		var passive = passives[relicPassive['passiveId']];
+		
+		cells[0].innerHTML = toLocalizes(passive['name']);
+		cells[6].innerHTML = toLocalizes(passive['desc']).format('N');
+	}
+}
+
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+}
+
+function doFilter2(txt) {
+	txt = txt.trim();
+	
+	for (var relicPid in relicPassives) {
+		var tr = document.getElementById(relicPid);
+		var relicPassive = tr.relicPassive;
+		var passive = passives[relicPassive['passiveId']];
+
+		if (txt === "") {
+			tr.style.display = "";
+			continue;
+		}
+		
+		// search from passive name
+		if (inLocalizeText(passive["name"], txt)) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		tr.style.display = "none";
+	}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	setLangChangeCallback(replaceDisplayLanguage);
+	
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";	
+	
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+	</div>
+	<div class="topbar-right">
+	<span id="langSelection"></span>
+	<p style="text-align: right; margin: 5px 0 0 0"><button onclick="popupInfo()">Info</button></p>
+	</div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col style="width:320px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th>Name</th>
+	  <th>Lv1</th>
+	  <th>Lv2</th>
+	  <th>Lv3</th>
+	  <th>Lv4</th>
+	  <th>Lv5</th>
+	  <th>Description</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col style="width:320px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<span id="closeModal" class="close">&times;</span>
+			<h2 id="modalHeader">Modal Header</h2>
+		</div>
+		<div class="modal-body">
+			<p id="modalContent"></p>
+		</div>
+	</div>
+</div>
+</body>
+</html>

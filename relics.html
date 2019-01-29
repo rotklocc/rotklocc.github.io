@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Relics</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+var filterTiers = new Array(4).fill(false);
+var filterGods = new Array(2).fill(true);
+
+var relicTypes = [ "청룡", "주작" ];
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var relicId in relics) {
+		var relic = relics[relicId];
+		var tr = document.createElement("tr");
+		tr.id = relicId;
+		tr.relic = relic;
+		
+		var td = createTdHtmlNode(toLocalizes(relic["name"]));
+		tr.appendChild(td);
+		
+		td = createTdHtmlNode(toLocalizes(relicTypes[relic['type']]));
+		tr.appendChild(td);
+		
+		tr.appendChild(createTdTextNode(relic['tier']));
+		
+		tr.appendChild(createTdNumberColorTagNode('statAtk', relic['atk']));
+		tr.appendChild(createTdNumberColorTagNode('statWis', relic['wis']));
+		tr.appendChild(createTdNumberColorTagNode('statDef', relic['def']));
+		tr.appendChild(createTdNumberColorTagNode('statAgi', relic['agi']));
+		tr.appendChild(createTdNumberColorTagNode('statMrl', relic['mrl']));
+		
+		tr.appendChild(createTdNumberColorTagNode('statHp', relic['hp']));
+		tr.appendChild(createTdNumberColorTagNode('statMp', relic['mp']));
+		
+		tbody.appendChild(tr);
+	}
+
+	doFilter();
+}
+
+function _updateCheckboxLabelLanguage() {
+	document.getElementById("g0Txt").innerText = toLocalize(relicTypes[0]);
+	document.getElementById("g1Txt").innerText = toLocalize(relicTypes[1]);
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";	
+}
+
+function replaceDisplayLanguage() {
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 0; i < nrow; i++) {
+		var tr = rows[i];
+		var cells = tr.cells;
+		var relic = tr.relic;
+		
+		cells[0].innerHTML = toLocalizes(relic["name"]);
+		cells[1].innerHTML = toLocalizes(relicTypes[relic["type"]]);
+	}
+	
+	_updateCheckboxLabelLanguage();
+}
+
+function checkFilterTierCheckbox() {
+	for (var i = 1; i <= 4; i++) {
+		var ele = document.getElementById('tier' + i);
+		filterTiers[i - 1] = ele.checked;
+	}
+}
+
+function onTierChange(ele) {
+	var idx = Number(ele.value) - 1;
+	if (filterTiers[idx] !== ele.checked) {
+		filterTiers[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function checkFilterGodCheckbox() {
+	for (var i = 0; i < 2; i++) {
+		var ele = document.getElementById('god' + i);
+		filterGods[i] = ele.checked;
+	}
+}
+
+function onGodChange(ele) {
+	var idx = Number(ele.value);
+	if (filterGods[idx] !== ele.checked) {
+		filterGods[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+}
+
+function doFilter2(txt) {
+	txt = txt.trim();
+	
+	for (var relicId in relics) {
+		var tr = document.getElementById(relicId);
+		var relic = tr.relic;
+		
+		if (filterTiers[relic['tier']-1] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		if (filterGods[relic['type']] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		if (txt === "") {
+			tr.style.display = "";
+			continue;
+		}
+		
+		// search from name
+		if (inLocalizeText(relic["name"], txt)) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		tr.style.display = "none";
+	}
+}
+
+function checkSelectValues() {
+	checkFilterTierCheckbox();
+	checkFilterGodCheckbox();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	setLangChangeCallback(replaceDisplayLanguage);
+	checkSelectValues();
+	_updateCheckboxLabelLanguage();
+	
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+	</div>
+	<div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+	Gods: <input type="checkbox" id="god0" value="0" onchange="onGodChange(this)" checked><label id="g0Txt" for="god0">Dragon</label>
+	<input type="checkbox" id="god1" value="1" onchange="onGodChange(this)" checked><label id="g1Txt" for="god1">Bird</label>
+	&nbsp; &nbsp; &nbsp;
+	Star: <input type="checkbox" id="tier4" value="4" onchange="onTierChange(this)" checked><label for="tier4">4</label>
+	<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
+	<input type="checkbox" id="tier2" value="2" onchange="onTierChange(this)"><label for="tier2">2</label>
+	<input type="checkbox" id="tier1" value="1" onchange="onTierChange(this)"><label for="tier1">1</label>
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container" style="width: auto">
+  <colgroup>
+	<col style="width:200px"/>
+	<col style="width:140px"/>
+	<col style="width:40px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th>Name</th>
+	  <th>Type</th>
+	  <th>Star</th>
+	  <th>ATK</th>
+	  <th>WIS</th>
+	  <th>DEF</th>
+	  <th>AGI</th>
+	  <th>MRL</th>
+	  <th>HP</th>
+	  <th>MP</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container" style="width: auto">
+  <colgroup>
+	<col style="width:200px"/>
+	<col style="width:140px"/>
+	<col style="width:40px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+	<col style="width:55px"/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+</body>
+</html>

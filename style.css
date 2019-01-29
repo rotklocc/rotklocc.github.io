@@ -85,6 +85,8 @@ label.terrain-name {
 .statDef { color: #0040ff; }
 .statAgi { color: #ffed00; }
 .statMrl { color: #a03eff; }
+.statHp  { color: #00ff2f; }
+.statMp  { color: #40f0f0; }
 .statSpd { color: Cyan; }
 
 table.atkShape {
