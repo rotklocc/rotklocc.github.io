@@ -61,6 +61,14 @@ function getUserLangs() {
 	var parts = url.split('#');
 	if (parts.length === 1) {
 		// no argument. do nothing
+		
+		// get cookie for user lang
+		var cookie = getCookie("l");
+		if (cookie !== "")
+			selLang = parseInt(cookie);
+		cookie = getCookie("l2");
+		if (cookie !== "")
+			selLang2 = parseInt(cookie);
 		return;
 	}
 	
@@ -88,6 +96,9 @@ function setUserLang() {
 		paramTxt += "&l2=" + langArr[selLang2];
 	}
 	window.location.href = url + paramTxt;
+	// set cookie to save user lang
+	setCookie("l", selLang);
+	setCookie("l2", selLang2);
 }
 
 function setLang() {
