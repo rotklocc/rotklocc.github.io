@@ -116,6 +116,8 @@ function setLang2() {
 }
 
 function toLocalizeLang(tkey, langIdx) {
+	if (tkey === '')
+		return tkey
 	txt = localizes[tkey][langIdx];
 	if (txt.length === 0)
 		txt = localizes[tkey][0]; // fall back to KR if no localization for specific language
@@ -358,6 +360,7 @@ function createSideBarMenu() {
 	html += '<br/>';
 	html += '<a href="stories.html">Stories</a>';
 	html += '<br/>';
+	html += '<a href="feats.html">Feats</a>';
 	html += '<a href="guildMissions.html">Guild Missions</a>';
 	
 	ele.innerHTML = html;

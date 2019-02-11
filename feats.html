@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Feats</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript">
+var filterTypes = new Array(5).fill(true);  // last type is hidden desc feat (not really type)
+var artifactsMap = {};
+
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var i = 0; i < feats.length; i++) {
+		var feat = feats[i];
+		var tr = document.createElement("tr");
+		tr.id = feat['id'];
+		tr.feat = feat;
+		
+		var td = createTdHtmlNode(toLocalizes(feat['name'], ' &nbsp; ') + '<br/>- ' + toLocalizes(feat['desc'], '<br/>- ').format(feat['count']));
+		tr.appendChild(td);
+		
+		tr.appendChild(createTdTextNode(feat['count']));
+		
+		var reward = rewards[feat['reward']];
+		var rewardIdx = 0;
+		
+		if (reward['setGood'] != 0) {
+			var setGood = setGoods[reward['setGood']];
+			for (var j = 0; j < setGood['goods'].length; j++) {
+				var goodId = setGood['goods'][j];
+				td = createTdHtmlNode('<span>'+toLocalizes(goodTypes[goodId])+'</span> x'+setGood['cnts'][j]);
+				td.itemId = goodId;
+				tr.appendChild(td);
+				rewardIdx++;
+			}
+		}
+		
+		if (reward['setItem'] != 0) {
+			var setItem = setItems[reward['setItem']];
+			for (var j = 0; j < setItem['items'].length; j++) {
+				var itemId = setItem['items'][j];
+				var itemName = toLocalizes(itemNames[itemId]);
+				if (itemId in artifactsMap)
+					itemName += " (" + artifactsMap[itemId]['tier'] + "★)";
+				td = createTdHtmlNode('<span>'+itemName+'</span> x'+setItem['cnts'][j]);
+				td.itemId = itemId;
+				tr.appendChild(td);
+				rewardIdx++;
+			}
+		}
+		
+		for (; rewardIdx < 3; rewardIdx++) {
+			tr.appendChild(createTdTextNode(''));
+		}
+		
+		tbody.appendChild(tr);
+	}
+
+	doFilter();
+}
+
+function setLabelDisplayLanguage() {
+	for (var i = 0; i < featTypes.length; i++) {
+		document.getElementById("lblType"+i).innerText = toLocalize(featTypes[i]);
+	}
+}
+
+function replaceDisplayLanguage() {
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 0; i < nrow; i++) {
+		var tr = rows[i];
+		var cells = tr.cells;
+		var feat = tr.feat;
+		
+		cells[0].innerHTML = toLocalizes(feat['name'], ' &nbsp; ') + '<br/>- ' + toLocalizes(feat['desc'], '<br/>- ').format(feat['count']);
+		for (var j = 2; j < 5; j++) {
+			var cell = cells[j];
+			if (!("itemId" in cell))
+				continue
+			var itemId = cell.itemId;
+			var itemName;
+			if (itemId < 100) {
+				itemName = toLocalizes(goodTypes[itemId]);
+			}
+			else {
+				itemName = toLocalizes(itemNames[itemId]);
+				if (itemId in artifactsMap)
+					itemName += " (" + artifactsMap[itemId]['tier'] + "★)";
+			}
+			cell.getElementsByTagName('span')[0].innerHTML = itemName;
+		}
+	}
+	
+	setLabelDisplayLanguage();
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+}
+
+function checkFilterTypeCheckbox() {
+	for (var i = 0; i < 5; i++) {
+		var ele = document.getElementById('type' + i);
+		filterTypes[i] = ele.checked;
+	}
+}
+
+function onTypeChange(ele) {
+	var idx = Number(ele.value);
+	if (filterTypes[idx] !== ele.checked) {
+		filterTypes[idx] = ele.checked;
+		doFilter();
+	}
+}
+
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+}
+
+function doFilter2(txt) {
+	txt = txt.trim();
+	
+	var showHidden = filterTypes[4];
+	for (var i = 0; i < feats.length; i++) {
+		var feat = feats[i];
+		var tr = document.getElementById(feat['id']);
+		
+		if (showHidden && feat['isHidden']) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		if (filterTypes[feat['category']] === false) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		if (txt === "") {
+			tr.style.display = "";
+			continue;
+		}
+		
+		// search from feat name
+		if (inLocalizeText(feat["name"], txt)) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		tr.style.display = "none";
+	}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	setLangChangeCallback(replaceDisplayLanguage);
+	setLabelDisplayLanguage();
+	checkFilterTypeCheckbox();
+	
+	for (var i = 0; i < artifacts.length; i++) {
+		artifactsMap[artifacts[i]['id']] = artifacts[i];
+	}
+	generateTableRows();
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+	</div>
+	<div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" class="topbar-bottom">
+	Type: <input type="checkbox" id="type0" value="0" onchange="onTypeChange(this)" checked><label for="type0" id="lblType0">Common</label>
+		<input type="checkbox" id="type1" value="1" onchange="onTypeChange(this)" checked><label for="type1" id="lblType1">Strategy</label>
+		<input type="checkbox" id="type2" value="2" onchange="onTypeChange(this)" checked><label for="type2" id="lblType2">Story</label>
+		<input type="checkbox" id="type3" value="3" onchange="onTypeChange(this)" checked><label for="type3" id="lblType3">Govern</label>
+		<input type="checkbox" id="type4" value="4" onchange="onTypeChange(this)" checked><label for="type4">Hidden Conditions</label>
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col/>
+	<col style="width:80px"/>
+	<col style="width:220px"/>
+	<col style="width:220px"/>
+	<col style="width:220px"/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th>Feat</th>
+	  <th>Count</th>
+	  <th>Reward 1</th>
+	  <th>Reward 2</th>
+	  <th>Reward 3</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col/>
+	<col style="width:80px"/>
+	<col style="width:220px"/>
+	<col style="width:220px"/>
+	<col style="width:220px"/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+</body>
+</html>
