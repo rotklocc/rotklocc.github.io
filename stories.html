@@ -14,6 +14,38 @@
 var currStoryIdx = 0;
 var currStageIdx = 0;
 var missionLangSep = ' &nbsp; ';
+var artifactsMap = {};
+
+function _generateRewardTable(missionRewards) {
+	var html = '<table class="stats">';
+	html += '<tr><th>Seal</th><th>Reward</th><th>Amount</th></tr>';
+	for (var i = 0; i < missionRewards.length; i++) {
+		var info = missionRewards[i];
+		var itemName = toLocalize(itemNames[info['itemId']]);
+		if (info['itemId'] in artifactsMap)
+			itemName += " (" + artifactsMap[info['itemId']]['tier'] + "★)";
+		html += '<tr><td>'+info['seal']+'</td><td>'+itemName+'</td><td>'+info['itemCnt']+'</td></tr>';
+	}
+	html += '</table>';
+	return html;
+}
+
+function popupReward() {
+	var story = stories[currStoryIdx];
+
+	var txt = '<div style="float: left; margin-right: 50px">';
+	txt += "<b>" + toLocalize("난이도") + ":</b> " + toLocalize("일반"); // normal mode
+	txt += _generateRewardTable(story['missionRewards']);
+	txt += '</div>';
+	
+	txt += '<div">';
+	txt += "<b>" + toLocalize("난이도") + ":</b> " + toLocalize("극한"); // extreme mode
+	txt += _generateRewardTable(story['missionRewardsHard']);
+	txt += '</div>';
+	
+	document.getElementById("modalContent").innerHTML = txt;
+	document.getElementById("modalDiv").style.display = "block";
+}
 
 function unitIds2Names(unitIds) {
 	var names = [];
@@ -139,6 +171,58 @@ function missionsHtml(missionIds) {
 	return txts.join('<br/>');
 }
 
+function toLocalizeStoryVictoryTexts(txts) {
+	var lines = [];
+	if (txts !== '') {
+		var txt = txts[selLang];
+		if (txt === '')
+			txt = txts[0];
+		lines = txt.split("\n");
+		
+		if (selLang2 !== -1) {
+			txt = txts[selLang2];
+			if (txt === '')
+				txt = txts[0];
+			lines2 = txt.split("\n");
+			for (var i = 0; i < lines.length; i++)
+				lines[i] += " &nbsp; " + lines2[i].substr(2); // remove number order
+		}
+	}
+	return lines;
+}
+
+function winTextHtml(scenario) {
+	var victoryInfo = scenario['victoryInfo'];
+	var lines = toLocalizeStoryVictoryTexts(victoryInfo['winTxt']);
+	if (!victoryInfo['noDefaultWin']) {
+		var leaderInfo = scenario['leaderInfo'];
+		if (leaderInfo['enemyValor'] > 0 && leaderInfo['enemyLeaderId'] > 0) {
+			var unitName = storyUnits[leaderInfo['enemyLeaderId']];
+			lines.push((lines.length+1)+"."+ toLocalizesFormat("{0} {1}의 퇴각", '', unitName));
+		}
+		else {
+			lines.push((lines.length+1)+"."+ toLocalizesFormat("{0} 적을 전멸시킨다", ''));
+		}
+	}
+	
+	return lines.join('<br/>');
+}
+
+function loseTextHtml(scenario) {
+	var victoryInfo = scenario['victoryInfo'];
+	var lines = toLocalizeStoryVictoryTexts(victoryInfo['loseTxt']);
+	if (!victoryInfo['noDefaultLose']) {
+		var leaderInfo = scenario['leaderInfo'];
+		if (leaderInfo['ownValor'] > 0 && leaderInfo['ownLeaderId'] > 0) {
+			var unitName = storyUnits[leaderInfo['ownLeaderId']];
+			lines.push((lines.length+1)+"."+ toLocalizesFormat("{0} {1}의 사망", '', unitName));
+		}
+		lines.push((lines.length+1)+"."+ toLocalizesFormat("{0} {1}턴을 넘긴다", '', scenario['turn']));
+	}
+	
+	return lines.join('<br/>');
+}
+
 function displayStageDetail() {
 	var story = stories[currStoryIdx];
 	var scenario = story['scenarios'][currStageIdx];
@@ -161,6 +245,18 @@ function displayStageDetail() {
 	
 	document.getElementById('recommendLvHard').innerText = scenario['recommendLvHard'];
 	document.getElementById('missionsHard').innerHTML = missionsHtml(scenario['missionIdsHard']);
+	
+	if (story['hasClassic']) {
+		document.getElementById('classicInfo').style.display = "";
+		document.getElementById('lvClassic').innerText = scenario['lvClassic'];
+		document.getElementById('missionsClassic').innerHTML = missionsHtml(scenario['missionIdsClassic']);
+	}
+	else {
+		document.getElementById('classicInfo').style.display = "none";
+	}
+	
+	document.getElementById('winText').innerHTML = winTextHtml(scenario);
+	document.getElementById('loseText').innerHTML = loseTextHtml(scenario);
 }
 
 function selectStory(idx) {
@@ -203,14 +299,22 @@ function createStorySelection() {
 	createStageSelection();
 }
 
-function checkSelectValues() {
+function replaceDisplayLanguage() {
+	document.getElementById("modeNormal").innerHTML = "<b>" + toLocalize("난이도") + ":</b> " + toLocalize("일반");
+	document.getElementById("modeExtreme").innerHTML = "<b>" + toLocalize("난이도") + ":</b> " + toLocalize("극한");
+	document.getElementById("modeEternal").innerHTML = "<b>" + toLocalize("난이도") + ":</b> " + toLocalize("무극");
+	document.getElementById("winCondText").innerText = toLocalize("승리조건");
+	document.getElementById("loseCondText").innerText = toLocalize("패배조건");
 	createStorySelection();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
 	rtkWebCommonInit();
-	setLangChangeCallback(createStorySelection);
-	checkSelectValues();
+	setLangChangeCallback(replaceDisplayLanguage);
+	replaceDisplayLanguage();
+	
+	for (var i = 0; i < artifacts.length; i++)
+		artifactsMap[artifacts[i]['id']] = artifacts[i];
 	
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight+5) + "px";
 }, false);
@@ -221,7 +325,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="searchBar">
 <div id="filterTool" class="topbar">
 	<div class="topbar-left">
-		Story: <select id="selStory" tabindex="1" onchange="selectStory(this.value)"></select><br/>
+		Story: <select id="selStory" tabindex="1" onchange="selectStory(this.value)"></select> 
+		&nbsp; <button onclick="popupReward()">Rewards</button><br/>
 		Scenario: <select id="selStage" tabindex="2" onchange="selectStage(this.value)"></select>
 	</div>
 	<div class="topbar-right" id="langSelection"></div>
@@ -241,23 +346,56 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><b>Required units:</b> <span id='needUnits'></span></p>
 <p><b>Optional units:</b> <span id='optionalUnits'></span></p>
 <p><b>Not allowed units:</b> <span id='banUnits'></span></p>
-</p>
 
-<p style="padding-top: 5px">
-<p><b>Normal Mode:</b></p>
-<b>Recommended Lv:</b> <span id='recommendLv'></span><br/>
-<b>Missions:</b><br/>
-<span id='missions'></span>
-</p>
+<div style="padding-top: 5px">
+  <span id="modeNormal">Difficulty: Normal</span>
+  <p style="margin: 2px 0 0 10px">
+  <b>Recommended Lv:</b> <span id='recommendLv'></span><br/>
+  <b>Missions:</b><br/>
+  <span id='missions'></span>
+  </p>
+</div>
 
-<p style="padding-top: 5px">
-<p><b>Extreme Mode:</b></p>
-<b>Recommended Lv:</b> <span id='recommendLvHard'></span><br/>
-<b>Missions:</b><br/>
-<span id='missionsHard'></span>
-</p>
+<div style="padding-top: 15px">
+  <span id="modeExtreme">Difficulty: Extreme</span>
+  <p style="margin: 2px 0 0 10px">
+  <b>Recommended Lv:</b> <span id='recommendLvHard'></span><br/>
+  <b>Missions:</b><br/>
+  <span id='missionsHard'></span>
+  </p>
+</div>
+
+<div id="classicInfo">
+<div style="padding-top: 15px">
+  <span id="modeEternal">Difficulty: Eternal</span>
+  <p style="margin: 2px 0 0 10px">
+  <b>Commander Lv:</b> <span id='lvClassic'></span><br/>
+  <b>Missions:</b><br/>
+  <span id='missionsClassic'></span>
+  </p>
+</div>
+</div>
+
+<div style="padding-top: 15px">
+  <span><b id="winCondText">Win Conditions:</b></span>
+  <p id='winText' style="margin: 2px 0 8px 10px"></p>
+  <span><b id="loseCondText">Defeat Conditions:</b></span>
+  <p id='loseText' style="margin: 2px 0 0 10px"></p>
+</div>
 
 </div>
 
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<span id="closeModal" class="close">&times;</span>
+			<h2 id="modalHeader">Rewards</h2>
+		</div>
+		<div class="modal-body">
+			<p id="modalContent"></p>
+		</div>
+	</div>
+</div>
 </body>
 </html>
