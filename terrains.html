@@ -37,7 +37,8 @@ var pvpMaps = [
 	{ name: '기주, 초원 전투', tiles: [4200001, 4200002] }, // grassland
 	{ name: '옹주, 사막 전투', tiles: [4200004, 4200032] }, // desert
 	{ name: '사주, 도성 전투', tiles: [4200017, 4200024] }, // castle
-	{ name: '양주, 장강 전투', tiles: [4200014, 4200011] }  // river
+	{ name: '양주, 장강 전투', tiles: [4200014, 4200011] },  // river
+	{ name: '난투', tiles: [4200060] } // Brawl
 ];
 var godMaps = [
 	{ name: '청룡', tiles: [4200053, 4200054, 4200009] },
@@ -299,10 +300,10 @@ function checkSelectValues() {
 	// create checkboxes for all
 	var grp = document.getElementById("grpPvp");
 	for (var i = 0; i < pvpMaps.length; i++) {
+		if (i > 0 && (i % 3) == 0)
+			grp.appendChild(document.createElement('br'));
 		var name = pvpMaps[i]['name'];
 		appendCheckBoxAndLabel(grp, i, "mapP"+i, onMapChange, true, "txtPvp"+i, toLocalize(name));
-		if (i == 2)
-			grp.appendChild(document.createElement('br'));
 	}
 
 	var grp = document.getElementById("grpGod");
