@@ -184,7 +184,8 @@ function toLocalizeStoryVictoryTexts(txts) {
 			if (txt === '')
 				txt = txts[0];
 			lines2 = txt.split("\n");
-			for (var i = 0; i < lines.length; i++)
+			// use line2.length because some translation language is wrong (new line is removed)
+			for (var i = 0; i < lines2.length; i++)
 				lines[i] += " &nbsp; " + lines2[i].substr(2); // remove number order
 		}
 	}
