@@ -48,6 +48,11 @@ table.table-container th {
   padding: 1px 1px 1px 1px;
 }
 
+table.table-popup {
+  width: auto;
+  table-layout: auto;
+}
+
 th.clickable {
   cursor: pointer;
 }

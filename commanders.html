@@ -70,17 +70,30 @@ function popupUnitType(td) {
 	txt += "<td>" + unitType["mrlLv"] + "</td>";
 	txt += "</tr></table>";
 	
-	txt += '<p class="header">Passives</p>';
+	txt += '<p class="header">' + toLocalize("부대 효과") + '</p>';
+	txt += '<table class="table-container table-popup"><thead><tr><th>Passive</th><th>Description</th></tr></thead><tbody>';
 	for (var i = 0; i < utypePassives.length; i++) {
-		var passive = passives[utypePassives[i][0]];
+		var passiveId = utypePassives[i][0];
 		var passiveVal = utypePassives[i][1];
-		
-		txt += "<p><strong>&#x2022; " + toLocalizes(passive["name"], " &nbsp; ") + "</strong></p>";
-		txt += "" + getPassiveDescSimple(passive, passiveVal, selLang);
-		if (selLang2 !== -1) {
-			txt += "<br/>" + getPassiveDescSimple(passive, passiveVal, selLang2);
-		}
+		txt += '<tr>';
+		txt += '<td>' + localizePassiveName(passiveId, passiveVal) + '</td>';
+		txt += '<td>' + localizePassiveDescSimple(passives[passiveId], passiveVal) + '</td>';
+		txt += '</tr>';
 	}
+	txt += '</tbody></table>';
+	
+	var passivePoints = [ 2, 6, 14, 24, 48 ]
+	var utypePassiveLists = unitType['passives'];
+	txt += '<p class="header">' + toLocalize("장수 효과") + '</p>';
+	txt += '<table class="table-container table-popup"><thead><tr><th>Point</th><th>Passive</th><th>Description</th></tr></thead><tbody>';
+	for (var i = 0; i < utypePassiveLists.length; i++) {
+		var passiveList = passiveLists[utypePassiveLists[i]];
+		txt += '<tr><td>' + passivePoints[i] + '</td>';
+		txt += '<td>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</td>';
+		txt += '<td>' + localizePassiveListDesc(passiveList) + '</td>';
+		txt += '</tr>';
+	}
+	txt += '</tbody></table>';
 
 	txt += '<p class="header">Attack Range</p>';
 	txt += getShapeHtml(unitType["job5"]["targetArea"], true);
@@ -555,10 +568,10 @@ function sortTable(n) {
 	  <th class="clickable" onclick="sortTable(0)">Name</th>
 	  <th class="clickable" onclick="sortTable(1)">Type</th>
 	  <th class="clickable" onclick="sortTable(2)">Cost</th>
-	  <th>Lv30 Passive</th>
-	  <th>Lv50 Passive</th>
-	  <th>Lv70 Passive</th>
-	  <th>Lv90 Passive</th>
+	  <th>Lv30 Passive (36)</th>
+	  <th>Lv50 Passive (48)</th>
+	  <th>Lv70 Passive (72)</th>
+	  <th>Lv90 Passive (84)</th>
 	  <th style="display:none">STR</th>
 	  <th style="display:none">INT</th>
 	  <th style="display:none">CMD</th>

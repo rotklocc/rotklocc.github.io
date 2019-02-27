@@ -168,6 +168,14 @@ function getPassiveDescSimple(passive, passiveVal, langId) {
 	return desc;
 }
 
+function localizePassiveDescSimple(passive, passiveVal, sep="<br/>") {
+	var txt = getPassiveDescSimple(passive, passiveVal, selLang);
+	if (selLang2 !== -1) {
+		txt += sep + getPassiveDescSimple(passive, passiveVal, selLang2);
+	}
+	return txt;
+}
+
 function getPassiveDesc(passiveList, langId) {
 	var passive = passives[passiveList['passiveId']];
 	var desc = toLocalizeLang(passive['desc'], langId);
@@ -208,10 +216,7 @@ function localizePassiveListDesc(passiveList, sep="<br/>") {
 function getHtmlPassiveDesc(passiveId, passiveVal) {
 	var passive = passives[passiveId];
 	var txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
-	txt += "<b>Description:</b><br/>" + getPassiveDescSimple(passive, passiveVal, selLang);
-	if (selLang2 !== -1) {
-		txt += "<br/>" + getPassiveDescSimple(passive, passiveVal, selLang2);
-	}
+	txt += "<b>Description:</b><br/>" + getPassiveDescSimple(passive, passiveVal);
 	
 	if (passiveId == 2200005) {  // Expand AoE
 		txt += '<p>' + getShapeHtml(passiveVal, false) + '</p>';
@@ -228,10 +233,7 @@ function getHtmlPassiveListDesc(passiveList) {
 	var passive = passives[passiveId];
 	
 	var txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
-	txt += "<b>Description:</b><br/>" + getPassiveDesc(passiveList, selLang);
-	if (selLang2 !== -1) {
-		txt += "<br/>" + getPassiveDesc(passiveList, selLang2);
-	}
+	txt += "<b>Description:</b><br/>" + localizePassiveListDesc(passiveList);
 	
 	if (passiveId == 2200005) {  // Expand AoE
 		txt += '<p>' + getShapeHtml(passiveList["val"], false) + '</p>';
