@@ -4,6 +4,7 @@ div#searchBar {
   top: 0;
   padding-top: 5px;
   background-color: white;
+  z-index: 2;
 }
 
 div#content {
@@ -61,6 +62,10 @@ table.table-container td {
   padding: 4px 8px 4px 8px;
   border: 1px solid #c2c2e7;
   vertical-align: center;
+}
+
+table.table-container td.img {
+  padding: 2px 2px 0px 2px;
 }
 
 table.table-container tbody tr:hover, table.table-container tbody tr:active {
@@ -310,4 +315,34 @@ p.header {
   right: 25px;
   font-size: 36px;
   margin-left: 50px;
+}
+
+/* sprite image */
+.magic {
+  display: inline-block;
+  background: url('imgs/magic.png') no-repeat;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+.passive {
+  display: inline-block;
+  background: url('imgs/passive.png') no-repeat;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+span.icon36 {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  overflow: hidden;
+}
+
+span.icon36 span {
+  transform: scale(0.5);
 }

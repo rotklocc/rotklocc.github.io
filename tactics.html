@@ -10,6 +10,7 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/magic.js"></script>
 <script type="text/javascript">
 
 function popupInfo() {
@@ -42,7 +43,7 @@ function popupInfo() {
 function popupTactic(td, idx) {
 	var tactic = td.parentNode.tactic;
 	
-	document.getElementById("modalHeader").innerHTML = toLocalizes(tactic["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = getMagicIconHtml(tactic['icon']) + " " + toLocalizes(tactic["name"], " &nbsp; ");
 	
 	txt = "<b>Attribute:</b> " + toLocalizes(skillTypes[tactic['skillType']], " &nbsp; ") + "<br/>";
 	txt += "<b>Description:</b><br/>" + toLocalizes(tactic['desc'], "<br/>");
@@ -63,6 +64,10 @@ function generateTableRows() {
 		tr.id = tactic["id"];
 		tr.tactic = tactic;
 		
+		var td = createTdHtmlNode(getMagicIconHtml(tactic['icon']));
+		td.className = "img";
+		tr.appendChild(td);
+
 		var td = createTdHtmlNode('<span class="info" onclick="popupTactic(this.parentNode, 0)">&#x1f6c8;</span>' + toLocalizes(tactic["name"]));
 		tr.appendChild(td);
 		
@@ -153,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container">
   <colgroup>
+	<col style="width:41px"/>
 	<col/>
 	<col/>
 	<col style="width:80px"/>
@@ -167,6 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </colgroup>
   <thead>
 	<tr>
+	  <th></th>
 	  <th>Name</th>
 	  <th>Attribute</th>
 	  <th>Power</th>
@@ -189,6 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container">
   <colgroup>
+	<col style="width:41px"/>
 	<col/>
 	<col/>
 	<col style="width:80px"/>

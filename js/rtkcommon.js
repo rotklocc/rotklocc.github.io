@@ -368,3 +368,17 @@ function createSideBarMenu() {
 	ele.innerHTML = html;
 	body.appendChild(ele);
 }
+
+
+function getMagicIconHtml(iconName) {
+	var icon = magicIcons[iconName];
+	return icon ? '<span class="magic" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
+}
+
+function getPassiveIconHtml(iconName) {
+	// some passive icon is in magic
+	if (iconName in magicIcons)
+		return getMagicIconHtml(iconName)
+	var icon = passiveIcons[iconName];
+	return icon ? '<span class="passive" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
+}

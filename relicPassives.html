@@ -9,6 +9,8 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
+<script type="text/javascript" src="imgs/magic.js"></script>
 <script type="text/javascript">
 function popupInfo() {
 	document.getElementById("modalHeader").innerHTML = "Info";
@@ -41,7 +43,11 @@ function generateTableRows() {
 		
 		var passive = passives[relicPassive['passiveId']];
 		
-		var td = createTdHtmlNode(toLocalizes(passive['name']));
+		var td = createTdHtmlNode(getPassiveIconHtml(passive['icon']));
+		td.className = "img";
+		tr.appendChild(td);
+		
+		td = createTdHtmlNode(toLocalizes(passive['name']));
 		tr.appendChild(td);
 		
 		for (var i = 0; i < 5; i++) {
@@ -132,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container">
   <colgroup>
+	<col style="width:41px"/>
 	<col style="width:320px"/>
 	<col style="width:50px"/>
 	<col style="width:50px"/>
@@ -142,6 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </colgroup>
   <thead>
 	<tr>
+	  <th></th>
 	  <th>Name</th>
 	  <th>Lv1</th>
 	  <th>Lv2</th>
@@ -160,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container">
   <colgroup>
+	<col style="width:41px"/>
 	<col style="width:320px"/>
 	<col style="width:50px"/>
 	<col style="width:50px"/>
