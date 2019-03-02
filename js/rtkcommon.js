@@ -216,7 +216,7 @@ function localizePassiveListDesc(passiveList, sep="<br/>") {
 function getHtmlPassiveDesc(passiveId, passiveVal) {
 	var passive = passives[passiveId];
 	var txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
-	txt += "<b>Description:</b><br/>" + getPassiveDescSimple(passive, passiveVal);
+	txt += "<b>Description:</b><br/>" + localizePassiveDescSimple(passive, passiveVal);
 	
 	if (passiveId == 2200005) {  // Expand AoE
 		txt += '<p>' + getShapeHtml(passiveVal, false) + '</p>';
@@ -369,16 +369,29 @@ function createSideBarMenu() {
 	body.appendChild(ele);
 }
 
+function _iconHtml(iconType, icon) {
+	return icon ? '<span class="'+iconType+'" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
+}
+
+function makePreTxtIconHtml(iconHtml) {
+	return '<span class="icon-pretxt">' + iconHtml + "</span>";
+}
 
 function getMagicIconHtml(iconName) {
-	var icon = magicIcons[iconName];
-	return icon ? '<span class="magic" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
+	return _iconHtml('magic', magicIcons[iconName]);
 }
 
 function getPassiveIconHtml(iconName) {
-	// some passive icon is in magic
-	if (iconName in magicIcons)
-		return getMagicIconHtml(iconName)
 	var icon = passiveIcons[iconName];
-	return icon ? '<span class="passive" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
+	if (!icon)  // some passive icon is in magic
+		return getMagicIconHtml(iconName)
+	return _iconHtml('passive', icon);
+}
+
+function getArtifactIconHtml(iconName) {
+	return _iconHtml('artifact', artifactIcons[iconName]);
+}
+
+function getRelicIconHtml(iconName) {
+	return _iconHtml('relic', relicIcons[iconName]);
 }

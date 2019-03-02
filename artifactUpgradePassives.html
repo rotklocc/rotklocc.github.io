@@ -9,6 +9,8 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
+<script type="text/javascript" src="imgs/magic.js"></script>
 <script type="text/javascript">
 var filterTiers = new Array(7).fill(false);
 var filterTypes = { 0: false, 1: true, 3: true, 5: true, 8: true };  // +6 all, +12 physical, +12 tactic, +12 armor, +12 accessory
@@ -73,7 +75,8 @@ function generateTableRows() {
 		tr.appendChild(td);
 				
 		var passiveList = passiveLists[item['passiveListId']];
-		var html = localizePassiveName(passiveList["passiveId"], -1);
+		var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList["passiveId"]]['icon']));
+		var html = iconHtml + localizePassiveName(passiveList["passiveId"], -1);
 		td = createTdHtmlNode(html);
 		//td.svalue = (passiveList["passiveId"] * 1000) + passiveList["val"];
 		tr.appendChild(td);
@@ -82,10 +85,10 @@ function generateTableRows() {
 		
 		tbody.appendChild(tr);
 	}
-
-	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
 	
 	doFilter();
+	
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
 }
 
 function checkFilterTierCheckbox() {
@@ -213,8 +216,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container">
   <colgroup>
-	<col style="width:40px"/>
-	<col style="width:100px"/>
+	<col style="width:30px"/>
+	<col style="width:85px"/>
 	<col style="width:40px"/>
 	<col style="width:350px"/>
 	<col/>
@@ -237,8 +240,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container" defaultSortAsc="1">
   <colgroup>
-	<col style="width:40px"/>
-	<col style="width:100px"/>
+	<col style="width:30px"/>
+	<col style="width:85px"/>
 	<col style="width:40px"/>
 	<col style="width:350px"/>
 	<col/>

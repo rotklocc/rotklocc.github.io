@@ -59,7 +59,7 @@ th.clickable {
 }
 
 table.table-container td {
-  padding: 4px 8px 4px 8px;
+  padding: 4px 8px 4px 4px;
   border: 1px solid #c2c2e7;
   vertical-align: center;
 }
@@ -334,6 +334,29 @@ p.header {
   height: 36px;
   overflow: hidden;
   transform-origin: 0 0;
+}
+
+.artifact {
+  display: inline-block;
+  background: url('imgs/artifact.png') no-repeat;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+.relic {
+  display: inline-block;
+  background: url('imgs/relic.png') no-repeat;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+span.icon-pretxt {
+  float: left;
+  padding-right: 2px;
 }
 
 span.icon36 {

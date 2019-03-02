@@ -9,6 +9,9 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/relic.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
+<script type="text/javascript" src="imgs/magic.js"></script>
 <script type="text/javascript">
 
 function findRelic(tier, type, part) {
@@ -34,13 +37,16 @@ function generateTableRows() {
 		
 		for (var i = 0; i < 4; i++) {
 			var relic = findRelic(relicSet['minTier'], relicSet['type'][i], relicSet['mainStat'][i]);
-			var td = createTdHtmlNode(toLocalizes(relic['name']));
+			var td = createTdHtmlNode(getRelicIconHtml(relic['icon']) + "<br/><span>" + toLocalizes(relic['name']) + "</span>");
+			td.style.textAlign = "center";
 			td.relic = relic;
 			tr.appendChild(td);
 		}
 		
 		var passiveList = passiveLists[relicSet['passiveListId']];
-		var td = createTdHtmlNode(localizePassiveName(passiveList["passiveId"], -1));
+		var html = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList["passiveId"]]['icon']))
+		html += '<span>' + localizePassiveName(passiveList["passiveId"], -1) + '</span>';
+		var td = createTdHtmlNode(html);
 		tr.appendChild(td);
 		
 		td = createTdHtmlNode(localizePassiveListDesc(passiveList));
@@ -64,12 +70,12 @@ function replaceDisplayLanguage() {
 		
 		for (var j = 1; j < 5; j++) {
 			var relic = cells[j].relic;
-			cells[j].innerHTML = toLocalizes(relic['name']);
+			cells[j].lastChild.innerHTML = toLocalizes(relic['name']);
 		}
 		
 		var passiveList = passiveLists[relicSet['passiveListId']];
 		
-		cells[5].innerHTML = localizePassiveName(passiveList["passiveId"], -1);
+		cells[5].lastChild.innerHTML = localizePassiveName(passiveList["passiveId"], -1);
 		cells[6].innerHTML = localizePassiveListDesc(passiveList);
 	}
 }
@@ -149,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:80px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
-	<col style="width:280px"/>
+	<col style="width:300px"/>
 	<col/>
   </colgroup>
   <thead>
@@ -177,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:80px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
-	<col style="width:280px"/>
+	<col style="width:300px"/>
 	<col/>
   </colgroup>
   <tbody id="cbody">

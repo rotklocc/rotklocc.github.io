@@ -43,7 +43,7 @@ function popupInfo() {
 function popupTactic(td, idx) {
 	var tactic = td.parentNode.tactic;
 	
-	document.getElementById("modalHeader").innerHTML = getMagicIconHtml(tactic['icon']) + " " + toLocalizes(tactic["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getMagicIconHtml(tactic['icon'])) + " " + toLocalizes(tactic["name"], " &nbsp; ");
 	
 	txt = "<b>Attribute:</b> " + toLocalizes(skillTypes[tactic['skillType']], " &nbsp; ") + "<br/>";
 	txt += "<b>Description:</b><br/>" + toLocalizes(tactic['desc'], "<br/>");
@@ -161,13 +161,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:41px"/>
 	<col/>
 	<col/>
-	<col style="width:80px"/>
-	<col style="width:80px"/>
 	<col style="width:70px"/>
-	<col style="width:70px"/>
-	<col style="width:100px"/>
-	<col style="width:100px"/>
-	<col style="width:120px"/>
+	<col style="width:75px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:90px"/>
+	<col style="width:90px"/>
+	<col style="width:110px"/>
 	<col style="width:80px"/>
 	<col style="width:90px"/>
   </colgroup>
@@ -199,13 +199,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:41px"/>
 	<col/>
 	<col/>
-	<col style="width:80px"/>
-	<col style="width:80px"/>
 	<col style="width:70px"/>
-	<col style="width:70px"/>
-	<col style="width:100px"/>
-	<col style="width:100px"/>
-	<col style="width:120px"/>
+	<col style="width:75px"/>
+	<col style="width:50px"/>
+	<col style="width:50px"/>
+	<col style="width:90px"/>
+	<col style="width:90px"/>
+	<col style="width:110px"/>
 	<col style="width:80px"/>
 	<col style="width:90px"/>
   </colgroup>

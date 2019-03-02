@@ -9,6 +9,7 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/relic.js"></script>
 <script type="text/javascript">
 var filterTiers = new Array(4).fill(false);
 var filterGods = new Array(2).fill(true);
@@ -24,7 +25,11 @@ function generateTableRows() {
 		tr.id = relicId;
 		tr.relic = relic;
 		
-		var td = createTdHtmlNode(toLocalizes(relic["name"]));
+		var td = createTdHtmlNode(getRelicIconHtml(relic['icon']));
+		td.className = "img";
+		tr.appendChild(td);
+		
+		td = createTdHtmlNode(toLocalizes(relic["name"]));
 		tr.appendChild(td);
 		
 		td = createTdHtmlNode(toLocalizes(relicTypes[relic['type']]));
@@ -63,8 +68,8 @@ function replaceDisplayLanguage() {
 		var cells = tr.cells;
 		var relic = tr.relic;
 		
-		cells[0].innerHTML = toLocalizes(relic["name"]);
-		cells[1].innerHTML = toLocalizes(relicTypes[relic["type"]]);
+		cells[1].innerHTML = toLocalizes(relic["name"]);
+		cells[2].innerHTML = toLocalizes(relicTypes[relic["type"]]);
 	}
 	
 	_updateCheckboxLabelLanguage();
@@ -179,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container" style="width: auto">
   <colgroup>
+	<col style="width:41px"/>
 	<col style="width:200px"/>
 	<col style="width:140px"/>
 	<col style="width:40px"/>
@@ -192,6 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </colgroup>
   <thead>
 	<tr>
+	  <th></th>
 	  <th>Name</th>
 	  <th>Type</th>
 	  <th>Star</th>
@@ -213,6 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container" style="width: auto">
   <colgroup>
+	<col style="width:41px"/>
 	<col style="width:200px"/>
 	<col style="width:140px"/>
 	<col style="width:40px"/>

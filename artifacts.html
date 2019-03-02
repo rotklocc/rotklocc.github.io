@@ -10,6 +10,8 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/artifact.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
 <script type="text/javascript">
 var filterTiers = new Array(8).fill(false);
 
@@ -19,7 +21,7 @@ function popupPassive(td, idx) {
 	var passiveVal = item['passiveVal'][idx];
 	var passive = passives[passiveId];
 	
-	document.getElementById("modalHeader").innerHTML = toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'])) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveDesc(passiveId, passiveVal);
 	document.getElementById("modalDiv").style.display = "block";
 }
@@ -33,7 +35,11 @@ function generateTableRows() {
 		tr.id = item["id"];
 		tr.item = item;
 		
-		var td = createTdHtmlNode(toLocalizes(item["name"]));
+		var td = createTdHtmlNode(getArtifactIconHtml(item['icon']));
+		td.className = "img";
+		tr.appendChild(td);
+		
+		td = createTdHtmlNode(toLocalizes(item["name"]));
 		tr.appendChild(td);
 		
 		td = createTdHtmlNode(toLocalizes(itemTypes[item['itemType']]));
@@ -48,7 +54,8 @@ function generateTableRows() {
 		tr.appendChild(createTdNumberColorTagNode('statMrl', item['mrl']));
 		
 		if (item["passive"].length > 0) {
-			var html = '<span class="info" onclick="popupPassive(this.parentNode, 0)">&#x1f6c8;</span>' + localizePassiveName(item['passive'][0], item['passiveVal'][0]);
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[item['passive'][0]]['icon']));
+			var html = iconHtml + '<span class="info" onclick="popupPassive(this.parentNode, 0)">&#x1f6c8;</span>' + localizePassiveName(item['passive'][0], item['passiveVal'][0]);
 			tr.appendChild(createTdHtmlNode(html));
 		}
 		else {
@@ -56,7 +63,8 @@ function generateTableRows() {
 		}
 
 		if (item["passive"].length > 1) {
-			var html = '<span class="info" onclick="popupPassive(this.parentNode, 1)">&#x1f6c8;</span>' + localizePassiveName(item['passive'][1], item['passiveVal'][1]);
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[item['passive'][1]]['icon']));
+			var html = iconHtml + '<span class="info" onclick="popupPassive(this.parentNode, 1)">&#x1f6c8;</span>' + localizePassiveName(item['passive'][1], item['passiveVal'][1]);
 			tr.appendChild(createTdHtmlNode(html));
 		}
 		else {
@@ -173,19 +181,21 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container">
   <colgroup>
+	<col style="width:41px"/>
 	<col style="width:240px"/>
-	<col style="width:142px"/>
+	<col style="width:140px"/>
 	<col style="width:40px"/>
-	<col style="width:55px"/>
-	<col style="width:55px"/>
 	<col style="width:50px"/>
 	<col style="width:50px"/>
 	<col style="width:50px"/>
+	<col style="width:45px"/>
+	<col style="width:45px"/>
 	<col/>
 	<col/>
   </colgroup>
   <thead>
 	<tr>
+	  <th></th>
 	  <th>Name</th>
 	  <th>Type</th>
 	  <th>Star</th>
@@ -207,14 +217,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container">
   <colgroup>
+	<col style="width:41px"/>
 	<col style="width:240px"/>
-	<col style="width:142px"/>
+	<col style="width:140px"/>
 	<col style="width:40px"/>
-	<col style="width:55px"/>
-	<col style="width:55px"/>
 	<col style="width:50px"/>
 	<col style="width:50px"/>
 	<col style="width:50px"/>
+	<col style="width:45px"/>
+	<col style="width:45px"/>
 	<col/>
 	<col/>
   </colgroup>
