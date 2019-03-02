@@ -11,6 +11,7 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
 <script type="text/javascript">
 var maxCost = 0;
 var tableViewId = 0; // 0 = passives, 1 = stat/prefect/lord
@@ -47,7 +48,7 @@ function popupPassive(td) {
 	var passiveId = passiveList['passiveId'];
 	var passive = passives[passiveId];
 	
-	document.getElementById("modalHeader").innerHTML = toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'])) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
 	document.getElementById("modalDiv").style.display = "block";
 }
@@ -176,18 +177,18 @@ function replaceDisplayLanguage() {
 		var cells = tr.cells;
 		var unit = tr.unit;
 		
-		cells[0].getElementsByTagName('span')[1].innerHTML = toLocalizes(unit["name"]);
+		cells[0].lastChild.innerHTML = toLocalizes(unit["name"]);
 		cells[0].svalue = toLocalizes(unit["name"]);
-		cells[1].getElementsByTagName('span')[1].innerHTML = toLocalizes(unitTypes[unit["jobTypeId"]]['name']);
+		cells[1].lastChild.innerHTML = toLocalizes(unitTypes[unit["jobTypeId"]]['name']);
 		cells[1].svalue = toLocalize(unitTypes[unit["jobTypeId"]]['name']);
 		for (var j = 0; j < unit["passiveListIds"].length; j++) {
 			var passiveList = passiveLists[unit["passiveListIds"][j]];
-			cells[j+3].getElementsByTagName('span')[1].innerHTML = localizePassiveName(passiveList["passiveId"], passiveList["val"]);
+			cells[j+3].lastChild.innerHTML = localizePassiveName(passiveList["passiveId"], passiveList["val"]);
 		}
 		
-		cells[12].getElementsByTagName('span')[1].innerHTML = toLocalizes(prefectSkills[unit["prefectId"]]['name'])
+		cells[12].lastChild.innerHTML = toLocalizes(prefectSkills[unit["prefectId"]]['name'])
 		cells[12].svalue = toLocalize(prefectSkills[unit["prefectId"]]['name']);
-		cells[13].getElementsByTagName('span')[1].innerHTML = toLocalizes(warlordSkills[unit["warlordId"]]['name'])
+		cells[13].lastChild.innerHTML = toLocalizes(warlordSkills[unit["warlordId"]]['name'])
 		cells[13].svalue = toLocalize(warlordSkills[unit["warlordId"]]['name']);
 	}
 	
@@ -223,12 +224,21 @@ function switchTableView() {
 	}
 }
 
+function onShowImage(show) {
+	var visiVal = show ? '' : 'none';
+	var icons = document.getElementsByClassName("icon-pretxt");
+	for (var i = 0; i < icons.length; i++) {
+		icons[i].style.display = visiVal;
+	}
+}
+
 function generateTableRows() {
 	var tbody = document.getElementById("cbody");
 	tbody.innerHTML = "";
 	
 	usedPassiveIds = [];
 	
+	var hideImg = !(document.getElementById('showImg').checked);
 	// use object to remove duplication
 	var passiveIds = {};
 	units.forEach(function(unit) {
@@ -254,7 +264,8 @@ function generateTableRows() {
 		
 		for (var i = 0 ; i < unit["passiveListIds"].length; i++) {
 			var passiveList = passiveLists[unit["passiveListIds"][i]];
-			td = createTdHtmlNode('<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span><span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</span>');
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList['passiveId']]['icon']), hideImg);
+			td = createTdHtmlNode(iconHtml + '<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span><span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</span>');
 			td.passiveList = passiveList;
 			td.setAttribute("name", "up"+passiveList["passiveId"]);
 			tr.appendChild(td);
@@ -292,7 +303,7 @@ function generateTableRows() {
 		td.svalue = toLocalize(warlordSkills[unit["warlordId"]]['name']);
 		td.style.display = "none";
 		tr.appendChild(td);
-				
+		
 		tbody.appendChild(tr);
 	});
 	
@@ -541,6 +552,7 @@ function sortTable(n) {
 	  <p><span id="filterTags-ut"></span><span id="filterTags-p"></span></p>
 	</div>
 	<div class="topbar-right">
+	  <input type="checkbox" id="showImg" onchange="onShowImage(this.checked)"><label for="showImg">Show Img</label> &nbsp;
 	  <button id="switchView" onclick="switchTableView()">Switch View</button>
 	</div>
 </div>

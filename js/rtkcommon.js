@@ -373,8 +373,9 @@ function _iconHtml(iconType, icon) {
 	return icon ? '<span class="'+iconType+'" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
 }
 
-function makePreTxtIconHtml(iconHtml) {
-	return '<span class="icon-pretxt">' + iconHtml + "</span>";
+function makePreTxtIconHtml(iconHtml, hidden=false) {
+	var txt = hidden ? ' style="display:none"' : '';
+	return '<span class="icon-pretxt"' + txt + '>' + iconHtml + "</span>";
 }
 
 function getMagicIconHtml(iconName) {
