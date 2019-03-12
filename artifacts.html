@@ -42,7 +42,8 @@ function generateTableRows() {
 		td = createTdHtmlNode(toLocalizes(item["name"]));
 		tr.appendChild(td);
 		
-		td = createTdHtmlNode(toLocalizes(itemTypes[item['itemType']]));
+		var itemType = (item['itemType'] > 12) ? 12 : item['itemType'];
+		td = createTdHtmlNode(toLocalizes(itemTypes[itemType]));
 		tr.appendChild(td);
 		
 		tr.appendChild(createTdTextNode(item['tier']));

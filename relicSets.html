@@ -14,15 +14,6 @@
 <script type="text/javascript" src="imgs/magic.js"></script>
 <script type="text/javascript">
 
-function findRelic(tier, type, part) {
-	for (var relicId in relics) {
-		var relic = relics[relicId];
-		if (relic['type'] === type && relic['tier'] === tier && relic['mainStat'] === part)
-			return relic;
-	}
-	return null;
-}
-
 function generateTableRows() {
 	var tbody = document.getElementById("cbody");
 	tbody.innerHTML = "";
@@ -36,7 +27,7 @@ function generateTableRows() {
 		tr.appendChild(createTdTextNode(relicSet['minTier']));
 		
 		for (var i = 0; i < 4; i++) {
-			var relic = findRelic(relicSet['minTier'], relicSet['type'][i], relicSet['mainStat'][i]);
+			var relic = relics[relicSet['relicIds'][i]];
 			var td = createTdHtmlNode(getRelicIconHtml(relic['icon']) + "<br/><span>" + toLocalizes(relic['name']) + "</span>");
 			td.style.textAlign = "center";
 			td.relic = relic;

@@ -55,7 +55,7 @@ function popupPassive(td) {
 
 function popupUnitType(td) {
 	var unit = td.parentElement.unit;
-	var unitType = unitTypes[unit["jobTypeId"]]
+	var unitType = unitTypes[unit["jobTypeId"]];
 	
 	document.getElementById("modalHeader").innerHTML = toLocalizes(unitType['name'], " &nbsp; ");
 	
@@ -83,7 +83,7 @@ function popupUnitType(td) {
 	}
 	txt += '</tbody></table>';
 	
-	var passivePoints = [ 2, 6, 14, 24, 48 ]
+	var passivePoints = [ 2, 6, 14, 24, 48 ];
 	var utypePassiveLists = unitType['passives'];
 	txt += '<p class="header">' + toLocalize("장수 효과") + '</p>';
 	txt += '<table class="table-container table-popup"><thead><tr><th>Point</th><th>Passive</th><th>Description</th></tr></thead><tbody>';

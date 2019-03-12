@@ -327,11 +327,11 @@ function hasLocalizeText(ktxt, wordUpper) {
 }
 
 function openNav() {
-  document.getElementById("mySidebar").style.width = "240px";
+	document.getElementById("mySidebar").style.width = "240px";
 }
 
 function closeNav() {
-  document.getElementById("mySidebar").style.width = "0";
+	document.getElementById("mySidebar").style.width = "0";
 }
 
 function createSideBarMenu() {
