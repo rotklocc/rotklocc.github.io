@@ -228,11 +228,13 @@ function getHtmlPassiveDesc(passiveId, passiveVal) {
 	return txt;
 }
 
-function getHtmlPassiveListDesc(passiveList) {
+function getHtmlPassiveListDesc(passiveList, hasStackInfo=true) {
 	var passiveId = passiveList['passiveId'];
 	var passive = passives[passiveId];
 	
-	var txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
+	var txt = "";
+	if (hasStackInfo)
+		txt += "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
 	txt += "<b>Description:</b><br/>" + localizePassiveListDesc(passiveList);
 	
 	if (passiveId == 2200005) {  // Expand AoE
@@ -369,8 +371,9 @@ function createSideBarMenu() {
 	body.appendChild(ele);
 }
 
-function _iconHtml(iconType, icon) {
-	return icon ? '<span class="'+iconType+'" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
+function _iconHtml(iconType, icon, extraClass) {
+	var className = iconType + ' ' + extraClass;
+	return icon ? '<span class="'+className+'" style="background-position: -'+icon[0]+'px -'+icon[1]+'px"></span>' : '';
 }
 
 function makePreTxtIconHtml(iconHtml, hidden=false) {
@@ -378,21 +381,34 @@ function makePreTxtIconHtml(iconHtml, hidden=false) {
 	return '<span class="icon-pretxt"' + txt + '>' + iconHtml + "</span>";
 }
 
-function getMagicIconHtml(iconName) {
-	return _iconHtml('magic', magicIcons[iconName]);
+function getFaceIconHtml(iconName, extraClass="") {
+	return _iconHtml('face', faceImgs[iconName], extraClass);
 }
 
-function getPassiveIconHtml(iconName) {
+function getMagicIconHtml(iconName, extraClass="") {
+	return _iconHtml('magic', magicIcons[iconName], extraClass);
+}
+
+function getPassiveIconHtml(iconName, extraClass="") {
 	var icon = passiveIcons[iconName];
 	if (!icon)  // some passive icon is in magic
-		return getMagicIconHtml(iconName)
-	return _iconHtml('passive', icon);
+		return getMagicIconHtml(iconName, extraClass)
+	return _iconHtml('passive', icon, extraClass);
 }
 
-function getArtifactIconHtml(iconName) {
-	return _iconHtml('artifact', artifactIcons[iconName]);
+function getPassiveIconInfo(iconName) {
+	var icon = passiveIcons[iconName];
+	if (icon)
+		return [ 'passive', icon ];
+	// some passive icon is in magic
+	icon = magicIcons[iconName];
+	return [ 'magic', icon ];
 }
 
-function getRelicIconHtml(iconName) {
-	return _iconHtml('relic', relicIcons[iconName]);
+function getArtifactIconHtml(iconName, extraClass="") {
+	return _iconHtml('artifact', artifactIcons[iconName], extraClass);
+}
+
+function getRelicIconHtml(iconName, extraClass="") {
+	return _iconHtml('relic', relicIcons[iconName], extraClass);
 }

@@ -28,14 +28,14 @@ function generateTableRows() {
 		
 		for (var i = 0; i < 4; i++) {
 			var relic = relics[relicSet['relicIds'][i]];
-			var td = createTdHtmlNode(getRelicIconHtml(relic['icon']) + "<br/><span>" + toLocalizes(relic['name']) + "</span>");
+			var td = createTdHtmlNode(getRelicIconHtml(relic['icon'], 'frame-orange') + "<br/><span>" + toLocalizes(relic['name']) + "</span>");
 			td.style.textAlign = "center";
 			td.relic = relic;
 			tr.appendChild(td);
 		}
 		
 		var passiveList = passiveLists[relicSet['passiveListId']];
-		var html = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList["passiveId"]]['icon']))
+		var html = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList["passiveId"]]['icon'], 'frame-blue'))
 		html += '<span>' + localizePassiveName(passiveList["passiveId"], -1) + '</span>';
 		var td = createTdHtmlNode(html);
 		tr.appendChild(td);
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:80px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
-	<col style="width:300px"/>
+	<col style="width:310px"/>
 	<col/>
   </colgroup>
   <thead>
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:80px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
-	<col style="width:300px"/>
+	<col style="width:310px"/>
 	<col/>
   </colgroup>
   <tbody id="cbody">

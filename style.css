@@ -54,7 +54,7 @@ table.table-popup {
   table-layout: auto;
 }
 
-th.clickable {
+.clickable {
   cursor: pointer;
 }
 
@@ -65,7 +65,7 @@ table.table-container td {
 }
 
 table.table-container td.img {
-  padding: 2px 2px 0px 2px;
+  padding: 1px 0px 0px 0px;
 }
 
 table.table-container tbody tr:hover, table.table-container tbody tr:active {
@@ -318,30 +318,106 @@ p.header {
   margin-left: 50px;
 }
 
+div.listhdr {
+  padding: 3px 0px 0px 2px;
+  width: 450px;
+  font-size: 13px;
+  font-weight: bold;
+  border-top: 1.5px solid #888;
+  border-bottom: 1.5px solid #888;
+  background-color: #ffff88;
+}
+
+div.listhdr span {
+  display: inline-block;
+  text-align: center;
+}
+
+ul.list {
+  height: 400px;
+  width: 450px;
+  overflow-y: scroll;
+  list-style-type: none;
+  padding: 0px 0px 0px 2px;
+  margin: 0;
+}
+
+ul.list li {
+  display: flex;
+  flex-direction: row;
+  padding: 1px 0 1px 0;
+  border-bottom: 1px solid #c2c2e7;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+ul.list li:hover {
+  background-color: #eeeeee;
+}
+
+ul.list li span.text {
+  padding: 5px 0 0 5px;
+}
+
+.frame-selected {
+  border: 2px solid red !important;
+}
+
+.frame-selectable {
+  border: 1px solid brown;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.frame-noselect {
+  border: 2px solid black;
+  margin-right: 5px;
+}
+
+/* overlay to disable item */
+.overlay-disable {
+  background: rgba(0,0,0,0.5);
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+}
+
+.frame-red {
+  border: 1px solid red;
+}
+
+.frame-orange {
+  border: 1px solid orange;
+}
+
+.frame-blue {
+  border: 1px solid #4444cc;
+}
+
 /* sprite image */
 .magic {
   display: inline-block;
-  background: url('imgs/magic.png') no-repeat;
-  width: 36px;
-  height: 36px;
+  background: url('imgs/magic.jpg') no-repeat;
+  width: 40px;
+  height: 40px;
   overflow: hidden;
   transform-origin: 0 0;
 }
 
 .passive {
   display: inline-block;
-  background: url('imgs/passive.png') no-repeat;
-  width: 36px;
-  height: 36px;
+  background: url('imgs/passive.jpg') no-repeat;
+  width: 40px;
+  height: 40px;
   overflow: hidden;
   transform-origin: 0 0;
 }
 
 .artifact {
   display: inline-block;
-  background: url('imgs/artifact.png') no-repeat;
-  width: 36px;
-  height: 36px;
+  background: url('imgs/artifact.jpg') no-repeat;
+  width: 40px;
+  height: 40px;
   overflow: hidden;
   transform-origin: 0 0;
 }
@@ -349,10 +425,30 @@ p.header {
 .relic {
   display: inline-block;
   background: url('imgs/relic.png') no-repeat;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   overflow: hidden;
   transform-origin: 0 0;
+}
+
+.face {
+  display: inline-block;
+  background: url('imgs/face.jpg') no-repeat;
+  width: 80px;
+  height: 82px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+span.face-mini {
+  display: inline-block;
+  width: 40px;
+  height: 41px;
+  overflow: hidden;
+}
+
+span.face-mini span {
+  transform: scale(0.5);
 }
 
 span.icon-pretxt {

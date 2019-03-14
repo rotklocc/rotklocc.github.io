@@ -12,6 +12,7 @@
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
 <script type="text/javascript" src="imgs/passive.js"></script>
+<script type="text/javascript" src="imgs/face.js"></script>
 <script type="text/javascript">
 var maxCost = 0;
 var tableViewId = 0; // 0 = passives, 1 = stat/prefect/lord
@@ -48,7 +49,7 @@ function popupPassive(td) {
 	var passiveId = passiveList['passiveId'];
 	var passive = passives[passiveId];
 	
-	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'])) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'], 'frame-blue')) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
 	document.getElementById("modalDiv").style.display = "block";
 }
@@ -109,7 +110,8 @@ function popupUnitType(td) {
 function popupCommander(td) {
 	var unit = td.parentElement.unit;
 	
-	document.getElementById("modalHeader").innerHTML = toLocalizes(unit['name'], " &nbsp; ");
+	var faceHtml = makePreTxtIconHtml('<span class="face-mini frame-blue">' + getFaceIconHtml(unit['face']) + '</span>');
+	document.getElementById("modalHeader").innerHTML = faceHtml + toLocalizes(unit['name'], " &nbsp; ");
 	
 	txt = "";
 	txt += '<table class="stats"><tr><th>STR</th><th>INT</th><th>CMD</th><th>DEX</th><th>LCK</th></tr>';
@@ -246,7 +248,8 @@ function generateTableRows() {
 		tr.id = unit["id"];
 		tr.unit = unit;
 		
-		var td = createTdHtmlNode('<span class="info" onclick="popupCommander(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(unit["name"]) + '</span>');
+		var faceHtml = makePreTxtIconHtml('<span class="face-mini frame-blue">' + getFaceIconHtml(unit['face']) + '</span>', hideImg);
+		var td = createTdHtmlNode(faceHtml + '<span class="info" onclick="popupCommander(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(unit["name"]) + '</span>');
 		if (unit["gender"] === 'F')
 			td.style.backgroundColor = "pink"; // female commander
 		td.svalue = toLocalize(unit["name"]);
@@ -264,7 +267,7 @@ function generateTableRows() {
 		
 		for (var i = 0 ; i < unit["passiveListIds"].length; i++) {
 			var passiveList = passiveLists[unit["passiveListIds"][i]];
-			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList['passiveId']]['icon']), hideImg);
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList['passiveId']]['icon'], 'frame-blue'), hideImg);
 			td = createTdHtmlNode(iconHtml + '<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span><span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</span>');
 			td.passiveList = passiveList;
 			td.setAttribute("name", "up"+passiveList["passiveId"]);

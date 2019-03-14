@@ -5,10 +5,12 @@ function createTextNode(tag, txt) {
 	return td;
 }
 
-function createHtmlNode(tag, html) {
-	var td = document.createElement(tag);
-	td.innerHTML = html;
-	return td;
+function createHtmlNode(tag, html, id=null) {
+	var ele = document.createElement(tag);
+	ele.innerHTML = html;
+	if (id)
+		ele.id = id;
+	return ele;
 }
 
 function createTdTextNode(txt) {
@@ -22,6 +24,22 @@ function createTdHtmlNode(html) {
 	var td = document.createElement("td");
 	td.innerHTML = html;
 	return td;
+}
+
+function createInputRadio(name, val, id) {
+	var radio = document.createElement("input");
+	radio.type = "radio";
+	radio.name = name;
+	radio.id = id;
+	radio.value = val;
+	return radio;
+}
+
+function createLabel(inputId, text) {
+	var label = document.createElement("label");
+	label.htmlFor = inputId;
+	label.innerHTML = text;
+	return label;
 }
 
 function createOptionNode(txt, val) {

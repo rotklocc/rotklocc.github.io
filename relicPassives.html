@@ -43,7 +43,7 @@ function generateTableRows() {
 		
 		var passive = passives[relicPassive['passiveId']];
 		
-		var td = createTdHtmlNode(getPassiveIconHtml(passive['icon']));
+		var td = createTdHtmlNode(getPassiveIconHtml(passive['icon'], 'frame-blue'));
 		td.className = "img";
 		tr.appendChild(td);
 		
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container">
   <colgroup>
-	<col style="width:41px"/>
+	<col style="width:42px"/>
 	<col style="width:320px"/>
 	<col style="width:45px"/>
 	<col style="width:45px"/>
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container">
   <colgroup>
-	<col style="width:41px"/>
+	<col style="width:42px"/>
 	<col style="width:320px"/>
 	<col style="width:45px"/>
 	<col style="width:45px"/>

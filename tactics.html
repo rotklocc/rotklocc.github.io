@@ -64,7 +64,7 @@ function generateTableRows() {
 		tr.id = tactic["id"];
 		tr.tactic = tactic;
 		
-		var td = createTdHtmlNode(getMagicIconHtml(tactic['icon']));
+		var td = createTdHtmlNode(getMagicIconHtml(tactic['icon'], 'frame-blue'));
 		td.className = "img";
 		tr.appendChild(td);
 
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container">
   <colgroup>
-	<col style="width:41px"/>
+	<col style="width:42px"/>
 	<col/>
 	<col/>
 	<col style="width:70px"/>
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container">
   <colgroup>
-	<col style="width:41px"/>
+	<col style="width:42px"/>
 	<col/>
 	<col/>
 	<col style="width:70px"/>

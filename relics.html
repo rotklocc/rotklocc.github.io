@@ -25,7 +25,7 @@ function generateTableRows() {
 		tr.id = relicId;
 		tr.relic = relic;
 		
-		var td = createTdHtmlNode(getRelicIconHtml(relic['icon']));
+		var td = createTdHtmlNode(getRelicIconHtml(relic['icon'], 'frame-orange'));
 		td.className = "img";
 		tr.appendChild(td);
 		
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="table-header" style="padding-top: 5px">
 <table class="table-container" style="width: auto">
   <colgroup>
-	<col style="width:41px"/>
+	<col style="width:42px"/>
 	<col style="width:200px"/>
 	<col style="width:140px"/>
 	<col style="width:40px"/>
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <table id="table-content" class="table-container" style="width: auto">
   <colgroup>
-	<col style="width:41px"/>
+	<col style="width:42px"/>
 	<col style="width:200px"/>
 	<col style="width:140px"/>
 	<col style="width:40px"/>
