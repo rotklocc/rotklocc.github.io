@@ -68,6 +68,10 @@ table.table-container td.img {
   padding: 1px 0px 0px 0px;
 }
 
+td.number {
+  text-align: right;
+}
+
 table.table-container tbody tr:hover, table.table-container tbody tr:active {
   background-color: #eeeeee;
 }

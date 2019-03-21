@@ -8,7 +8,7 @@ function createTextNode(tag, txt) {
 function createHtmlNode(tag, html, id=null) {
 	var ele = document.createElement(tag);
 	ele.innerHTML = html;
-	if (id)
+	if (id !== null)
 		ele.id = id;
 	return ele;
 }
@@ -26,11 +26,12 @@ function createTdHtmlNode(html) {
 	return td;
 }
 
-function createInputRadio(name, val, id) {
+function createInputRadio(name, val, id=null) {
 	var radio = document.createElement("input");
 	radio.type = "radio";
 	radio.name = name;
-	radio.id = id;
+	if (id !== null)
+		radio.id = id;
 	radio.value = val;
 	return radio;
 }

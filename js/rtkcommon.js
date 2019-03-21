@@ -195,12 +195,12 @@ function getPassiveDesc(passiveList, langId) {
 	if (desc.indexOf('{3}') !== -1) {
 		condId = 2100000 + passiveList['conditionVal'][0];
 		if (condId in conditions)
-			desc = desc.replace('{3}', toLocalizeLang(conditions[condId], langId));
+			desc = desc.replace('{3}', toLocalizeLang(conditions[condId]['name'], langId));
 	}
 	if (desc.indexOf('{4}') !== -1) {
 		condId = 2100000 + passiveList['conditionVal'][1];
 		if (condId in conditions)
-			desc = desc.replace('{4}', toLocalizeLang(conditions[condId], langId));
+			desc = desc.replace('{4}', toLocalizeLang(conditions[condId]['name'], langId));
 	}
 	return desc
 }
@@ -225,6 +225,10 @@ function getHtmlPassiveDesc(passiveId, passiveVal) {
 		txt += '<p>' + getShapeHtml(passiveVal, true) + '</p>';
 	}
 	
+	if ('tileAdvs' in passive) {
+		txt += '<p>' + getTileAdvHtml(passive['tileAdvs']) + '</p>';
+	}
+	
 	return txt;
 }
 
@@ -244,7 +248,20 @@ function getHtmlPassiveListDesc(passiveList, hasStackInfo=true) {
 		txt += '<p>' + getShapeHtml(passiveList["val"], true) + '</p>';
 	}
 	
+	if ('tileAdvs' in passive) {
+		txt += '<p>' + getTileAdvHtml(passive['tileAdvs']) + '</p>';
+	}
+	
 	return txt;
+}
+
+function getTileAdvHtml(tileAdvs) {
+	var html = '<table class="stats">';
+	html += '<tr><th>Terrain Name</th><th>Value</th></tr>';
+	for (tileId in tileAdvs)
+		html += '<tr><td>' + toLocalizes(tiles[tileId], ' ') + '</td><td>' + tileAdvs[tileId] + '</td></tr>';
+	html += '</table>';
+	return html;
 }
 
 function getShapeHtml(shapeId, isRange) {
