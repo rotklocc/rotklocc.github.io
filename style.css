@@ -435,6 +435,15 @@ ul.list li span.text {
   transform-origin: 0 0;
 }
 
+.condition {
+  display: inline-block;
+  background: url('imgs/condition.jpg') no-repeat;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
 .face {
   display: inline-block;
   background: url('imgs/face.jpg') no-repeat;

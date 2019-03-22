@@ -406,6 +406,10 @@ function getMagicIconHtml(iconName, extraClass="") {
 	return _iconHtml('magic', magicIcons[iconName], extraClass);
 }
 
+function getConditionIconHtml(iconName, extraClass="") {
+	return _iconHtml('condition', conditionIcons[iconName], extraClass);
+}
+
 function getPassiveIconHtml(iconName, extraClass="") {
 	var icon = passiveIcons[iconName];
 	if (!icon)  // some passive icon is in magic
