@@ -273,7 +273,7 @@ p.header {
 .float-button {
   position: fixed;
   left: 0px;
-  top: 10px;
+  top: 6px;
   z-index: 5;
   margin: 0;
   padding: 0;
@@ -330,6 +330,11 @@ div.listhdr {
   border-top: 1.5px solid #888;
   border-bottom: 1.5px solid #888;
   background-color: #ffff88;
+}
+
+.block {
+  display: inline-block;
+  vertical-align: top;
 }
 
 div.listhdr span {
@@ -396,6 +401,34 @@ ul.list li span.text {
 
 .frame-blue {
   border: 1px solid #4444cc;
+}
+
+.frame-face {
+  border: 2px solid blue;
+}
+
+span.absInside {
+  position: relative;
+}
+
+.itemLvTxt {
+  position: absolute;
+  color: white;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 11px;
+  top: 0px;
+  right: 2px
+}
+
+.relicLvTxt {
+  position: absolute;
+  color: black;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 11px;
+  top: 0px;
+  right: 2px;
 }
 
 /* sprite image */
@@ -469,13 +502,165 @@ span.icon-pretxt {
   padding-right: 2px;
 }
 
-span.icon36 {
+span.icon30 {
   display: inline-block;
-  width: 18px;
-  height: 18px;
+  width: 30px;
+  height: 30px;
   overflow: hidden;
 }
 
-span.icon36 span {
+span.icon30 span {
+  transform: scale(0.75);
+}
+
+span.icon20 {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  overflow: hidden;
+}
+
+span.icon20 span {
   transform: scale(0.5);
 }
+
+.heroName {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 130px;
+  vertical-align: middle;
+}
+
+label.attrName {
+  display: inline-block;
+  width: 45px;
+  text-align: right;
+}
+
+span.attrVal {
+  display: inline-block;
+  width: 35px;
+  text-align: right;
+}
+
+span.statVal {
+  display: inline-block;
+  width: 45px;
+  text-align: right;
+}
+
+.floating {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 9;
+  left: 0;
+  top: 0;
+  padding: 0 1px 1px;
+  background-color: rgba(0,0,0,0.7);
+  vertical-align: top;
+}
+
+.trainingBtn {
+  padding: 0px;
+  font-size: 12px;
+  line-height: 10px;
+  width: 61px;
+}
+
+.smallText {
+  line-height: 12px;
+  font-size: 12px;
+}
+
+button.battleOpt {
+  width:120px;
+  line-height:12px;
+  font-size:12px;
+}
+
+.terrainSel {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 120px;
+}
+
+.miniIcons-container {
+  display: inline-block;
+  height: 22px;
+  width: 132px;  /* 6 is enough */
+  background-color: #fffacd;
+}
+
+/* for increasing/decreasing slider value */
+.arrowBtn {
+  padding: 0;
+  font-size: 0.8em;
+  line-height: 0.7em;
+  width: 25px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 200px;
+  height: 0.4em;
+  margin: 0;
+  border-radius: 2px;  
+  background: #d3d3d3;
+  outline: none;
+  -webkit-transition: .2s;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%; 
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.hpBar {
+  height: 1em;
+  width: 100%;
+  background-color: #c9c9c9;
+  border: 1px solid black;
+  position: relative;
+}
+.hpBar:before {
+  content: attr(data-label);
+  font-size: 0.7em;
+  position: absolute;
+  text-align: center;
+  top: 1px;
+  left: 0;
+  right: 0;
+}
+.hpBar .hpVal {
+  background-color: #00ff2f;
+  display: inline-block;
+  height: 100%;
+}
+.hpBar .mpVal {
+  background-color: #40c0ff;
+  display: inline-block;
+  height: 100%;
+}
+.hpBar .epVal {
+  background-color: gold;
+  display: inline-block;
+  height: 100%;
+}
+

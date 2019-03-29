@@ -426,10 +426,18 @@ function getPassiveIconInfo(iconName) {
 	return [ 'magic', icon ];
 }
 
+function getMagicIconInfo(iconName) {
+	return magicIcons[iconName];
+}
+
 function getArtifactIconHtml(iconName, extraClass="") {
 	return _iconHtml('artifact', artifactIcons[iconName], extraClass);
 }
 
 function getRelicIconHtml(iconName, extraClass="") {
 	return _iconHtml('relic', relicIcons[iconName], extraClass);
+}
+
+function isTypeHeavyCavalry(typeId) {
+	return ([1210001, 1210007, 1210009, 1210017, 1210069, 1210070, 1210078].indexOf(typeId) !== -1);
 }

@@ -276,13 +276,10 @@ function createStageSelection() {
 	eleSel.innerHTML = '';
 	var scenarios = stories[currStoryIdx]['scenarios'];
 	for (var i = 0; i < scenarios.length; i++) {
-		var option = document.createElement("option");
 		var txt = scenarios[i]['episodeNo'] + ' ' + toLocalize(scenarios[i]['accidentName']);
 		if (currStoryIdx === 1) // only cao cao story need chapter no
 			txt = scenarios[i]['chapterNo'] + '-' + txt;
-		option.text = txt;
-		option.value = i;
-		eleSel.add(option);
+		eleSel.add(createOptionNode(txt, i));
 	}
 	eleSel.value = currStageIdx;
 	

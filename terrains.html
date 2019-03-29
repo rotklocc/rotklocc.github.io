@@ -143,10 +143,13 @@ function generateTableRows() {
 		for (var i = 0; i < tileOrders.length; i++) {
 			var tid = tileOrders[i];
 			var tileInfo = ut_tiles[tid];
-			td = createTdTextNode(tileInfo[0]+'_'+tileInfo[1]);
-			td.svalue = tileInfo[0];
+			var adv = tileInfo[0];
+			if (isTypeHeavyCavalry(Number(utid)))
+				adv += 5;
+			td = createTdTextNode(adv+'_'+tileInfo[1]);
+			td.svalue = adv;
 			td.className = "terrain-val";
-			td.style.backgroundColor = "#" + advColors[tileInfo[0]];
+			td.style.backgroundColor = "#" + advColors[adv];
 			if (!filterTiles[tid]) {
 				td.style.display = 'none';
 			}
