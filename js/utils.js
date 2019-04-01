@@ -1,3 +1,10 @@
+function createSpaceNode(width) {
+	var span = document.createElement('span');
+	span.style.display = 'inline-block';
+	span.style.width = width;
+	return span;
+}
+	
 function createTextNode(tag, txt) {
 	var td = document.createElement(tag);
 	var txt = document.createTextNode(txt);

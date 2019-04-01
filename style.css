@@ -368,6 +368,65 @@ ul.list li span.text {
   padding: 5px 0 0 5px;
 }
 
+span.btnChkbox {
+  -webkit-display: inline-flex;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  color:#333;
+  border: 1px solid #CCC;
+  background: #f0f0f0;
+  box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.3);
+  cursor: pointer;
+  width: 100px;
+  height: 36px;
+  padding: 0 1px 0 2px;
+  align-items: center;
+}
+
+span.btnActive {
+  background-color: #666;
+  color: white;
+  box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.5) inset;
+}
+
+.btnTxtOnly {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  width: 100%;
+}
+
+.condBtnTxt {
+  margin-left: 3px;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battlePassiveText {
+  margin-left: 10px;
+  font-size: 12px;
+}
+
+span.resultLbl {
+  display: inline-block;
+  width: 65px;
+}
+
+span.resultDmg {
+  display: inline-block;
+  width: 80px;
+  color: #333;
+  border: 1px solid #888;
+  background-color: #f0f0f0;
+  box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.3);
+  text-align:right;
+}
+
 .frame-selected {
   border: 2px solid red !important;
 }
@@ -505,6 +564,7 @@ span.icon-pretxt {
 span.icon30 {
   display: inline-block;
   width: 30px;
+  min-width: 30px;
   height: 30px;
   overflow: hidden;
 }
@@ -516,6 +576,7 @@ span.icon30 span {
 span.icon20 {
   display: inline-block;
   width: 20px;
+  min-width: 20px;
   height: 20px;
   overflow: hidden;
 }
