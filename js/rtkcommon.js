@@ -116,7 +116,7 @@ function setLang2() {
 }
 
 function toLocalizeLang(tkey, langIdx) {
-	if (tkey === '')
+	if (tkey === '' || !(tkey in localizes))
 		return tkey
 	txt = localizes[tkey][langIdx];
 	if (txt.length === 0)
