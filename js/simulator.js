@@ -486,7 +486,7 @@ function SpActionList(uinfo) {
 		if (spAction === null) {
 			spAction = { 'id': passiveId, 'val': 0, 'passive': passive };
 			// default disable all chance to trigger passive
-			spAction['enabled'] = (passive.triggerType === 0) ? true: false;
+			spAction['enabled'] = (passive.triggerType === 0 || passive.triggerTileValue !== 0) ? true: false;
 			// set main at first of array
 			if (passiveId === rootPassiveId)
 				spActionArr.unshift(spAction);
