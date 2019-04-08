@@ -95,6 +95,10 @@ table.table-terrain td.terrain-val {
   text-align: right;
 }
 
+table.table-terrain td {
+  padding: 4px 8px 4px 8px;
+}
+
 label.terrain-name {
   display: inline-block;
   min-width: 130px;
@@ -407,9 +411,16 @@ span.btnActive {
   text-overflow: ellipsis;
 }
 
-.battlePassiveText {
-  margin-left: 10px;
+.passiveSubText {
+  margin-left: 5px;
   font-size: 12px;
+  white-space: nowrap;
+}
+
+.subPassiveBlock {
+  font-size: 12px;
+  border-top: 1px solid #ccc;
+  clear: left;
 }
 
 span.resultLbl {
@@ -590,7 +601,7 @@ span.icon20 span {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 130px;
+  width: 140px;
   vertical-align: middle;
 }
 
@@ -621,6 +632,15 @@ span.statVal {
   padding: 0 1px 1px;
   background-color: rgba(0,0,0,0.7);
   vertical-align: top;
+}
+
+.formationBtn {
+  line-height: 12px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 160px;
 }
 
 .trainingBtn {
