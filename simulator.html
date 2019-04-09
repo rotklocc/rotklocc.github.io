@@ -23,6 +23,43 @@
 <script type="text/javascript">
 var punits = {};
 
+function lPassiveName(pid) {
+	return toLocalize(passives[pid].name);
+}
+
+function popupNote() {
+	var html = '';
+	html += '<p>For non English player, you can change language on top right dropdown.';
+	html += ' It will change many in-game words to selected langauge, included this note.</p>';
+	html += '<p>To use this page, basically you can click on images/buttons to change the equipments/passives/value.</p>';
+	
+	html += '<p>Here is the short guide for this page after clicking on<br/>';
+	html += '- <b>Code</b> button: get/set code string of this page setup (Game Mode, Map, Weather, ...)<br/>';
+	html += '- <b>Face</b> image: change a hero. In the popup, you can get the code of current hero setup<br/>';
+	html += '- <b>HP/MP</b> bar: change a hero hp/mp. Changing hp/mp might change some passive value such as ';
+	html +=   lPassiveName(2200011)+', '+lPassiveName(2200040)+', '+lPassiveName(2200039)+'<br/>';
+	html += '- <b>Battle Passives</b> button: show detail of passives that affect hero stat in battle map. ';
+	html +=   'You can modify some passives that affect hero stat in battle too, such as '+lPassiveName(2200008)+', '+lPassiveName(2200596)+'<br/>';
+	html += '- <b>Buff/Debuff</b> button: modify and show detail of hero buff/debuff<br/>';
+	html += '- <b>Spell</b> image: change the casting spell to see damage, accuracy of selected spell<br/>';
+	html += '- <b>Dmg/Acc</b> result box: see detail how damage and accuracy is calculated. ';
+	html +=   'In popup, you can change attack type ('+toLocalize(atkTypes[2][0])+', '+toLocalize(atkTypes[5][0])+', ...), '+lPassiveName(2200061)+'. ';
+	html +=   'You also can modify some passive value and see the change immediately.';
+	html += '</p>';
+	
+	html += '<p><b>Notes:</b><br/>';
+	html += '- You can see the game version that is used for stat/dmg/acc calculation near Note button<br/>';
+	html += '- Currently, post damage (damage after main attack. in game, the second damage number that shown on victim) is not implemented. ';
+	html +=   'Example passives that have effect in post damage are '+lPassiveName(2200090)+', '+lPassiveName(2200225)+', '+lPassiveName(2200065);
+	html +=   ', '+lPassiveName(2200088)+', '+lPassiveName(2200089)+', '+lPassiveName(2200494)+', '+lPassiveName(2200564);
+	html += '</p>';
+	
+	document.getElementById("modalHeader").innerHTML = "Note";
+	var content = document.getElementById("modalContent");
+	content.innerHTML = html;
+	document.getElementById("modalDiv").style.display = "block";
+}
+
 function popupGameCode() {
 	document.getElementById("modalHeader").innerHTML = "Data Code";
 	
@@ -2231,7 +2268,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		&nbsp; <button onclick="popupGameCode()">Code</button>
 	</div>
 	<div class="topbar-right" id="langSelection"></div>
-	<div class="topbar-right">65798 <button>Note</button></div>
+	<div class="topbar-right">65798 <button onclick="popupNote()">Note</button></div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">

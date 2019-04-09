@@ -418,7 +418,7 @@ function getDefaultUnitInfo(unit, id) {
 	else {
 		if (passiveIds.indexOf(2200418) !== -1)
 			wantedWeaponPassiveId = 2200418; // double deadly
-		else if (passiveIds.indexOf(2200022) !== -1 && passiveIds.indexOf(2200023) !== -1) {
+		else if (passiveIds.indexOf(2200022) !== -1 || passiveIds.indexOf(2200023) !== -1) {
 			if (uinfo.attackRole === 'Range')
 				wantedWeaponPassiveId = 2200183; // guiding if has leading/chain
 			else
