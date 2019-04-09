@@ -32,7 +32,8 @@ var weatherId = 0; // 0-4
 
 // the mono Math.RoundToInt()
 function monoMathRound(val) {
-	return ((val % 2) == 0.5) ? Math.floor(val) : Math.round(val);
+	var r = (val % 2);
+	return (r === 0.5 || r === -1.5) ? Math.floor(val) : Math.round(val);
 }
 
 function mathClamp(num, lower, upper) {
@@ -905,12 +906,12 @@ function BattleSpAction(id, type, userVal=null, userType='int') {
 	
 	this.clearStat();
 	
-	this.caculateStatFloor = function(baseStat, pct) {
-		this.atk = Math.floor(baseStat.atk * pct / 100);
-		this.wis = Math.floor(baseStat.wis * pct / 100);
-		this.def = Math.floor(baseStat.def * pct / 100);
-		this.agi = Math.floor(baseStat.agi * pct / 100);
-		this.mrl = Math.floor(baseStat.mrl * pct / 100);
+	this.calculateStatTrunc = function(baseStat, pct) {
+		this.atk = Math.trunc(baseStat.atk * pct / 100);
+		this.wis = Math.trunc(baseStat.wis * pct / 100);
+		this.def = Math.trunc(baseStat.def * pct / 100);
+		this.agi = Math.trunc(baseStat.agi * pct / 100);
+		this.mrl = Math.trunc(baseStat.mrl * pct / 100);
 	};
 	
 	this.getPassive = function() {
@@ -927,7 +928,7 @@ function BattleSp007() { // unstoppable
 	this.userText = 'Activated';
 	this.calculate = function(uinfo) {
 		this.modPct = (this.userVal) ? 10 : 0;
-		this.caculateStatFloor(uinfo.statBasic, this.modPct);
+		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
 	};
 }
 
@@ -937,7 +938,7 @@ function BattleSp008() { // union
 	this.userText = 'Number of ally';
 	this.calculate = function(uinfo) {
 		this.modPct = this.userVal * 3;
-		this.caculateStatFloor(uinfo.statBasic, this.modPct);
+		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
 	};
 }
 
@@ -947,12 +948,7 @@ function BattleSp583() { // God of War Guan Yu
 	this.calculate = function(uinfo) {
 		// because enemy guan yu might not exist for simulation. this passive val must be hard code
 		this.modPct = this.userVal ? -10 : 0;
-		//this.caculateStatFloor(uinfo.statBasic, this.modPct); // TODO: check again
-		this.atk = Math.ceil(uinfo.statBasic.atk * this.modPct / 100);
-		this.wis = Math.ceil(uinfo.statBasic.wis * this.modPct / 100);
-		this.def = Math.ceil(uinfo.statBasic.def * this.modPct / 100);
-		this.agi = Math.ceil(uinfo.statBasic.agi * this.modPct / 100);
-		this.mrl = Math.ceil(uinfo.statBasic.mrl * this.modPct / 100);
+		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
 	};
 }
 
@@ -970,7 +966,7 @@ function BattleSp440() { // Quantify (han xin passive)
 	this.userText = 'Number of ally in reach';
 	this.calculate = function(uinfo) {
 		this.modPct = this.userVal * uinfo.getPassiveTotalVal(this.id);
-		this.caculateStatFloor(uinfo.statBasic, this.modPct);
+		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
 	};
 }
 
@@ -979,7 +975,7 @@ function BattleSp433() { // MRL Surge (Emperor passive)
 	this.userText = 'Number of ally in reach';
 	this.calculate = function(uinfo) {
 		this.modPct = this.userVal * uinfo.getPassiveTotalVal(this.id);
-		this.mrl = Math.floor(uinfo.statBasic.mrl * this.modPct / 100);
+		this.mrl = Math.trunc(uinfo.statBasic.mrl * this.modPct / 100);
 	};
 }
 
@@ -987,9 +983,9 @@ function BattleSp011() { // Good from Evil
 	BattleSpAction.call(this, 2200011, 0);
 	this.calculate = function(uinfo) {
 		// TODO: game mode. now there is no mode that started from 100
-		var val = Math.max(50 - Math.floor(uinfo['hpPct']), 0);
+		var val = Math.max(50 - Math.trunc(uinfo['hpPct']), 0);
 		this.modPct = Math.min(val * 100 / (50 * 2), 48);
-		this.caculateStatFloor(uinfo.statBasic, this.modPct);
+		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
 	};
 }
 
@@ -999,8 +995,8 @@ function BattleSp040() { // Veteran
 		this.modPct = this.atk = this.def = 0;
 		if (uinfo['hpPct'] < 35) {
 			this.modPct = uinfo.getPassiveTotalVal(2200040);
-			this.atk = Math.floor(uinfo.statBasic.atk * this.modPct / 100);
-			this.def = Math.floor(uinfo.statBasic.def * this.modPct / 100);
+			this.atk = Math.trunc(uinfo.statBasic.atk * this.modPct / 100);
+			this.def = Math.trunc(uinfo.statBasic.def * this.modPct / 100);
 		}
 	};
 }
@@ -1011,7 +1007,7 @@ function BattleSp006() { // Rage +%
 	this.userText = 'Number of physical attack taken';
 	this.calculate = function(uinfo) {
 		this.modPct = this.userVal * uinfo.getPassiveTotalVal(this.id);
-		this.atk = Math.floor(uinfo.statBasic.atk * this.modPct / 100);
+		this.atk = Math.trunc(uinfo.statBasic.atk * this.modPct / 100);
 	};
 }
 
@@ -1066,18 +1062,18 @@ function BattleSp160() { // Elusive
 		this.modPct = uinfo.getPassiveTotalVal(this.id);
 		if (this.userVal) { // ally turn
 			if (isAlmightyJob(uinfo.unit['jobTypeId'])) {
-				this.atk = Math.floor(uinfo.statBasic.atk * this.modPct / 100);
-				this.wis = Math.floor(uinfo.statBasic.wis * this.modPct / 100);
+				this.atk = Math.trunc(uinfo.statBasic.atk * this.modPct / 100);
+				this.wis = Math.trunc(uinfo.statBasic.wis * this.modPct / 100);
 			}
 			else if (uinfo.attackRole === 'Magic') {
-				this.wis = Math.floor(uinfo.statBasic.wis * this.modPct / 100);
+				this.wis = Math.trunc(uinfo.statBasic.wis * this.modPct / 100);
 			}
 			else {
-				this.atk = Math.floor(uinfo.statBasic.atk * this.modPct / 100);
+				this.atk = Math.trunc(uinfo.statBasic.atk * this.modPct / 100);
 			}
 		}
 		else {
-			this.def = Math.floor(uinfo.statBasic.def * this.modPct / 100);
+			this.def = Math.trunc(uinfo.statBasic.def * this.modPct / 100);
 		}
 	};
 }
@@ -1282,7 +1278,7 @@ function collectUnitPassives(uinfo) {
 	}
 	// should add even passive val is 0 or not?
 	for (passiveId in tmpRelicPassives)
-		uinfo.spActions.addSpAction(passiveId, Math.floor(tmpRelicPassives[passiveId]));
+		uinfo.spActions.addSpAction(passiveId, Math.trunc(tmpRelicPassives[passiveId]));
 	if (uinfo.relicSet !== null)
 		uinfo.spActions.addSpActionFromPassiveList(passiveLists[uinfo.relicSet.passiveListId]);
 	
@@ -1332,10 +1328,10 @@ function calculateStatBasic(uinfo) {
 	uinfo.epMax = unit['ep'];
 	if (uinfo.epMax !== 0)
 		uinfo.mpMax = 0;
-	uinfo.hpMax = Math.floor(uinfo.hpMax * gameMode.hpMul); // cap is 5000
+	uinfo.hpMax = Math.trunc(uinfo.hpMax * gameMode.hpMul); // cap is 5000
 	// keep hp/mp percentage
-	uinfo.hp = Math.floor(uinfo.hpMax * uinfo.hpPct / 100);
-	uinfo.mp = Math.floor(uinfo.mpMax * uinfo.mpPct / 100);
+	uinfo.hp = Math.trunc(uinfo.hpMax * uinfo.hpPct / 100);
+	uinfo.mp = Math.trunc(uinfo.mpMax * uinfo.mpPct / 100);
 	uinfo.ep = uinfo.epMax;
 	uinfo.hpPct = uinfo.hp * 100 / uinfo.hpMax;
 	uinfo.mpPct = uinfo.mpMax ? (uinfo.mp * 100 / uinfo.mpMax) : 0;
