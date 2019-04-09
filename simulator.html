@@ -12,6 +12,7 @@
 <script type="text/javascript" src="js/data.js"></script>
 <script type="text/javascript" src="js/rtkcommon.js"></script>
 <script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="js/lz-string.min.js"></script>
 <script type="text/javascript" src="js/simulator.js"></script>
 <script type="text/javascript" src="imgs/magic.js"></script>
 <script type="text/javascript" src="imgs/passive.js"></script>
@@ -23,22 +24,35 @@
 var punits = {};
 
 function popupGameCode() {
-	// TODO:
 	document.getElementById("modalHeader").innerHTML = "Data Code";
 	
 	var textarea = document.createElement('textarea');
 	textarea.rows = 5;
 	textarea.cols = 100;
 	textarea.value = serializeGameInfo();
+	textarea.addEventListener("keyup", function(evt) {
+		if (evt.keyCode == 13) {
+			evt.preventDefault();
+			applyCode();
+		}
+	});
 	
-	var btnApply = document.createElement('button');
-	btnApply.innerText = 'Apply';
-	btnApply.onclick = function() {
+	function applyCode() {
 		unserializeGameInfo(textarea.value);
 		document.getElementById("modalDiv").style.display = "none";
 		replaceDisplayLanguage();
 		setUserUnitInfo(punits['p0']);
 		setUserUnitInfo(punits['p1']);
+	}
+	
+	var btnApply = document.createElement('button');
+	btnApply.innerText = 'Apply';
+	btnApply.onclick = applyCode;
+	var btnCopy = document.createElement('button');
+	btnCopy.innerText = 'Copy';
+	btnCopy.onclick = function() {
+		textarea.select();
+		document.execCommand("copy");
 	};
 	
 	var content = document.getElementById("modalContent");
@@ -46,6 +60,7 @@ function popupGameCode() {
 	content.appendChild(textarea);
 	content.appendChild(document.createElement('br'));
 	content.appendChild(btnApply);
+	content.appendChild(btnCopy);
 	document.getElementById("modalDiv").style.display = "block";
 	
 	textarea.focus();
@@ -1877,8 +1892,8 @@ function _actionAccTableRowsCreator(uinfo, tableEle, actionList) {
 			var spActionArr = action.getPassiveGroup();
 			for (var i = 0; i < spActionArr.length; i++) {
 				var spAction = spActionArr[i];
-				if (spAction.passive.triggerType === 0)
-					continue;
+				if (spAction.id === action.id)
+					continue; // main
 				var subPassive = passives[spAction.id];
 				var div = document.createElement("div");
 				div.className = 'subPassiveBlock';
@@ -1891,22 +1906,24 @@ function _actionAccTableRowsCreator(uinfo, tableEle, actionList) {
 				div.appendChild(spanPretxt);
 				// passive name
 				div.innerHTML += toLocalize(subPassive['name']);
-				// radio for activation
-				var span = createHtmlNode('span',  ' - Activated:');
-				span.className = 'passiveSubText';
-				var radioName = "sp"+action.id+"s"+spAction.id;
-				for (var j = 1; j >= 0; j--) {
-					var radio = createInputRadio(radioName, j, radioName+j);
-					if (j === (spAction.enabled ? 1 : 0))
-						radio.checked = true;
-					radio.action = action;
-					radio.subAction = spAction;
-					radio.onclick = onAttackSubActionUserVal;
-					span.appendChild(radio);
-					span.appendChild(createLabel(radioName+j, j ? 'Yes' : 'No'));
+				if (spAction.rate !== 0 && spAction.rate !== 100) {
+					// radio for activation
+					var span = createHtmlNode('span',  ' - Activated:');
+					span.className = 'passiveSubText';
+					var radioName = "sp"+action.id+"s"+spAction.id;
+					for (var j = 1; j >= 0; j--) {
+						var radio = createInputRadio(radioName, j, radioName+j);
+						if (j === (spAction.enabled ? 1 : 0))
+							radio.checked = true;
+						radio.action = action;
+						radio.subAction = spAction;
+						radio.onclick = onAttackSubActionUserVal;
+						span.appendChild(radio);
+						span.appendChild(createLabel(radioName+j, j ? 'Yes' : 'No'));
+					}
+					div.appendChild(document.createElement('br'));
+					div.appendChild(span);
 				}
-				div.appendChild(document.createElement('br'));
-				div.appendChild(span);
 				cell.appendChild(div);
 			}
 		}

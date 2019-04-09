@@ -194,10 +194,13 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 	return outObj;
 }
 
+function _serializedObj2Txt(sobj) {
+	//return JSON.stringify(sobj);
+	return LZString.compressToBase64(JSON.stringify(sobj));
+}
+
 function serializeUserUnit(uinfo, doFull=false) {
-	var txt = JSON.stringify(_userUnit2SerializeObj(uinfo, doFull));
-	//console.log(txt);
-	return txt;
+	return _serializedObj2Txt(_userUnit2SerializeObj(uinfo, doFull));
 }
 
 function _unserializeArtifact(info) {
@@ -266,7 +269,11 @@ function _serializedObj2UserUnit(sobj, uid) {
 }
 
 function unserializeUserUnit(uid, txt) {
+	txt = txt.trim();
+	if (txt === '') return;
 	try {
+		if (txt.charAt(0) !== '{')
+			txt = LZString.decompressFromBase64(txt);
 		var sobj = JSON.parse(txt);
 	} catch (e) {
 		return null;
@@ -286,13 +293,15 @@ function serializeGameInfo() {
 		'p0': p0obj,
 		'p1': p1obj,
 	};
-	var txt = JSON.stringify(outObj);
-	//console.log(txt);
-	return txt;
+	return _serializedObj2Txt(outObj);
 }
 
 function unserializeGameInfo(txt) {
+	txt = txt.trim();
+	if (txt === '') return;
 	try {
+		if (txt.charAt(0) !== '{')
+			txt = LZString.decompressFromBase64(txt);
 		var sobj = JSON.parse(txt);
 	} catch (e) {
 		return null;
@@ -468,7 +477,7 @@ function SpActionList(uinfo) {
 	this.uinfo = uinfo;
 	this.spList = {};
 	
-	this.addSpAction = function(passiveId, passiveVal) {
+	this.addSpAction = function(passiveId, passiveVal, triggerRate=100) {
 		var passive = passives[passiveId];
 		// +12 kit passive has tile condition. check it
 		if (passive.triggerTileValue !== 0 && this.uinfo.tileId !== passive.triggerTileValue)
@@ -487,7 +496,7 @@ function SpActionList(uinfo) {
 		if (spAction === null) {
 			spAction = { 'id': passiveId, 'val': 0, 'passive': passive };
 			// default disable all chance to trigger passive
-			spAction['enabled'] = (passive.triggerType === 0 || passive.triggerTileValue !== 0) ? true: false;
+			spAction['enabled'] = (triggerRate === 0 || triggerRate === 100) ? true: false;
 			// set main at first of array
 			if (passiveId === rootPassiveId)
 				spActionArr.unshift(spAction);
@@ -496,14 +505,16 @@ function SpActionList(uinfo) {
 		}
 		if (passive['accumulate']) {
 			spAction['val'] += passiveVal;
+			spAction['rate'] = triggerRate;
 		}
 		else if (passiveVal > spAction['val']) {
 			spAction['val'] = passiveVal;
+			spAction['rate'] = triggerRate;
 		}
 	};
 	
 	this.addSpActionFromPassiveList = function(passiveList) {
-		this.addSpAction(passiveList['passiveId'], passiveList['val']);
+		this.addSpAction(passiveList['passiveId'], passiveList['val'], passiveList['triggerRateValue']);
 	};
 	
 	this.addSpActionFromArtifact = function(artifactInfo) {
@@ -2768,6 +2779,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp435(this, 2200435), // Dignity (Emperor passive)
 		//new AttackDmgSp185(this, 2200185), // Keep (for keep only)
 		new AttackDmgSp057(this, 2200057), // MP Attack
+		new AttackDmgSp592(this, 2200592), // Desperate Countermeasure
 		//new AttackDmgTech1019(this, 2501019), // Enhance Keep
 		new AttackDmgTech027(this, 2500027), // Research: Ship Construction (navy)
 		new AttackDmgSp446(this, 2200446), // CMD: Physical Attack +%
@@ -2969,7 +2981,7 @@ function AttackDmgSp280(actList, actId) { // Decrease Physical Damage
 	
 	this.adjustValue = function(dmg) {
 		this.modVal = this.getPassiveTotalVal();
-		this.result = Math.max(0, dmg - this.modPct);
+		this.result = Math.max(0, dmg - this.modVal);
 	};
 }
 
@@ -2981,7 +2993,7 @@ function AttackDmgSp500(actList, actId) { // Relic: Melee Damage -
 	
 	this.adjustValue = function(dmg) {
 		this.modVal = this.getPassiveTotalVal();
-		this.result = Math.max(0, dmg - this.modPct);
+		this.result = Math.max(0, dmg - this.modVal);
 	};
 }
 
@@ -3005,7 +3017,7 @@ function AttackDmgSp501(actList, actId) { // Relic: Ranged Damage -
 	
 	this.adjustValue = function(dmg) {
 		this.modVal = this.getPassiveTotalVal();
-		this.result = Math.max(0, dmg - this.modPct);
+		this.result = Math.max(0, dmg - this.modVal);
 	};
 }
 		
@@ -3024,8 +3036,24 @@ function AttackDmgSp057(actList, actId) { // MP Attack
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	
 	this.adjustValue = function(dmg) {
-		this.modVal = this.getAtkInfo().mp; // Note: ToG is 50% of mp
+		this.modVal = this.getAtkInfo().mp; // Note: ToG is round(mp*0.5)
 		this.result = dmg + this.modVal;
+	};
+}
+
+function AttackDmgSp592(actList, actId) { // Desperate Countermeasure
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	
+	this.adjustValue = function(dmg) {
+		var hp = this.getAtkInfo().hp;
+		if (hp < 10) {
+			this.modVal = 0;
+			this.result = dmg;
+		}
+		else {
+			this.modVal = monoMathRound(hp * this.getPassiveTotalVal() * 0.01);
+			this.result = dmg + this.modVal;
+		}
 	};
 }
 
@@ -3655,14 +3683,14 @@ function AttackDmgSp418(actList, actId) { // Deadly Attack
 
 function AttackDmgSp101(actList, actId) { // Desperate Attack
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 2, 1, 'int');
-	this.userText = 'Attack Order'; // TODO: better user text (maybe it is target hit (included joint/...))
+	this.userText = 'Hit Enemy Count'; // including hitting from joint attack
 	this.userValMin = 1;
 	this.canApply = function() {
-		return this.getAtkInfo().attackType === 7;
+		return this.getAtkInfo().attackType >= 5; // any post attack (guiding/pene/desperate)
 	};
 	
 	this.adjustValue = function(dmg) {
-		this.modPct = -(this.userVal-1) * this.getPassiveTotalVal();
+		this.modPct = -this.userVal * this.getPassiveTotalVal();
 		this.result = dmg + (dmg * this.modPct / 100);
 	};
 }
@@ -3815,7 +3843,7 @@ function AttackDmgSp543(actList, actId) { // Mortal Blaze (assume main target)
 		}
 		else {
 			this.modPct = this.getPassiveTotalVal() * this.userVal;
-			var cap = this.getAtkInfo().getStat('atk') * 0.01 * this.userVal;
+			var cap = this.getAtkInfo().getStat('atk') * 0.1 * this.userVal;
 			var val = dmg * this.modPct / 100;
 			this.result = Math.max(0, dmg + Math.min(val, cap));
 		}
