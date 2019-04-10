@@ -412,7 +412,7 @@ function getDefaultUnitInfo(unit, id) {
 		if (passiveIds.indexOf(2200024) === -1)
 			wantedWeaponPassiveId = 2200024; // double tactics
 		else
-			wantedWeaponPassiveId = 2200024; // tactic def rate pierce
+			wantedWeaponPassiveId = 2200417; // tactic def rate pierce
 		uinfo.kit.item = _findObj(3040744, artifacts); // sun bin
 	}
 	else {
@@ -2169,7 +2169,7 @@ function TacticAccSp582(actList) { // Tactics Defense Skill %
 	this.adjustValue = function(acc) {
 		this.modVal = 20; // subtract after applied modPct
 		this.modPct = Math.min(this.userVal * this.getPassiveTotalVal(), 100);
-		this.result = Math.max(acc - ((acc * this.modPct * 0.01) + this.modVal), 0, 100, 0);
+		this.result = Math.max(acc - ((acc * this.modPct * 0.01) + this.modVal), 0);
 	};
 }
 
