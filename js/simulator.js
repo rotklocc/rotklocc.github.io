@@ -1515,11 +1515,11 @@ function getTacticBasicAcc(atkInfo, defInfo) {
 	var defWis = defInfo.getStat('wis') + defInfo.getStat('mrl');
 	var atkVal = atkWis + atkInfo.attrs.lck / 5;
 	var defVal = defWis + defInfo.attrs.lck / 5;
-	if (atkWis >= atkWis * 2)
+	if (atkWis >= defWis * 2)
 		return 90;
-	else if (atkWis >= atkWis)
+	else if (atkWis >= defWis)
 		return 80 + (atkVal - defVal) * 10 / defVal;
-	else if (atkWis >= atkWis / 2)
+	else if (atkWis >= defWis / 2)
 		return 50 + (atkVal - defVal/2) * 30 / (defVal/2);
 	return 35 + (atkVal - defVal/3) * 30 / (defVal/3);
 }
