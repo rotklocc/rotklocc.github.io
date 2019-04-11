@@ -3719,7 +3719,7 @@ function AttackDmgSp418(actList, actId) { // Deadly Attack
 }
 
 function AttackDmgSp101(actList, actId) { // Desperate Attack
-	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 1, 'int');
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 2, 'int');
 	this.userText = 'Hit Enemy Count'; // including hitting from joint attack
 	this.userValMin = 2; // the count is added before attacking target (1 for first target as normal, 2 for first desperate)
 	this.canApply = function() {
