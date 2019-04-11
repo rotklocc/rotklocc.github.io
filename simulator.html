@@ -1517,6 +1517,117 @@ function popupBattleConditions(uid) {
 	document.getElementById("modalDiv").style.display = "block";
 }
 
+function updateAttackSubModeUI(uinfo) {
+	var ele = document.getElementById(uinfo.id+'atkDouble');
+	if (uinfo.isDoubleAttack)
+		ele.classList.remove('iconInactive');
+	else
+		ele.classList.add('iconInactive');
+	ele = document.getElementById(uinfo.id+'atkCritical');
+	if (uinfo.isCriticalAttack)
+		ele.classList.remove('iconInactive');
+	else
+		ele.classList.add('iconInactive');
+	ele = document.getElementById(uinfo.id+'spellDouble');
+	if (uinfo.isDoubleTactic)
+		ele.classList.remove('iconInactive');
+	else
+		ele.classList.add('iconInactive');
+	ele = document.getElementById(uinfo.id+'spellCritical');
+	if (uinfo.isCriticalTactic)
+		ele.classList.remove('iconInactive');
+	else
+		ele.classList.add('iconInactive');
+}
+
+function toggleDoubleAttack(uid) {
+	var uinfo = punits[uid];
+	if (!uinfo.canDoubleAttack())
+		return;
+	uinfo.setDoubleAttack(!uinfo.isDoubleAttack);
+	updateDamageResult();
+}
+
+function toggleCriticalAttack(uid) {
+	var uinfo = punits[uid];
+	if (uinfo.alwaysCriticalAttack())
+		return;
+	uinfo.setCriticalAttack(!uinfo.isCriticalAttack);
+	updateDamageResult();
+}
+
+function toggleDoubleTactic(uid) {
+	var uinfo = punits[uid];
+	if (!uinfo.canDoubleTactic())
+		return;
+	uinfo.setDoubleTactic(!uinfo.isDoubleTactic);
+	updateDamageResult();
+}
+
+function toggleCriticalTactic(uid) {
+	var uinfo = punits[uid];
+	if (!uinfo.canCriticalTactic())
+		return;
+	if (uinfo.alwaysCriticalAttack())
+		return;
+	uinfo.setCriticalTactic(!uinfo.isCriticalTactic);
+	updateDamageResult();
+}
+
+function showSelectAttack(evt) {
+	// TODO:
+	var ele = evt.target;
+	var uinfo = punits[ele.id.substr(0,2)];
+	
+	var div = document.getElementById('atkTypesDiv');
+	div.style.display = "block";
+	var bodyY = document.documentElement.scrollTop || document.body.scrollTop;
+	var bodyX = document.documentElement.scrollLeft || document.body.scrollLeft;
+	div.style.top = (ele.offsetTop - bodyY - 50) + "px";
+	div.style.left = (ele.offsetLeft - bodyX - 5) + "px";
+	
+	function onAtkTypeClicked(evt) {
+		var imgSpan = evt.target;
+		uinfo.setAttackType(Number(imgSpan.atkId));
+		updateDamageResult();
+		document.getElementById('atkTypesDiv').style.display = "none";
+	}
+	
+	div.innerHTML = '';
+	for (var i = 0; i < atkTypes.length; i++) {
+		var name = atkTypes[i][0];
+		var reqPassive = atkTypes[i][1];
+		var allowed = true;
+		if (i === 2) {
+			// joint attack. check from unit type
+			allowed = uinfo.jobInfo.canPincers;
+		}
+		else if (reqPassive !== 0) {
+			allowed = false;
+			for (var j = 0; j < reqPassive.length; j++) {
+				if (uinfo.hasPassive(reqPassive[j])) {
+					allowed = true;
+					break;
+				}
+			}
+		}
+		if (allowed) {
+			var span = document.createElement('span');
+			var imgInfo = atkTypeImgs[i];
+			span.atkId = i;
+			span.className=imgInfo[0]+" frame-orange clickable";
+			span.addEventListener('click', onAtkTypeClicked);
+			if (imgInfo[0] === 'passive') {
+				var icon = passiveIcons[passives[imgInfo[1]].icon];
+				span.style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
+			}
+			div.appendChild(span);
+		}
+	}
+	
+	evt.stopPropagation();
+}
+
 function popupSelectTactic(uid) {
 	var uinfo = punits[uid];
 	var currentTactic = uinfo.tactic;
@@ -1724,9 +1835,28 @@ function calculateDamageInfo() {
 	updateDamageResult();
 }
 
+function updateAttackTypeImage(uinfo) {
+	var ele = document.getElementById(uinfo.id+'attack');
+	var imgInfo = atkTypeImgs[uinfo.attackType];
+	ele.classList.remove('attackImg', 'jointImg', 'passive');
+	ele.classList.add(imgInfo[0]);
+	if (imgInfo[0] === 'passive') {
+		var icon = passiveIcons[passives[imgInfo[1]].icon];
+		ele.style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
+	}
+	else {
+		ele.style.backgroundPosition = '0px 0px';
+	}
+}
+
 function updateDamageResult() {
 	var p0info = punits['p0'];
 	var p1info = punits['p1'];
+	
+	updateAttackTypeImage(p0info);
+	updateAttackTypeImage(p1info);
+	updateAttackSubModeUI(p0info);
+	updateAttackSubModeUI(p1info);
 	
 	document.getElementById('p0pDmg').innerText = getDecimalText(p0info.attackDmgActionList.result);
 	document.getElementById('p0pAcc').innerText = getDecimalText(p0info.attackAccActionList.result) + '%';
@@ -2038,8 +2168,7 @@ function popupAttackDmg(uid) {
 	
 	createAttackTypeSelection(uinfo);
 	document.getElementById('atkType').onchange = function() {
-		uinfo.attackType = Number(this.value);
-		uinfo.attackDmgActionList.calculate();
+		uinfo.setAttackType(Number(this.value));
 		rowCreator.recheckAttackTableDetail();
 	};
 	
@@ -2051,8 +2180,7 @@ function popupAttackDmg(uid) {
 	}
 	else {
 		chkDoubleAttack.onchange = function() {
-			uinfo.isDoubleAttack = this.checked;
-			uinfo.attackDmgActionList.calculate();
+			uinfo.setDoubleAttack(this.checked);
 			rowCreator.recheckAttackTableDetail();
 		};
 	}
@@ -2064,8 +2192,7 @@ function popupAttackDmg(uid) {
 	}
 	else {
 		chkCriticalAttack.onchange = function() {
-			uinfo.isCriticalAttack = this.checked;
-			uinfo.attackDmgActionList.calculate();
+			uinfo.setCriticalAttack(this.checked);
 			rowCreator.recheckAttackTableDetail();
 		};
 	}
@@ -2096,8 +2223,7 @@ function popupAttackAcc(uid) {
 	
 	createAttackTypeSelection(uinfo);
 	document.getElementById('atkType').onchange = function() {
-		uinfo.attackType = Number(this.value);
-		uinfo.attackAccActionList.calculate();
+		uinfo.setAttackType(Number(this.value));
 		rowCreator.recheckAttackTableDetail();
 	};
 }
@@ -2192,8 +2318,7 @@ function popupTacticDmg(uid) {
 	}
 	else {
 		chkDoubleTactic.onchange = function() {
-			uinfo.isDoubleTactic = this.checked;
-			uinfo.tacticDmgActionList.calculate();
+			uinfo.setDoubleTactic(this.checked);
 			rowCreator.recheckAttackTableDetail();
 		};
 	}
@@ -2205,8 +2330,7 @@ function popupTacticDmg(uid) {
 	}
 	else {
 		chkCriticalTactic.onchange = function() {
-			uinfo.isCriticalTactic = this.checked;
-			uinfo.tacticDmgActionList.calculate();
+			uinfo.setCriticalTactic(this.checked);
 			rowCreator.recheckAttackTableDetail();
 		};
 	}
@@ -2228,6 +2352,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (!div.contains(event.target)) {
 			div.style.display = "none";
 		}
+		div = document.getElementById("atkTypesDiv");
+		if (!div.contains(event.target)) {
+			div.style.display = "none";
+		}
 	});
 	
 	var btns = document.getElementsByClassName('trainingBtn');
@@ -2240,12 +2368,23 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('p0mpBar').addEventListener("click", showNumberDiv);
 	document.getElementById('p1hpBar').addEventListener("click", showNumberDiv);
 	document.getElementById('p1mpBar').addEventListener("click", showNumberDiv);
+	document.getElementById('p0attack').addEventListener("click", showSelectAttack);
+	document.getElementById('p1attack').addEventListener("click", showSelectAttack);
 	document.getElementById('numInput').addEventListener("keyup", function(evt) {
 		if (evt.keyCode === 13) {
 			document.getElementById("numberDiv").style.display = "none";
 			evt.preventDefault();
 		}
 	});
+	
+	setPassivePic('p0atkDouble', passives[2200023]);
+	setPassivePic('p0atkCritical', passives[2200061]);
+	setPassivePic('p1atkDouble', passives[2200023]);
+	setPassivePic('p1atkCritical', passives[2200061]);
+	setPassivePic('p0spellDouble', passives[2200024]);
+	setPassivePic('p0spellCritical', passives[2200061]);
+	setPassivePic('p1spellDouble', passives[2200024]);
+	setPassivePic('p1spellCritical', passives[2200061]);
 	
 	createGameModeSelection();
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight+5) + "px";
@@ -2424,7 +2563,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <span class="block">
   <div style="border-bottom: 1px solid brown">
-  <span class="passive frame-orange" style="margin-top:7px"></span>
+  <span class="block" style="width:44px;line-height:11px;">
+    <span id="p0attack" class="attackImg frame-orange clickable" style="margin-left:1px"></span>
+    <span class="icon20 frame-dark"><span id="p0atkDouble" class="passive clickable iconInactive" onclick="toggleDoubleAttack('p0')"></span>
+    </span><span class="icon20 frame-dark"><span id="p0atkCritical" class="passive clickable iconInactive" onclick="toggleCriticalAttack('p0')"></span></span>
+  </span>
   <span class="block">
     <span class="resultLbl">Dmg: </span><span id="p0pDmg" class="resultDmg clickable" onclick="popupAttackDmg('p0')">0</span><br/>
     <span class="resultLbl">Acc: </span><span id="p0pAcc" class="resultDmg clickable" onclick="popupAttackAcc('p0')">0</span><br/>
@@ -2432,7 +2575,11 @@ document.addEventListener('DOMContentLoaded', function() {
   </span>
   </div>
   <div style="border-bottom: 1px solid brown">
-  <span id="p0spell" class="magic frame-orange clickable" style="margin-top:7px" onclick="popupSelectTactic('p0')"></span>
+  <span class="block" style="width:44px;line-height:11px">
+    <span id="p0spell" class="magic frame-orange clickable" style="margin-left:1px" onclick="popupSelectTactic('p0')"></span>
+    <span class="icon20 frame-dark"><span id="p0spellDouble" class="passive clickable iconInactive" onclick="toggleDoubleTactic('p0')"></span>
+    </span><span class="icon20 frame-dark"><span id="p0spellCritical" class="passive clickable iconInactive" onclick="toggleCriticalTactic('p0')"></span></span>
+  </span>
   <span class="block">
     <span class="resultLbl">Dmg: </span><span id="p0tDmg" class="resultDmg clickable" onclick="popupTacticDmg('p0')">0</span><br/>
     <span class="resultLbl">Acc: </span><span id="p0tAcc" class="resultDmg clickable" onclick="popupTacticAcc('p0')">0</span><br/>
@@ -2596,7 +2743,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <span class="block">
   <div style="border-bottom: 1px solid brown">
-  <span class="passive frame-orange" style="margin-top:7px"></span>
+  <span class="block" style="width:44px;line-height:11px">
+    <span id="p1attack" class="attackImg frame-orange clickable" style="margin-left:1px"></span>
+    <span class="icon20 frame-dark"><span id="p1atkDouble" class="passive clickable iconInactive" onclick="toggleDoubleAttack('p1')"></span>
+    </span><span class="icon20 frame-dark"><span id="p1atkCritical" class="passive clickable iconInactive" onclick="toggleCriticalAttack('p1')"></span></span>
+  </span>
   <span class="block">
     <span class="resultLbl">Dmg: </span><span id="p1pDmg" class="resultDmg clickable" onclick="popupAttackDmg('p1')">0</span><br/>
     <span class="resultLbl">Acc: </span><span id="p1pAcc" class="resultDmg clickable" onclick="popupAttackAcc('p1')">0</span><br/>
@@ -2604,7 +2755,11 @@ document.addEventListener('DOMContentLoaded', function() {
   </span>
   </div>
   <div style="border-bottom: 1px solid brown">
-  <span id="p1spell" class="magic frame-orange clickable" style="margin-top:7px" onclick="popupSelectTactic('p1')"></span>
+  <span class="block" style="width:44px;line-height:11px">
+    <span id="p1spell" class="magic frame-orange clickable" style="margin-left:1px" onclick="popupSelectTactic('p1')"></span>
+    <span class="icon20 frame-dark"><span id="p1spellDouble" class="passive clickable iconInactive" onclick="toggleDoubleTactic('p1')"></span>
+    </span><span class="icon20 frame-dark"><span id="p1spellCritical" class="passive clickable iconInactive" onclick="toggleCriticalTactic('p1')"></span></span>
+  </span>
   <span class="block">
     <span class="resultLbl">Dmg: </span><span id="p1tDmg" class="resultDmg clickable" onclick="popupTacticDmg('p1')">0</span><br/>
     <span class="resultLbl">Acc: </span><span id="p1tAcc" class="resultDmg clickable" onclick="popupTacticAcc('p1')">0</span><br/>
@@ -2646,6 +2801,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- floating input number for adjusting hp/mp -->
 <div id="numberDiv" class="floating">
   <input id="numInput" style="width:50px;margin:2px;line-height:0.8em;font-size:12px" type="number" min="0" max="5000" value="5000" onfocus="this.select()" />
+</div>
+
+<div id="atkTypesDiv" class="floating" style="line-height:10px;padding:3px">
 </div>
 
 </body>

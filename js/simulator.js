@@ -30,6 +30,17 @@ var gameMode = gameModes[gameModeId];
 var mapId = 0;
 var weatherId = 0; // 0-4
 
+var atkTypeImgs = [
+	[ 'attackImg', 0 ],
+	[ 'passive', 2200096 ], // counterattack
+	[ 'jointImg', 0 ],
+	[ 'passive', 2200092 ], // Reversal
+	[ 'passive', 2200097 ], // Phalanx
+	[ 'passive', 2200183 ], // Guiding attack
+	[ 'passive', 2200099 ], // Penetration attack
+	[ 'passive', 2200101 ], // Desperate attack
+];
+
 // the mono Math.RoundToInt()
 function monoMathRound(val) {
 	var r = (val % 2);
@@ -843,6 +854,32 @@ function UserUnit(unit, id) {
 	
 	this.isAoEAttack = function() {
 		return this.jobInfo.effectArea !== 0 || this.hasPassive(2200005);
+	};
+	
+	this.setAttackType = function(type) {
+		this.attackType = type;
+		this.attackAccActionList.calculate();
+		this.attackDmgActionList.calculate();
+	};
+	
+	this.setDoubleAttack = function(val) {
+		this.isDoubleAttack = val;
+		this.attackDmgActionList.calculate();
+	};
+	
+	this.setCriticalAttack = function(val) {
+		this.isCriticalAttack = val;
+		this.attackDmgActionList.calculate();
+	};
+	
+	this.setDoubleTactic = function(val) {
+		this.isDoubleTactic = val;
+		this.tacticDmgActionList.calculate();
+	};
+	
+	this.setCriticalTactic = function(val) {
+		this.isCriticalTactic = val;
+		this.tacticDmgActionList.calculate();
 	};
 	
 	this.battlePassives = [
@@ -3682,9 +3719,9 @@ function AttackDmgSp418(actList, actId) { // Deadly Attack
 }
 
 function AttackDmgSp101(actList, actId) { // Desperate Attack
-	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 2, 1, 'int');
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 1, 'int');
 	this.userText = 'Hit Enemy Count'; // including hitting from joint attack
-	this.userValMin = 1;
+	this.userValMin = 2; // the count is added before attacking target (1 for first target as normal, 2 for first desperate)
 	this.canApply = function() {
 		return this.getAtkInfo().attackType >= 5; // any post attack (guiding/pene/desperate)
 	};
