@@ -1575,7 +1575,6 @@ function toggleCriticalTactic(uid) {
 }
 
 function showSelectAttack(evt) {
-	// TODO:
 	var ele = evt.target;
 	var uinfo = punits[ele.id.substr(0,2)];
 	
@@ -2006,13 +2005,12 @@ function _actionAccTableRowsCreator(uinfo, tableEle, actionList) {
 	}
 	
 	function addActionInfoCells(row, action) {
-		var passive = action.getPassive();
 		// img
 		cell = row.insertCell(-1);
-		if (passive) {
+		var iconHtml = action.getIconHtml();
+		if (iconHtml) {
 			cell.className = "img";
-			if (action.hasMainPassive)
-				cell.innerHTML = getPassiveIconHtml(passive['icon'], 'frame-blue');
+			cell.innerHTML = iconHtml;
 		}
 		// name
 		cell = row.insertCell(-1);

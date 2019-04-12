@@ -363,7 +363,6 @@ function getDefaultArtifactUpgradePassive(info) {
 }
 
 function getDefaultRelicInfo(uinfo) {
-	var weapon = uinfo.weapon.item;
 	if (uinfo.attackRole === 'Magic') {
 		uinfo.relicSet = relicSets[13030028]; // scorching Lighting Plan
 		uinfo.relicPassives = new Array(4).fill(relicPassives[13010003]); // amplify offensive tactics
@@ -1731,11 +1730,28 @@ function AttackAccActionBase(actList, id, side, type, userVal=null, userType='in
 	};
 	
 	this.getDisplayName = function() {
+		if ('displayName' in this)
+			return this.displayName;
 		if (this.passiveId !== 0)
 			return toLocalize(passives[this.passiveId]['name']);
 		if (this.techId !== 0)
 			return toLocalize(research[this.techId]);
-		return toLocalize(this.displayName);
+		return 'NoName_'+this.id;
+	};
+	
+	this.getIconHtml = function() {
+		var html = null;
+		if (this.passiveId) {
+			if (this.hasMainPassive)
+				html = getPassiveIconHtml(passives[this.passiveId]['icon'], 'frame-blue');
+		}
+		else if (this.techId) {
+			// TODO: add code when has research images
+		}
+		else if ('imgInfo' in this) {
+			html = _iconHtml(this.imgInfo[0], this.imgInfo[1], 'frame-blue');
+		}
+		return html;
 	};
 }
 
@@ -2496,7 +2512,10 @@ function TacticDmgTech030(actList, actId) { // Assess Terrain (outlaw)
 
 function TacticDmgWeather(actList, actId) {
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
-	this.displayName = "Weather Effect";
+	this.getDisplayName = function() {
+		return 'Weather: '+toLocalize(weatherNames[weatherId]);
+	};
+	
 	this.canApply = function() {
 		var tactic = this.getTactic();
 		if (weatherId === 0 && tactic.skillType === 0) // sun
@@ -2748,7 +2767,9 @@ function TacticDmgSp422(actList, actId) { // Song: Tactics Damage -%
 
 function TacticDmgPatience(actList, actId) { // swift calvary Patience tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
-	this.displayName = _findObj(2000170, tactics).name;
+	this.magic = _findObj(2000170, tactics);
+	this.getDisplayName = function() { return toLocalize(this.magic.name); };
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'Activated';
 	this.canApply = function() {
 		return this.getTactic().skillType !== 25 && this.getDefInfo().unit.jobTypeId === 1210078;
@@ -2768,7 +2789,9 @@ function TacticDmgPatience(actList, actId) { // swift calvary Patience tactic
 
 function TacticDmgComposure(actList, actId) { // swift calvary Tranquility tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
-	this.displayName = _findObj(2000171, tactics).name;
+	this.magic = _findObj(2000171, tactics);
+	this.getDisplayName = function() { return toLocalize(this.magic.name); };
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'Activated';
 	this.canApply = function() {
 		return this.getTactic().skillType !== 25 && this.getDefInfo().unit.jobTypeId === 1210078;
@@ -3245,6 +3268,10 @@ function AttackDmgCounterSp096(actList, actId) { // Counterattack+
 
 function AttackDmgCounterSp023(actList, actId) { // Counterattack with chain attack
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.getDisplayName = function() {
+		return 'Counterattack damage with '+ toLocalize(passives[this.passiveId]['name']);
+	};
+	
 	this.canApply = function() {
 		var modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());
 		return this.getAtkInfo().attackType === 1 && modPct !== 100;
@@ -3797,7 +3824,9 @@ function AttackDmgSp542(actList, actId) { // Fire Attack % (main target only)
 
 function AttackDmgPatience(actList, actId) { // swift calvary Patience tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 2, 0, 'bool');
-	this.displayName = _findObj(2000170, tactics).name;
+	this.magic = _findObj(2000170, tactics);
+	this.getDisplayName = function() { return toLocalize(this.magic.name); };
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'Activated';
 	this.canApply = function() {
 		return this.getDefInfo().unit.jobTypeId === 1210078;
@@ -3817,7 +3846,9 @@ function AttackDmgPatience(actList, actId) { // swift calvary Patience tactic
 
 function AttackDmgComposure(actList, actId) { // swift calvary Tranquility tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 2, 0, 'bool');
-	this.displayName = _findObj(2000171, tactics).name;
+	this.magic = _findObj(2000171, tactics);
+	this.getDisplayName = function() { return toLocalize(this.magic.name); };
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'Activated';
 	this.canApply = function() {
 		return this.getDefInfo().unit.jobTypeId === 1210078;
@@ -3889,7 +3920,9 @@ function AttackDmgSp543(actList, actId) { // Mortal Blaze (assume main target)
 
 function AttackDmgFlameMark(actList, actId) {
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 2, 0, 'int');
-	this.displayName = 'Flame Mark';
+	this.condition = conditions[2100061];
+	this.getDisplayName = function() { return toLocalize(this.condition.name); };
+	this.imgInfo = [ 'condition', conditionIcons[this.condition.icon] ];
 	this.userText = 'Count';
 	this.userValMax = 8;
 	this.markPct = [ 0, 3, 5, 7, 10, 15, 20, 27, 35 ];
