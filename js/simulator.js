@@ -1735,7 +1735,7 @@ function AttackAccActionBase(actList, id, side, type, userVal=null, userType='in
 		if (this.passiveId !== 0)
 			return toLocalize(passives[this.passiveId]['name']);
 		if (this.techId !== 0)
-			return toLocalize(research[this.techId]);
+			return toLocalize(research[this.techId]['name']);
 		return 'NoName_'+this.id;
 	};
 	
@@ -1746,7 +1746,7 @@ function AttackAccActionBase(actList, id, side, type, userVal=null, userType='in
 				html = getPassiveIconHtml(passives[this.passiveId]['icon'], 'frame-blue');
 		}
 		else if (this.techId) {
-			// TODO: add code when has research images
+			html = _iconHtml('tech', techIcons[research[this.techId]['icon']], 'frame-blue');
 		}
 		else if ('imgInfo' in this) {
 			html = _iconHtml(this.imgInfo[0], this.imgInfo[1], 'frame-blue');
@@ -3121,7 +3121,7 @@ function AttackDmgTech027(actList, actId) { // Research: Ship Construction (navy
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	this.canApply = function() {
 		var defInfo = this.getDefInfo();
-		return this.getAtkInfo().attackRole === 'Range' && defInfo.unit.jobTypeId === 1210019 && defInfo.terrain === 4200014;
+		return this.getAtkInfo().attackRole === 'Range' && defInfo.unit.jobTypeId === 1210019 && defInfo.tileId === 4200014;
 	};
 	
 	this.adjustValue = function(dmg) {
@@ -3576,7 +3576,7 @@ function AttackDmgTech010(actList, actId) { // Research: Ambush
 	this.canApply = function() {
 		var atkInfo = this.getAtkInfo();
 		// all forest tile is 4200003, 4200044 (snow), 4200047 (peach), 4200051 (night)
-		return atkInfo.allowItemTypes[0] === 2 && atkInfo.terrain === 4200003;
+		return atkInfo.allowItemTypes[0] === 2 && atkInfo.tileId === 4200003;
 	};
 	
 	this.adjustValue = function(dmg) {
