@@ -14,6 +14,37 @@
 <script type="text/javascript" src="imgs/magic.js"></script>
 <script type="text/javascript">
 
+var tableViewId = 0; // 0 = description, 1 = stat
+
+function switchTableView() {
+	if (tableViewId === 0)
+		tableViewId = 1;
+	else
+		tableViewId = 0;
+	
+	var head_cols = document.getElementById('chead-colgrp').getElementsByTagName('col');
+	var body_cols = document.getElementById('cbody-colgrp').getElementsByTagName('col');
+	var head_cells = document.getElementById("table-header").rows[0].cells;
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 6; i < head_cells.length; i++) {
+		var show = (i === 6 && tableViewId === 0) || (i >= 7 && tableViewId === 1);
+		head_cols[i].style.display = show ? 'table-column' : 'none';
+		body_cols[i].style.display = show ? 'table-column' : 'none';
+		head_cells[i].style.display = show ? '' : 'none';
+	}
+	
+	for (var i = 0; i < nrow; i++) {
+		var cells = rows[i].cells;
+		for (var j = 6; j < cells.length; j++) {
+			var show = (j === 6 && tableViewId === 0) || (j >= 7 && tableViewId === 1);
+			cells[j].style.display = show ? '' : 'none';
+		}
+	}
+}
+
 function generateTableRows() {
 	var tbody = document.getElementById("cbody");
 	tbody.innerHTML = "";
@@ -26,12 +57,16 @@ function generateTableRows() {
 		
 		tr.appendChild(createTdTextNode(relicSet['minTier']));
 		
+		var stat = { 'atk':0, 'wis':0, 'def':0, 'agi':0, 'mrl':0, 'hp':0, 'mp':0};
 		for (var i = 0; i < 4; i++) {
 			var relic = relics[relicSet['relicIds'][i]];
 			var td = createTdHtmlNode(getRelicIconHtml(relic['icon'], 'frame-orange') + "<br/><span>" + toLocalizes(relic['name']) + "</span>");
 			td.style.textAlign = "center";
+			td.style.lineHeight = "14px";
 			td.relic = relic;
 			tr.appendChild(td);
+			for (var name in stat)
+				stat[name] += relic[name];
 		}
 		
 		var passiveList = passiveLists[relicSet['passiveListId']];
@@ -41,6 +76,29 @@ function generateTableRows() {
 		tr.appendChild(td);
 		
 		td = createTdHtmlNode(localizePassiveListDesc(passiveList));
+		tr.appendChild(td);
+		
+		td = createTdNumberColorTagNode('statAtk', stat['atk']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		td = createTdNumberColorTagNode('statWis', stat['wis']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		td = createTdNumberColorTagNode('statDef', stat['def']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		td = createTdNumberColorTagNode('statAgi', stat['agi']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		td = createTdNumberColorTagNode('statMrl', stat['mrl']);
+		td.style.display = "none";
+		tr.appendChild(td);
+
+		td = createTdNumberColorTagNode('statHp', stat['hp']);
+		td.style.display = "none";
+		tr.appendChild(td);
+		td = createTdNumberColorTagNode('statMp', stat['mp']);
+		td.style.display = "none";
 		tr.appendChild(td);
 		
 		tbody.appendChild(tr);
@@ -132,15 +190,18 @@ document.addEventListener('DOMContentLoaded', function() {
 	<div class="topbar-left">
 		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
 	</div>
-	<div class="topbar-right" id="langSelection"></div>
+	<div class="topbar-right">
+		<button id="switchView" onclick="switchTableView()">Switch View</button> &nbsp;
+		<span class="topbar-right" id="langSelection"></span>
+	</div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">
 </div>
 
 <div class="table-header" style="padding-top: 5px">
-<table class="table-container">
-  <colgroup>
+<table id="table-header" class="table-container">
+  <colgroup id="chead-colgrp">
 	<col style="width:40px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
@@ -148,6 +209,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:80px"/>
 	<col style="width:310px"/>
 	<col/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
   </colgroup>
   <thead>
 	<tr>
@@ -158,6 +226,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	  <th>Relic4</th>
 	  <th>Name</th>
 	  <th>Description</th>
+	  <th style="display:none">ATK</th>
+	  <th style="display:none">WIS</th>
+	  <th style="display:none">DEF</th>
+	  <th style="display:none">AGI</th>
+	  <th style="display:none">MRL</th>
+	  <th style="display:none">HP</th>
+	  <th style="display:none">MP</th>
 	</tr>
   </thead>
 </table>
@@ -168,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="content">
 
 <table id="table-content" class="table-container">
-  <colgroup>
+  <colgroup id="cbody-colgrp">
 	<col style="width:40px"/>
 	<col style="width:80px"/>
 	<col style="width:80px"/>
@@ -176,6 +251,13 @@ document.addEventListener('DOMContentLoaded', function() {
 	<col style="width:80px"/>
 	<col style="width:310px"/>
 	<col/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
+	<col style="display:none;width:50px"/>
   </colgroup>
   <tbody id="cbody">
   </tbody>

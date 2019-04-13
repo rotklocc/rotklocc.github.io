@@ -218,7 +218,7 @@ function switchTableView() {
 	}
 	
 	for (var i = 0; i < nrow; i++) {
-		var cells = rows[i].cells;		
+		var cells = rows[i].cells;
 		for (var j = 3; j < cells.length; j++) {
 			var show = (j <= 6 && tableViewId === 0) || (j >= 7 && tableViewId === 1);
 			cells[j].style.display = show ? '' : 'none';
