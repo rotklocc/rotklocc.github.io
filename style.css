@@ -164,6 +164,44 @@ p.header {
   color: DodgerBlue;
 }
 
+table.bFormation {
+  border-collapse: collapse;
+  font-size: 14px;
+  width: auto;
+  table-layout: auto;
+}
+
+table.bFormation td {
+  border: 1px solid #c2c2e7;
+  background-color: #ffffdd;
+  vertical-align: center;
+  text-align: center;
+  width: 20px;
+  height: 20px;
+}
+
+table.bFormation td.front {
+  border: 1px solid #0000ff;
+  background-color: rgba(0, 0, 255, 0.4);
+}
+
+table.bFormation td.middle {
+  border: 1px solid #ff8c00;
+  background-color: rgba(255, 140, 0, 0.4);
+}
+
+table.bFormation td.rear {
+  border: 1px solid #ff0000;
+  background-color: rgba(255, 0, 0, 0.4);
+}
+
+table.bFormation td.space {
+  border: none;
+  background-color: white;
+  width: 10px;
+}
+
+
 .modal {
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */

@@ -50,6 +50,8 @@ function popupNote() {
 	
 	html += '<p><b>Notes:</b><br/>';
 	html += '- You can see the game version that is used for stat/dmg/acc calculation near Note button<br/>';
+	html += '- All commanders are level 99. All formation level is level 90<br/>'
+	html += '- Equipment cannot be unequipped<br/>'
 	html += '- Currently, post damage (damage after main attack. in game, the second damage number that shown on victim) is not implemented. ';
 	html +=   'Example passives that have effect in post damage are '+lPassiveName(2200090)+', '+lPassiveName(2200225)+', '+lPassiveName(2200065);
 	html +=   ', '+lPassiveName(2200088)+', '+lPassiveName(2200089)+', '+lPassiveName(2200494)+', '+lPassiveName(2200564);
@@ -121,7 +123,9 @@ function popupFormation(uid) {
 	var uinfo = punits[uid];
 	
 	var html = '';
-	html += 'Formation: <select id="formation"></select><br/>';
+	html += '<div style="display:flex">';
+	html += '<div style="min-width:550px">';
+	html += 'Formation: <select id="formation"></select> (Lv90)<br/>';
 	html += 'All:';
 	html += '<ul id="formationAll"></ul>';
 	html += '<input id="fpos0" type="radio" name="formationPos" value="0"/><label for="fpos0">Front Line:</label>';
@@ -130,6 +134,16 @@ function popupFormation(uid) {
 	html += '<ul id="formationMiddle"></ul>';
 	html += '<input id="fpos2" type="radio" name="formationPos" value="2"/><label for="fpos2">Rear Line:</label>';
 	html += '<ul id="formationRear"></ul>';
+	html += '</div>';
+	html += '<div style="margin-top:40px">';
+	html += '<table id="formationTable" class="bFormation">';
+	for (var i = 0; i < 5; i++) {
+		html += '<tr><td class="rear"></td><td class="rear"></td><td class="space"></td>';
+		html += '<td class="middle"></td><td class="middle"></td><td class="space"></td><td class="front"></td></tr>';
+	}
+	html += '</table>';
+	html += '</div>';
+	html += '</div>';
 
 	document.getElementById("modalHeader").innerHTML = "Battle Formation";
 	var content = document.getElementById("modalContent");
@@ -172,6 +186,23 @@ function popupFormation(uid) {
 		ul.innerHTML = '';
 		_addPassiveInfo(ul, 4);
 	}
+	
+	function setFormationPositionTable() {
+		var posIdx = formations[uinfo.formationId].posIdx;
+		var rows = document.getElementById('formationTable').rows;
+		for (var i = 0; i < rows.length; i++) {
+			var cells = rows[i].cells;
+			var colIdx = 4;
+			for (var j = 0; j < cells.length; j++) {
+				if (j === 2 || j === 5)
+					continue;
+				var pos = (colIdx * 5) + i;
+				var idx = posIdx.indexOf(pos);
+				cells[j].innerText = (idx === -1) ? '' : idx+1;
+				colIdx--;
+			}
+		}
+	}
 
 	var eleSel = document.getElementById('formation');
 	for (var i = 0; i < formations.length; i++)
@@ -180,6 +211,7 @@ function popupFormation(uid) {
 	eleSel.onchange = function() {
 		uinfo.setFormationId(Number(this.value));
 		setFormationPassiveInfo();
+		setFormationPositionTable();
 	};
 	
 	function onFormationPosClick() {
@@ -194,6 +226,7 @@ function popupFormation(uid) {
 	document.getElementById('fpos'+uinfo.formationPos).checked = true;
 	
 	setFormationPassiveInfo();
+	setFormationPositionTable();
 }
 
 var popupCommanderUnitTypeIdFilter = 0;
@@ -1610,6 +1643,9 @@ function showSelectAttack(evt) {
 					break;
 				}
 			}
+			// Zhao Family Triple Strike disable reversal
+			if (i === 3 && allowed && uinfo.hasPassive(2200585))
+				allowed = false;
 		}
 		if (allowed) {
 			var span = document.createElement('span');
@@ -1895,6 +1931,9 @@ function createAttackTypeSelection(uinfo) {
 					break;
 				}
 			}
+			// Zhao Family Triple Strike disable reversal
+			if (i === 3 && allowed && uinfo.hasPassive(2200585))
+				allowed = false;
 		}
 		if (allowed)
 			eleSel.add(createOptionNode(toLocalize(name), i));
