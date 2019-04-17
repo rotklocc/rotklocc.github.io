@@ -147,34 +147,31 @@ function _findObj(objId, objArr) {
 	return null;
 }
 
-function _artifact2SerializedObj(equipInfo) {
-	var p6 = equipInfo['p6'] ? _findObjId(equipInfo['p6'], itemEnhancePassives) : 0;
-	var p12 = equipInfo['p12'] ? _findObjId(equipInfo['p12'], itemEnhancePassives) : 0;
-	return [ equipInfo['item']['id'], equipInfo['lv'], p6 ? p6 - 2700000 : 0, p12 ? p12 - 2700000 : 0 ];
-}
-
+// for mapping key name to id. so always append to the array to reserve a old serialized data
+var serializeKeyNames = [
+	'id', 'weapon', 'armor', 'kit', 'passives', 'relics', 'scroll', 'formation', 'hp',
+	'battlePassives', 'conditions', 'terrain', 'tactic', 'gid', 'mid', 'wid', 'p0', 'p1'
+];
+var serializeKeyArray = ['battlePassives', 'conditions']; // data array that size can be any length
 function _userUnit2SerializeObj(uinfo, doFull=false) {
 	var outObj = {
 		'id': uinfo.unit['id'] - 1100000,
-		'eW': _artifact2SerializedObj(uinfo['weapon']),
-		'eA': _artifact2SerializedObj(uinfo['armor']),
-		'eK': _artifact2SerializedObj(uinfo['kit']),
-		'sP': uinfo.selectedPassiveLists,
-		'r': new Array(4),
-		'rP': new Array(4),
-		'rPL': new Array(4),
-		'sc': [ uinfo.scrolls['str'], uinfo.scrolls['int'], uinfo.scrolls['cmd'], uinfo.scrolls['dex'], uinfo.scrolls['lck'] ],
-		'bf': [ uinfo.formationId, uinfo.formationPos ],
+		'weapon': _artifact2SerializedObj(uinfo['weapon']),
+		'armor': _artifact2SerializedObj(uinfo['armor']),
+		'kit': _artifact2SerializedObj(uinfo['kit']),
+		'passives': uinfo.selectedPassiveLists,
+		'relics': new Array(4*3), // relic, relic passive, relic lv
+		'scroll': [ uinfo.scrolls['str'], uinfo.scrolls['int'], uinfo.scrolls['cmd'], uinfo.scrolls['dex'], uinfo.scrolls['lck'] ],
+		'formation': [ uinfo.formationId, uinfo.formationPos ],
 	};
 	for (var i = 0; i < 4; i++) {
-		outObj.r[i] = _findObjId(uinfo.relics[i], relics) - 13000000;
-		outObj.rP[i] = _findObjId(uinfo.relicPassives[i], relicPassives) - 13010000;
-		outObj.rPL[i] = uinfo.relicPassivesLv[i];
+		outObj.relics[i*3] = _findObjId(uinfo.relics[i], relics) - 13000000;
+		outObj.relics[i*3+1] = _findObjId(uinfo.relicPassives[i], relicPassives) - 13010000;
+		outObj.relics[i*3+2] = uinfo.relicPassivesLv[i];
 	}
 	if (doFull) {
 		// hp/mp
-		outObj.hp = uinfo.hp;
-		outObj.mp = uinfo.mp;
+		outObj.hp = [ uinfo.hp, uinfo.mp];
 		// battle passive
 		var bp = {}
 		for (var i = 0; i < uinfo.battlePassives.length; i++) {
@@ -185,7 +182,8 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 				continue;
 			bp[battlePassive.id-2200000] = battlePassive.userVal;
 		}
-		outObj.bp = bp;
+		if (bp.length > 0)
+			outObj.battlePassives = bp;
 		
 		// buff/debuff
 		var cd = []
@@ -195,19 +193,181 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 				continue;
 			cd.push(condition.allowIds[condition.userIdx] - 2100000);
 		}
-		outObj.cd = cd;
+		if (cd.length > 0)
+			outObj.conditions = cd;
 		// terrain
-		outObj.tr = [ uinfo.tileId, uinfo.isFlameTile ? 1 : 0 ];
+		outObj.terrain = [ uinfo.tileId-4200001, uinfo.isFlameTile ? 1 : 0 ];
 		// tactic
-		outObj.tt = uinfo.tactic.id-2000000;
+		outObj.tactic = uinfo.tactic.id-2000000;
 	}
 	
 	return outObj;
 }
 
+function _artifact2SerializedObj(equipInfo) {
+	var p6 = equipInfo['p6'] ? _findObjId(equipInfo['p6'], itemEnhancePassives) : 0;
+	var p12 = equipInfo['p12'] ? _findObjId(equipInfo['p12'], itemEnhancePassives) : 0;
+	return [ equipInfo['item']['id']-3000000, equipInfo['lv'], p6 ? p6 - 2700000 : 0, p12 ? p12 - 2700000 : 0 ];
+}
+
+//var keyStrBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+var txtChars = '1234567890:.,{}'; // 15 chars
+function _compressSerializedTxt(txt) {
+	var out = '';
+	var nBit = 0;
+	var n = 0;
+	for (var i = 0; i < txt.length; i++) {
+		var idx = txtChars.indexOf(txt.charAt(i));
+		if (idx === -1) {
+			return null;
+		}
+		if (nBit === 0) {
+			n = idx;
+			nBit = 4;
+		}
+		else if (nBit === 4) {
+			out += keyStrUriSafe[(n << 2) | (idx >> 2)];
+			n = idx & 3;
+			nBit = 2;
+		}
+		else { // nBit === 2
+			out += keyStrUriSafe[(n << 4) | idx];
+			nBit = 0;
+		}
+	}
+	if (nBit === 4)
+		out += keyStrUriSafe[n<<2];
+	else if (nBit === 2)
+		out += keyStrUriSafe[(n<<4)|15]; // make last 4 bit to be invalid character
+	
+	return out;
+}
+
+function _decompressSerializedTxt(txt) {
+	var out = '';
+	var nBit = 0;
+	var n = 0;
+	for (var i = 0; i < txt.length; i++) {
+		var idx = keyStrUriSafe.indexOf(txt.charAt(i));
+		if (idx === -1) {
+			return null;
+		}
+		if (nBit === 0) {
+			out += txtChars[idx>>2];
+			n = idx & 3;
+			nBit = 2;
+		}
+		else { // nBit === 2
+			out += txtChars[(n<<2) | (idx>>4)];
+			var tmp = idx&15;
+			if (tmp === 15) {
+				if (i !== txt.length - 1)
+					return null;
+				break;
+			}
+			out += txtChars[tmp];
+			nBit = 0;
+		}
+	}
+	// ignore unused bit (can be only 2)
+	return out;
+}
+
+function _serializedObj2TxtRecursive(sobj) {
+	var txt = '';
+	for (var key in sobj) {
+		var keyIdx = serializeKeyNames.indexOf(key);
+		if (keyIdx === -1) {
+			console.log('cannot find key idx: '+key);
+			return null;
+		}
+		var val = sobj[key];
+		txt += keyIdx + ':';
+		// serialized object data can be only dict (object), array, number
+		if (Array.isArray(val)) {
+			// data in array can be only values
+			txt += val.join(',') + '.';
+		}
+		else if (typeof val === 'object') {
+			txt += '{' + _serializedObj2TxtRecursive(val) + '}'
+		}
+		else { // number
+			txt += val + '.';
+		}
+	}
+	return txt;
+}
+
 function _serializedObj2Txt(sobj) {
-	//return JSON.stringify(sobj);
-	return LZString.compressToBase64(JSON.stringify(sobj));
+	var txt = _serializedObj2TxtRecursive(sobj);
+	return _compressSerializedTxt(txt);
+}
+
+function _serializedToken2ObjRecursive(tokens, idx) {
+	var startIdx = idx;
+	var sobj = {};
+	// no need check idx < tokens.length when fetching inside while loop
+	// because the undefined value will be fallen into invalid case (return null)
+	while (idx < tokens.length) {
+		if (startIdx !== 0 && tokens[idx] === '}')
+			break; // end of nest object
+		var keyName = serializeKeyNames[tokens[idx++]];
+		if (!keyName) return null;
+		if (tokens[idx++] !== ':') return null;
+		
+		if (tokens[idx] === '{') {
+			// nest object case
+			var tmpRes = _serializedToken2ObjRecursive(tokens, idx+1);
+			if (tmpRes === null) return null;
+			idx = tmpRes[1] + 1;
+			sobj[keyName] = tmpRes[0];
+		}
+		else {
+			// consume value
+			var vals = [];
+			if (tokens[idx] === '.') {
+				idx++; // empty array
+			}
+			else {
+				var hasError = true;
+				while (true) {
+					var val = Number(tokens[idx++]);
+					if (isNaN(val)) break;
+					vals.push(val);
+					var token = tokens[idx++];
+					if (token === '.') {
+						hasError = false;
+						break;
+					}
+					if (token !== ',') break;
+				}
+				if (hasError)
+					return null;
+			}
+			if (vals.length === 1 && serializeKeyArray.indexOf(keyName) === -1)
+				vals = vals[0];
+			sobj[keyName] = vals;
+		}
+	}
+	return [sobj, idx];
+}
+
+function _serializedTxt2Obj(ctxt) {
+	var txt = _decompressSerializedTxt(ctxt);
+	var delimiterPattern = /([:\.,\{\}])/g;
+	// split and remove empty token
+	var tokens = txt.split(delimiterPattern).filter(function(el) {
+		return el !== '';
+	});
+	if (tokens.length < 10)
+		return null;
+	var tmpRes = _serializedToken2ObjRecursive(tokens, 0);
+	if (tmpRes === null)
+		return null;
+	if (tmpRes[1] !== tokens.length)
+		return null;
+	return tmpRes[0];
 }
 
 function serializeUserUnit(uinfo, doFull=false) {
@@ -215,7 +375,7 @@ function serializeUserUnit(uinfo, doFull=false) {
 }
 
 function _unserializeArtifact(info) {
-	var item = _findObj(info[0], artifacts);
+	var item = _findObj(info[0]+3000000, artifacts);
 	return {
 		'item': item,
 		'lv': info[1],
@@ -228,52 +388,55 @@ function _unserializeArtifact(info) {
 function _serializedObj2UserUnit(sobj, uid) {
 	var unit = _findObj(sobj.id + 1100000, units);	
 	var uinfo  = getDefaultUnitInfo(unit, uid);
-	uinfo.weapon = _unserializeArtifact(sobj.eW);
-	uinfo.armor = _unserializeArtifact(sobj.eA);
-	uinfo.kit = _unserializeArtifact(sobj.eK);
-	uinfo.selectedPassiveLists = sobj.sP;
-	uinfo.scrolls = { 'str': sobj.sc[0], 'int': sobj.sc[1], 'cmd': sobj.sc[2], 'dex': sobj.sc[3], 'lck': sobj.sc[4] };
+	uinfo.weapon = _unserializeArtifact(sobj.weapon);
+	uinfo.armor = _unserializeArtifact(sobj.armor);
+	uinfo.kit = _unserializeArtifact(sobj.kit);
+	uinfo.selectedPassiveLists = sobj.passives;
+	uinfo.scrolls = { 'str': sobj.scroll[0], 'int': sobj.scroll[1], 'cmd': sobj.scroll[2], 'dex': sobj.scroll[3], 'lck': sobj.scroll[4] };
 	for (var i = 0; i < 4; i++) {
-		uinfo.relics[i] = relics[sobj.r[i] + 13000000];
-		uinfo.relicPassives[i] = relicPassives[sobj.rP[i] + 13010000];
-		uinfo.relicPassivesLv[i] = sobj.rPL[i];
+		uinfo.relics[i] = relics[sobj.relics[i*3] + 13000000];
+		uinfo.relicPassives[i] = relicPassives[sobj.relics[i*3+1] + 13010000];
+		uinfo.relicPassivesLv[i] = sobj.relics[i*3+2];
 	}
 	uinfo.relicSet = _findRelicSet(uinfo.relics);
-	if ('bf' in sobj) {
-		uinfo.formationId = sobj.bf[0];
-		uinfo.formationPos = sobj.bf[1];
+	if ('formation' in sobj) {
+		uinfo.formationId = sobj.formation[0];
+		uinfo.formationPos = sobj.formation[1];
 	}
-	if ('bp' in sobj) {
+	if ('battlePassives' in sobj) {
 		for (var i = 0; i < uinfo.battlePassives.length; i++) {
 			var battlePassive = uinfo.battlePassives[i];
 			if (battlePassive.type === 0)
 				continue; // auto active (no data)
 			var sid = battlePassive.id-2200000;
-			if (sid in sobj.bp)
-				battlePassive.userVal = sobj.bp[sid];
+			if (sid in sobj.battlePassives)
+				battlePassive.userVal = sobj.battlePassives[sid];
 		}
 	}
-	if ('cd' in sobj) {
+	if ('conditions' in sobj) {
 		for (var i = 0; i < uinfo.conditions.length; i++) {
 			var condition = uinfo.conditions[i];
 			for (var j = 0; j < condition.allowIds.length; j++) {
-				if (sobj['cd'].indexOf(condition.allowIds[j]-2100000) !== -1) {
+				if (sobj.conditions.indexOf(condition.allowIds[j]-2100000) !== -1) {
 					condition.userIdx = j;
 					break;
 				}
 			}
 		}
 	}
-	if ('tr' in sobj) {
+	if ('terrain' in sobj) {
 		// need UI to handle explicitly
-		uinfo.tileId = sobj.tr[0];
-		uinfo.isFlameTile = (sobj.tr[1] === 1);
+		uinfo.tileId = sobj.terrain[0];
+		uinfo.isFlameTile = (sobj.terrain[1] === 1);
 	}
-	if ('tt' in sobj)
-		uinfo.tactic = _findObj(sobj.tt+2000000, tactics);
+	if ('tactic' in sobj)
+		uinfo.tactic = _findObj(sobj.tactic+2000000, tactics);
 	
-	var hp = ('hp' in sobj) ? sobj.hp : 0;
-	var mp = ('mp' in sobj) ? sobj.mp : 0;
+	var hp = 0, mp = 0;
+	if ('hp' in sobj) {
+		hp = sobj.hp[0];
+		mp = sobj.hp[1];
+	}
 	
 	uinfo.initializeData(hp, mp);
 	return uinfo;
@@ -282,14 +445,9 @@ function _serializedObj2UserUnit(sobj, uid) {
 function unserializeUserUnit(uid, txt) {
 	txt = txt.trim();
 	if (txt === '') return;
-	try {
-		if (txt.charAt(0) !== '{')
-			txt = LZString.decompressFromBase64(txt);
-		var sobj = JSON.parse(txt);
-	} catch (e) {
+	var sobj = _serializedTxt2Obj(txt);
+	if (sobj === null)
 		return null;
-	}
-	
 	var uinfo = _serializedObj2UserUnit(sobj, uid);
 	return uinfo;
 }
@@ -310,14 +468,9 @@ function serializeGameInfo() {
 function unserializeGameInfo(txt) {
 	txt = txt.trim();
 	if (txt === '') return;
-	try {
-		if (txt.charAt(0) !== '{')
-			txt = LZString.decompressFromBase64(txt);
-		var sobj = JSON.parse(txt);
-	} catch (e) {
+	var sobj = _serializedTxt2Obj(txt);
+	if (sobj === null)
 		return null;
-	}
-	
 	gameModeId = sobj.gid;
 	gameMode = gameModes[gameModeId];
 	mapId = sobj.mid;
