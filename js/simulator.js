@@ -542,6 +542,13 @@ function getDefaultUnitTerrainId(uinfo) {
 		uinfo.tileId = battleMap.tiles[0];
 }
 
+function getUnitInfo(unit, uid) {
+	if (unit.id in unitPreset) {
+		return unserializeUserUnit(uid, unitPreset[unit.id]);
+	}
+	return getDefaultUnitInfo(unit, uid);
+}
+
 function getDefaultUnitInfo(unit, id) {
 	var uinfo = new UserUnit(unit, id);
 	
@@ -1530,7 +1537,7 @@ function calculateStatBasic(uinfo) {
 		uinfo.mpMax = 0;
 	uinfo.hpMax = Math.trunc(uinfo.hpMax * gameMode.hpMul); // cap is 5000
 	// keep hp/mp percentage
-	uinfo.hp = Math.trunc(uinfo.hpMax * uinfo.hpPct / 100);
+	uinfo.hp = Math.max(1, Math.trunc(uinfo.hpMax * uinfo.hpPct / 100));
 	uinfo.mp = Math.trunc(uinfo.mpMax * uinfo.mpPct / 100);
 	uinfo.ep = uinfo.epMax;
 	uinfo.hpPct = uinfo.hp * 100 / uinfo.hpMax;
@@ -4086,7 +4093,7 @@ function AttackDmgFlameMark(actList, actId) {
 			this.userVal = (val < 2) ? val : 0;
 		}
 		else {
-			this.val = val;
+			this.userVal = val;
 		}
 	};
 	
