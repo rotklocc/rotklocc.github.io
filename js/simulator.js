@@ -994,6 +994,13 @@ function UserUnit(unit, id) {
 	this.canDoubleTactic = function() {
 		if (this.hasPassive(2200573) || this.hasPassive(2200574) || this.hasPassive(2200575) || this.hasPassive(2200576))
 			return false;
+		if (!this.tactic.canStreakCast) {
+			if (this.tactic.id === 2000065 && this.hasPassive(2200439))
+				return true; // azure dragon with hell gate
+			if (this.tactic.obstructiveSkill && this.hasPassive(2200568))
+				return true; // interrupt tactics with mastery
+			return false;
+		}
 		return true;
 	};
 	
@@ -2606,7 +2613,7 @@ function TacticDmgSp607(actList, actId) { // Hail the Yellow Sky
 	this._userText = 'First hit';
 	this.canApply = function() {
 		var tactic = this.getTactic();
-		if (tactic.id ===2000065) {
+		if (tactic.id === 2000065) {
 			// choosable when using azure dragon tactic. is it first hit?
 			this.userText = this._userText;
 		}
