@@ -1763,6 +1763,11 @@ function _getDefVal(defInfo, mainStat, subStat) {
 function getAttackBasicDmg(atkInfo, defInfo) {
 	var atkAtk = _getAtkVal(atkInfo, 'atk', 'wis');
 	var defDef = _getDefVal(defInfo, 'def', 'wis');
+	// TODO: sp625 Gale % (atkUnit passive. modify atkAtk for normal or reversal from normal (not joint/phalanx))
+	// TODO: display the passive info too
+	if (atkInfo.hasPassive(2200613)) { // destroy
+		defDef = monoMathRound(defDef * (1 - atkInfo.getPassiveTotalVal(2200613) / 100));
+	}
 	
 	atkAtk = monoMathRound(atkAtk * atkInfo.getTerrainAdvantage() / 100);
 	defDef = monoMathRound(defDef * defInfo.getTerrainAdvantage() / 100);
@@ -1781,7 +1786,7 @@ function _getTacticMagicBasicDmg(atkInfo, defInfo) {
 	
 	atkWis = monoMathRound(atkWis * atkInfo.getTerrainAdvantage() / 100);
 	defWis = monoMathRound(defWis * defInfo.getTerrainAdvantage() / 100);
-	return (atkInfo.lv + 25) + (atkWis - defWis) * (3333 / 10000);
+	return (atkInfo.lv + 25) + ((atkWis - defWis) * (3333 / 10000));
 }
 
 function _getTacticPhysicalBasicDmg(atkInfo, defInfo) {
@@ -1932,6 +1937,8 @@ function AttackAccActionList(atkInfo) {
 		new AttackAccSp509(this), // Relic: Ranged Attack DEF Rate +
 		new AttackAccSp033(this), // All DEF Rate +
 		new AttackAccSp036(this), // Naval Battle + (only water related, terrain in special terrain adv)
+		// TODO: check UserUniit.ContainsTilePassive() for passive
+		// - 619, 620, 621, 622, 633
 		new AttackAccSp208(this), // Narrow Escape (condition) (*0.5)
 		new AttackAccSp447(this), // Command: Attack DEF Rate Pierce (Emperor tactic)
 		new AttackAccSp413(this), // Surprise Attack
@@ -2149,7 +2156,7 @@ function AttackAccSp571(actList) { // Long-Range Archery
 	this.userText = 'Extra Range';
 	
 	this.adjustValue = function(acc) {
-		this.modPct = this.getPassiveTotalVal();
+		this.modPct = this.userVal ? this.getPassiveTotalVal() : 0;
 		this.result = Math.min(acc - acc * this.modPct / 100, 100);
 	};
 }
@@ -2220,7 +2227,7 @@ function TacticAccActionList(atkInfo) {
 		new TacticAccSp417(this), // Tactics DEF Rate Pierce
 		new TacticAccSp507(this), // Relic: Tactics DEF Rate Pierce
 		new TacticAccLightningWeather(this), // lightning accuracy when rain/snow
-		new TacticAccSp582(this), // 
+		new TacticAccSp582(this), // Tactics Defense Skill %
 		new AttackAccTech026(this), // Research dancer
 		// 404: (Formation Effect) Tactics DEF Rate +% (no use in game)
 		new TacticAccSp405(this), // (Formation Effect) All DEF Rate +%
@@ -2434,28 +2441,31 @@ function TacticDmgActionList(atkInfo) {
 		new TacticDmgSpBoost(this, 2200568, [16,17]), // Interrupt Tactics Mastery %
 		new TacticDmgSpBoost(this, 2200054, [0,1,2,3]), // Elemental Tactics +%
 		new TacticDmgSpBoost(this, 2200055, null), // Offensive Tactics +%
+		new TacticDmgSpBoost(this, 2200606, [], [2000105]), // Crimson Lotus Upgrade %
 		new TacticDmgSpBoost(this, 2200573, [0]), // Fire Tactics Synergy %
 		new TacticDmgSpBoost(this, 2200574, [3]), // Wind Tactics Synergy %
 		new TacticDmgSpBoost(this, 2200575, [16,17]), // Interrupt Tactics Synergy %
 		new TacticDmgSpBoost(this, 2200576, null), // Deadly Tactics
 		new TacticDmgSp438(this, 2200438), // Godly Tactics
-		new TacticDmgSpBoost(this, 2200520, [0]), // Fire Tactics Specialization %
+		new TacticDmgSpBoost(this, 2200520, [0], [2000105]), // Fire Tactics Specialization %
 		new TacticDmgSpBoost(this, 2200578, [3]), // Wind Tactics Specialization %
 		new TacticDmgSpBoost(this, 2200590, [1]), // Water Tactics Specialization %
+		new TacticDmgSp607(this, 2200607), // Hail the Yellow Sky
 		new AttackDmgSp434(this, 2200434), // Impose (Emperor passive)
 		new TacticDmgSp056(this, 2200056), // Tactics Damage -%
 		new TacticDmgSp588(this, 2200588), // Tactics Offset %
 		new TacticDmgSp279(this, 2200279), // Decrease Tactics Damage (no 4gods)
 		new TacticDmgSp402(this, 2200402), // Decrease Tactics Damage (by tactic power)
 		new TacticDmgSp502(this, 2200502), // Relic: Decrease Tactics Damage
-		// freezing damage reduction (only in dragon raid)
+		// freezing damage reduction (2100053, only in dragon raid)
 		new AttackDmgSp435(this, 2200435), // Dignity (Emperor passive)
 		new TacticDmgSpBoost(this, 2200058, [5]), // Seduce +%
 		new TacticDmgSpReduction(this, 2200259, 0), // Decrease Fire Tactics Damage %
 		new TacticDmgSpReduction(this, 2200260, 3), // Decrease Wind Tactics Damage %
 		new TacticDmgSpReduction(this, 2200261, 1), // Decrease Water Tactics Damage %
 		new TacticDmgSpReduction(this, 2200262, 2), // Decrease Earth Tactics Damage %
-		new TacticDmgTech030(this, 2500030), // Assess Terrain (outlaw)
+		new TacticDmgTech030(this, 2500030), // Research: Assess Terrain (outlaw)
+		new TacticDmgTech027(this, 2500027), // Research: Ship Construction (navy)
 		//new TacticDmgSp229(this), // (Bloody Battle) Enhanced Offensive Tactics %
 		new TacticDmgWeather(this, 13), // 
 		new TacticDmgSp420(this, 2200420), // Decrease Area Tactics Damage
@@ -2488,6 +2498,7 @@ function TacticDmgActionList(atkInfo) {
 		new TacticDmgPatience(this, 18), // swift calvary tactic
 		new TacticDmgComposure(this, 19), // swift calvary tactic
 		new AttackDmgFlameMark(this, 7),
+		// 599: Defense Specialization % (hardened/weakness, meng mei)
 	];
 	
 	this.setDefInfo = function(defInfo) {
@@ -2590,6 +2601,38 @@ function TacticDmgSp438(actList, actId) { // Godly Tactics
 	};
 }
 
+function TacticDmgSp607(actList, actId) { // Hail the Yellow Sky
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 1, 'bool');
+	this._userText = 'First hit';
+	this.canApply = function() {
+		var tactic = this.getTactic();
+		if (tactic.id ===2000065) {
+			// choosable when using azure dragon tactic. is it first hit?
+			this.userText = this._userText;
+		}
+		else if (_isAttackSkill(tactic)) {
+			delete this.userText;
+			this.userVal = 1;
+		}
+		else {
+			return false;
+		}
+		return true;
+	};
+	
+	this.adjustValue = function(dmg) {
+		var hp = this.getAtkInfo().hp;
+		if (hp < 10 || this.userVal === 0) {
+			this.modVal = 0;
+			this.result = dmg;
+		}
+		else {
+			this.modVal = monoMathRound(hp * this.getPassiveTotalVal() * 0.01);
+			this.result = dmg + this.modVal;
+		}
+	};
+}
+
 function TacticDmgSp056(actList, actId) { // Tactics Damage -%
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	this.canApply = function() {
@@ -2662,6 +2705,19 @@ function TacticDmgTech030(actList, actId) { // Assess Terrain (outlaw)
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	this.canApply = function() {
 		return this.getTactic().skillType === 2 && this.getDefInfo().unit.jobTypeId === 1210012;
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = 50;
+		this.result = dmg - dmg * this.modPct * 0.01;
+	};
+}
+
+function TacticDmgTech027(actList, actId) { // Research: Ship Construction (navy)
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
+	this.canApply = function() {
+		var defInfo = this.getDefInfo();
+		return this.getTactic().skillType === 1 && defInfo.unit.jobTypeId === 1210019 && defInfo.tileId === 4200014;
 	};
 	
 	this.adjustValue = function(dmg) {
@@ -2986,12 +3042,14 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp043(this, 2200043), // Mounted ATK +%
 		new AttackDmgTech028(this, 2500028), // Mount Slayer
 		new AttackDmgSp044(this, 2200044), // Physical Attack +%
+		new AttackDmgSp603(this, 2200603), // Approaching Shot
 		new AttackDmgSp434(this, 2200434), // Impose (Emperor passive)
 		//new AttackDmgSp228(this, 2200228), // (Bloody Battle) Enhanced Physical Attack %
 		new AttackDmgSp036(this, 2200036), // Naval Battle +
 		new AttackDmgSp045(this, 2200045), // Physical Damage -%
 		//new AttackDmgSp448(this, 2200448), // Azure Dragon's Protection
 		//new AttackDmgSp449(this, 2200449), // Azure Dragon's Blessing
+		// 624: Damage Taken +%
 		new AttackDmgSp280(this, 2200280), // Decrease Physical Damage
 		new AttackDmgSp500(this, 2200500), // Relic: Melee Damage -
 		new AttackDmgSp046(this, 2200046), // Ranged DMG -%
@@ -2999,7 +3057,9 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp435(this, 2200435), // Dignity (Emperor passive)
 		//new AttackDmgSp185(this, 2200185), // Keep (for keep only)
 		new AttackDmgSp057(this, 2200057), // MP Attack
+		new AttackDmgSp608(this, 2200608), // MP ATK%
 		new AttackDmgSp592(this, 2200592), // Desperate Countermeasure
+		new AttackDmgSp617(this, 2200617), // Lucky Feint
 		//new AttackDmgTech1019(this, 2501019), // Enhance Keep
 		new AttackDmgTech027(this, 2500027), // Research: Ship Construction (navy)
 		new AttackDmgSp446(this, 2200446), // CMD: Physical Attack +%
@@ -3023,19 +3083,24 @@ function AttackDmgActionList(atkInfo) {
 		// 533: Vermilion Bird: Quick Reflexes (for 4god only)
 		new AttackDmgPhalanxSp581(this, 2200581), // Quick Reflexes %
 		new AttackDmgPhalanxSp445(this, 2200445), // Oathkeeper (Phalanx)
-		new AttackDmgSp585(this, 2200585), // Zhao Family Triple Strike
 		new AttackDmgRandom(this, 35), // random damage -2 to 4
 		this.actionSp570, // wheel upgrade %
 		this.actionSp009, // % charge attack
+		new AttackDmgSp605(this, 2200605), // Aimed Shot % (likely bug, see detail in implementation)
+		new AttackDmgSp615(this, 2200615), // Fierce Strike
+		// 612: Fierce Attack. ignore special attack immunity chance (random here)
+		// 444: Comeback. for handling ignore immunity
 		new AttackDmgSp061(this, 2200061), // Critical Attack
 		new AttackDmgCriticalBonus(this, 36), // additional crit damage from luck diff
 		new AttackDmgSp062(this, 2200062), // Critical Attack+
 		// 527: Critical Hit Damage -% (only 4god bird has)
 		new AttackDmgSp060(this, 2200060), // Critical Attack Immunity
 		new AttackDmgSp027c(this, 2200027), // Special Attack Immunity (crit)
+		// 611: Special Attack Defense %. special attack immunity chance
 		new AttackDmgSp017(this, 2200017), // Physical Certain Hit
 		new AttackDmgSp025(this, 2200025), // Double ATK Immunity
 		new AttackDmgSp027d(this, 2200027), // Special Attack Immunity (double)
+		// 611: Special Attack Defense %. special attack immunity chance
 		new AttackDmgTech010(this, 2500010), // Research: Ambush 1
 		//new AttackDmgTech019(this, 2500019), // Research: Enhance Siege 1
 		new AttackDmgTech023(this, 2500023), // Research: Exploit Weakness
@@ -3055,6 +3120,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp268(this, 2200268), // Absorb Attack Damage %
 		//new AttackDmgSp523(this, 2200523), // Vermilion Bird: Scarlet Dagger
 		new AttackDmgSp272(this, 2200272), // Max Damage Defense %
+		new AttackDmgSp585(this, 2200585), // Zhao Family Triple Strike
 		new AttackDmgSp418(this, 2200418), // Deadly Attack
 		new AttackDmgSp101(this, 2200101), // Desperate Attack
 		// 462: Main Attack + (noone has)
@@ -3068,6 +3134,7 @@ function AttackDmgActionList(atkInfo) {
 		this.actionSp543, // Mortal Blaze (assume main target)
 		this.actionFlameMark,
 		new AttackDmgSp570e(this, 2200570), // wheel upgrade (non-main target)
+		// 599: Defense Specialization % (hardened/weakness, meng mei)
 	];
 	
 	this.setDefInfo = function(defInfo) {
@@ -3161,6 +3228,37 @@ function AttackDmgSp044(actList, actId) { // Physical Attack +%
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = dmg + dmg * this.modPct / 100;
+	};
+}
+
+function AttackDmgSp009(actList, actId) { // % Charge Attack
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 0, 'int');
+	this.userText = 'Move Step';
+	this.userValMax = 13;
+	this.setUserVal = function(userVal) {
+		this.userVal = userVal;
+		this.actList.actionSp570.userVal = userVal; // change userVal userVal too
+	};
+		
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal() * this.userVal;
+		var modPct = this.modPct;
+		if (this.getAtkInfo().hasPassive(2200570))
+			modPct += this.actList.actionSp570.modPct;
+		this.result =  dmg * (1 + modPct * 0.01);
+	};
+}
+
+function AttackDmgSp603(actList, actId) { // Approaching Shot
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 2, 'int');
+	this.userText = 'Distance';
+	this.userValMin = 1;
+	this.userValMax = 5;
+	
+	this.adjustValue = function(dmg) {
+		var distance = Math.max(5 - this.userVal, 0);
+		this.modPct = distance * 5; // max is 20%. no need to use min() because of distance value can be 0-4
+		this.result = dmg * (1 + this.modPct / 100);
 	};
 }
 
@@ -3261,6 +3359,15 @@ function AttackDmgSp057(actList, actId) { // MP Attack
 	};
 }
 
+function AttackDmgSp608(actList, actId) { // MP ATK%
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	
+	this.adjustValue = function(dmg) {
+		this.modVal = this.getAtkInfo().mp * this.getPassiveTotalVal() / 100;
+		this.result = dmg + this.modVal;
+	};
+}
+
 function AttackDmgSp592(actList, actId) { // Desperate Countermeasure
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	
@@ -3273,6 +3380,24 @@ function AttackDmgSp592(actList, actId) { // Desperate Countermeasure
 		else {
 			this.modVal = monoMathRound(hp * this.getPassiveTotalVal() * 0.01);
 			this.result = dmg + this.modVal;
+		}
+	};
+}
+
+function AttackDmgSp617(actList, actId) { // Lucky Feint
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
+	this.userText = 'Activate';
+	this.canApply = function() {
+		return this.getAtkInfo().attackType === 1; // must be counterattack
+	};
+	
+	this.adjustValue = function(dmg) {
+		if (this.userVal) {
+			this.modPct = this.getPassiveTotalVal();
+			this.result = dmg * (1 - this.modPct / 100);
+		} else {
+			this.modPct = 0;
+			this.result = dmg;
 		}
 	};
 }
@@ -3631,6 +3756,39 @@ function AttackDmgSp009(actList, actId) { // % Charge Attack
 	};
 }
 
+function AttackDmgSp605(actList, actId) { // Aimed Shot %
+	// modPct should be merged with charge attack but not. likely bug
+	// currently, this passive override "% Charge Attack" and use wrong value from wheel upgrade for addition
+	// while this passive is opposite of wheel/charge passive, so the below implementation assume no one 
+	//   use charge passive with aimed shot
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 3, 'int');
+	this.userText = 'Step Left';
+	this.userValMax = 10;
+	this.canApply = function() {
+		// TODO:
+		// cannot be phalanx, reversal, counterattack (counter because of enemy first strike is ok)
+		var attackType = this.getAtkInfo().attackType;
+		return attackType !== 1 && attackType !== 3 && attackType !== 4;
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = Math.min(this.userVal * this.getPassiveTotalVal(), 40);
+		this.result = dmg * (1 + this.modPct / 100);
+	};
+}
+
+function AttackDmgSp615(actList, actId) { // Fierce Strike
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 2, 'int');
+	this.userText = 'Distance';
+	this.userValMin = 1;
+	this.userValMax = 6;
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = Math.min(this.userVal * this.getPassiveTotalVal(), 30);
+		this.result = dmg * (1 + this.modPct / 100);
+	};
+}
+
 function AttackDmgSp061(actList, actId) { // Critical Attack
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.needProcess = function() {
@@ -3749,7 +3907,7 @@ function AttackDmgTech023(actList, actId) { // Research: Exploit Weakness
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
 		var weaponType = this.getAtkInfo().allowItemTypes[0];
-		return weaponType === 3 && weaponType === 4;
+		return weaponType === 3 || weaponType === 4;
 	};
 	
 	this.adjustValue = function(dmg) {
