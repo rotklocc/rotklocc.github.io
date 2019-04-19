@@ -1943,9 +1943,12 @@ function AttackAccActionList(atkInfo) {
 		new AttackAccSp508(this), // Relic: Melee Attack DEF Rate +
 		new AttackAccSp509(this), // Relic: Ranged Attack DEF Rate +
 		new AttackAccSp033(this), // All DEF Rate +
-		new AttackAccSp036(this), // Naval Battle + (only water related, terrain in special terrain adv)
-		// TODO: check UserUniit.ContainsTilePassive() for passive
-		// - 619, 620, 621, 622, 633
+		new AttackAccSpTileBoost(this, 2200036), // Naval Battle + (only water related, terrain in special terrain adv)
+		new AttackAccSpTileBoost(this, 2200619), // Mountain Boost
+		new AttackAccSpTileBoost(this, 2200620), // Desert Boost
+		new AttackAccSpTileBoost(this, 2200621), // Castle Boost
+		new AttackAccSpTileBoost(this, 2200622), // Snow Boost
+		new AttackAccSpTileBoost(this, 2200623), // River Boost
 		new AttackAccSp208(this), // Narrow Escape (condition) (*0.5)
 		new AttackAccSp447(this), // Command: Attack DEF Rate Pierce (Emperor tactic)
 		new AttackAccSp413(this), // Surprise Attack
@@ -2060,8 +2063,8 @@ function AttackAccSp033(actList) { // All DEF Rate +
 	};
 }
 
-function AttackAccSp036(actList) { // Naval Battle +
-	AttackAccActionBase.call(this, actList, 2200036, SIDE_ATK, 0);
+function AttackAccSpTileBoost(actList, actId) { // Acc boost when on specific tile
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
 		return (this.getAtkInfo().tileId in this.getPassive().tileAdvs);
 	};
@@ -2611,6 +2614,7 @@ function TacticDmgSp438(actList, actId) { // Godly Tactics
 function TacticDmgSp607(actList, actId) { // Hail the Yellow Sky
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 1, 'bool');
 	this._userText = 'First hit';
+	this._userText2 = 'Main Target';
 	this.canApply = function() {
 		var tactic = this.getTactic();
 		if (tactic.id === 2000065) {
@@ -2618,8 +2622,13 @@ function TacticDmgSp607(actList, actId) { // Hail the Yellow Sky
 			this.userText = this._userText;
 		}
 		else if (_isAttackSkill(tactic)) {
-			delete this.userText;
-			this.userVal = 1;
+			if (tactic.effectArea === 0) {
+				delete this.userText;
+				this.userVal = 1;
+			}
+			else { // aoe tactic
+				this.userText = this._userText2;
+			}
 		}
 		else {
 			return false;
@@ -3056,7 +3065,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp045(this, 2200045), // Physical Damage -%
 		//new AttackDmgSp448(this, 2200448), // Azure Dragon's Protection
 		//new AttackDmgSp449(this, 2200449), // Azure Dragon's Blessing
-		// 624: Damage Taken +%
+		new AttackDmgSp624(this, 2200624), // Damage Taken +%
 		new AttackDmgSp280(this, 2200280), // Decrease Physical Damage
 		new AttackDmgSp500(this, 2200500), // Relic: Melee Damage -
 		new AttackDmgSp046(this, 2200046), // Ranged DMG -%
@@ -3298,6 +3307,15 @@ function AttackDmgSp045(actList, actId) { // Physical Attack -%
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = Math.max(0, dmg - dmg * this.modPct / 100);
+	};
+}
+
+function AttackDmgSp624(actList, actId) { // Damage Taken +%
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = Math.max(0, dmg + dmg * this.modPct / 100);
 	};
 }
 
