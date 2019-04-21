@@ -2187,13 +2187,16 @@ function popupAttackDmg(uid) {
 	html += 'ATK: '+uinfo.getStat('atk');
 	if (uinfo.hasPassive(2200104)) // atk stat switch
 		html += ', WIS: '+uinfo.getStat('wis');
-	html += '<br/>Terrain Adv: '+uinfo.getTerrainAdvantage()+', '+toLocalize('연구')+': ATK +'+getResearchAtkBonus(uinfo.allowItemTypes[0])+'</td>';
+	if (uinfo.hasPassive(2200613)) // destroy
+		html += '<br/>Passive: '+toLocalize(passives[2200613]['name'])+' ('+uinfo.getPassiveTotalVal(2200613)+')';
+	html += '<br/>Terrain Adv: '+uinfo.getTerrainAdvantage()+', '+toLocalize('연구')+': ATK +'+getResearchAtkBonus(uinfo.allowItemTypes[0]);
+	html += ' => '+uinfo.attackDmgActionList.atkVal+'</td>';
 	html += '<td class="number">'+getDecimalText(uinfo.attackDmgActionList.basicDmg)+'</td>';
 	html += '<td></td><td>';
 	html += 'DEF: '+defInfo.getStat('def');
 	if (defInfo.hasPassive(2200105)) // def stat switch
 		html += ', WIS: '+defInfo.getStat('wis');
-	html += '<br/>Terrain Adv: '+defInfo.getTerrainAdvantage()+'</td>';
+	html += '<br/>Terrain Adv: '+defInfo.getTerrainAdvantage()+' => '+uinfo.attackDmgActionList.defVal+'</td>';
 	html += '</tr>';
 	html += '</tbody></table>';
 	
@@ -2325,7 +2328,7 @@ function popupTacticDmg(uid) {
 		html += 'ATK: '+uinfo.getStat('atk')+', '+toLocalize('연구')+': ATK +'+getResearchAtkBonus(uinfo.allowItemTypes[0]);
 	else
 		html += 'WIS: '+uinfo.getStat('wis');
-	html += '<br/>Terrain Adv: '+uinfo.getTerrainAdvantage()+'</td>';
+	html += '<br/>Terrain Adv: '+uinfo.getTerrainAdvantage()+' => '+uinfo.tacticDmgActionList.atkVal+'</td>';
 	html += '<td class="number">'+getDecimalText(uinfo.tacticDmgActionList.basicDmg)+'</td>';
 	html += '<td></td><td>';
 	if (uinfo.tactic.damageType === 'Fixed')
@@ -2336,7 +2339,7 @@ function popupTacticDmg(uid) {
 		html += 'DEF: '+defInfo.getStat('def');
 	else
 		html += 'WIS: '+defInfo.getStat('wis');
-	html += '<br/>Terrain Adv: '+defInfo.getTerrainAdvantage()+'</td>';
+	html += '<br/>Terrain Adv: '+defInfo.getTerrainAdvantage()+' => '+uinfo.tacticDmgActionList.defVal+'</td>';
 	html += '</tr>';
 	html += '</tbody></table>';
 	

@@ -13,7 +13,7 @@ var pvpMaps = [
 	{ name: '기주, 초원 전투', tiles: [4200001, 4200002], weather: [ 68, 16, 16, 0, 0 ] }, // grassland
 	{ name: '옹주, 사막 전투', tiles: [4200004, 4200032], weather: [ 68, 16, 16, 0, 0 ] }, // desert
 	{ name: '사주, 도성 전투', tiles: [4200017, 4200024], weather: [ 20, 50, 30, 0, 0 ] }, // castle
-	{ name: '양주, 장강 전투', tiles: [4200014, 4200011], weather: [ 24, 36, 24, 16, 0 ] },  // river
+	{ name: '양주, 장강 전투', tiles: [4200014, 4200011], weather: [ 24, 36, 24, 16, 0 ] }, // river
 ];
 var brawlMaps = [
 	{ name: '난투', tiles: [4200060], weather: [ 20, 20, 20, 20, 20 ] } // Brawl
@@ -1771,7 +1771,6 @@ function getAttackBasicDmg(atkInfo, defInfo) {
 	var atkAtk = _getAtkVal(atkInfo, 'atk', 'wis');
 	var defDef = _getDefVal(defInfo, 'def', 'wis');
 	// TODO: sp625 Gale % (atkUnit passive. modify atkAtk for normal or reversal from normal (not joint/phalanx))
-	// TODO: display the passive info too
 	if (atkInfo.hasPassive(2200613)) { // destroy
 		defDef = monoMathRound(defDef * (1 - atkInfo.getPassiveTotalVal(2200613) / 100));
 	}
@@ -1781,7 +1780,7 @@ function getAttackBasicDmg(atkInfo, defInfo) {
 	atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
 	// TODO: now allowed game modes are same calculation (need when implemening 4gods or other modes)
 	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (5000 / 10000)); // min dmg is 1
-	return dmg;
+	return [ atkAtk, defDef, dmg ];
 }
 
 function _getTacticMagicBasicDmg(atkInfo, defInfo) {
@@ -1793,7 +1792,8 @@ function _getTacticMagicBasicDmg(atkInfo, defInfo) {
 	
 	atkWis = monoMathRound(atkWis * atkInfo.getTerrainAdvantage() / 100);
 	defWis = monoMathRound(defWis * defInfo.getTerrainAdvantage() / 100);
-	return (atkInfo.lv + 25) + ((atkWis - defWis) * (3333 / 10000));
+	var dmg = (atkInfo.lv + 25) + ((atkWis - defWis) * (3333 / 10000));
+	return [ atkWis, defWis, dmg ];
 }
 
 function _getTacticPhysicalBasicDmg(atkInfo, defInfo) {
@@ -1806,7 +1806,7 @@ function _getTacticPhysicalBasicDmg(atkInfo, defInfo) {
 	// TODO: now allowed game modes are same calculation (need when implemening 4gods or other modes)
 	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (5000 / 10000)); // min dmg is 1
 	// Noone has Ignore Type Advantage (401)
-	return dmg;
+	return [ atkAtk, defDef, dmg ];
 }
 
 SIDE_ATK = 0
@@ -2523,10 +2523,14 @@ function TacticDmgActionList(atkInfo) {
 			return;
 		}
 		
+		var res;
 		if (tactic.damageType === 'Physical')
-			this.basicDmg = _getTacticPhysicalBasicDmg(this.atkInfo, this.defInfo);
+			res = _getTacticPhysicalBasicDmg(this.atkInfo, this.defInfo);
 		else
-			this.basicDmg = _getTacticMagicBasicDmg(this.atkInfo, this.defInfo);
+			res = _getTacticMagicBasicDmg(this.atkInfo, this.defInfo);
+		this.atkVal = res[0];
+		this.defVal = res[1];
+		this.basicDmg = res[2];
 		var dmg = this.basicDmg;
 		for (var i = 0; i < this.actionArr.length; i++) {
 			var action = this.actionArr[i];
@@ -3159,7 +3163,10 @@ function AttackDmgActionList(atkInfo) {
 	};
 	
 	this.calculate = function() {
-		this.basicDmg = getAttackBasicDmg(this.atkInfo, this.defInfo);
+		var res = getAttackBasicDmg(this.atkInfo, this.defInfo);
+		this.atkVal = res[0];
+		this.defVal = res[1];
+		this.basicDmg = res[2];
 		var dmg = this.basicDmg;
 		for (var i = 0; i < this.actionArr.length; i++) {
 			var action = this.actionArr[i];
@@ -3770,6 +3777,10 @@ function AttackDmgSp009(actList, actId) { // % Charge Attack
 	this.setUserVal = function(userVal) {
 		this.userVal = userVal;
 		this.actList.actionSp570.userVal = userVal; // change userVal userVal too
+	};
+	// because of aimed shot bug, canApply() is needed to disable this passive when unit has aimed shot
+	this.canApply = function() {
+		return !this.getAtkInfo().hasPassive(2200605);
 	};
 		
 	this.adjustValue = function(dmg) {
