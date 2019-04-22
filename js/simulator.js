@@ -3086,12 +3086,12 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgDoubleSp022(this, 2200022), // Normal double attack with leading
 		new AttackDmgDoubleSp023(this, 2200023), // Normal double attack with chain
 		new AttackDmgDoubleSp047(this, 2200047), // Enhanced Double ATK % (normal)
+		new AttackDmg2ndHit(this, 24), // 2hit damage reduction for (counter, reversal, phalanx, joint)
 		new AttackDmgTech014(this, 2500014), // Research: Counter Archery 1
 		new AttackDmgTech024(this, 2500024), // Research: Counter Riding
-		new AttackDmgCounter(this, 25), // Counterattack damage reduction
+		new AttackDmgCounter(this, 25), // Counterattack damage without sp096 (counterattack+)
 		new AttackDmgCounterSp096(this, 2200096), // Counterattack+
-		new AttackDmgCounterSp023(this, 2200023), // Counterattack with chain attack
-		new AttackDmgReversal(this, 28), // Reversal damage reduction
+		new AttackDmgReversal(this, 28), // Reversal damage without sp096 (counterattack+)
 		new AttackDmgReversalSp096(this, 2200096), // Counterattack+ (reversal)
 		// 533: Vermilion Bird: Quick Reflexes (for 4god only)
 		new AttackDmgReversalSp581(this, 2200581), // Quick Reflexes % (Reversal Phalanx)
@@ -3475,6 +3475,9 @@ function _getDoubleAttackModPct(atkInfo, defInfo) {
 
 function AttackDmgDoubleSp022(actList, actId) { // Normal double attack with leading
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.getDisplayName = function() {
+		return "2nd hit with "+toLocalize(this.getPassive().name);
+	};
 	this.canApply = function() {
 		var atkInfo = this.getAtkInfo(); // must no chain
 		return _isNormalDoubleAttack(atkInfo) && !atkInfo.hasPassive(2200023);
@@ -3488,6 +3491,9 @@ function AttackDmgDoubleSp022(actList, actId) { // Normal double attack with lea
 
 function AttackDmgDoubleSp023(actList, actId) { // Normal double attack with chain
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.getDisplayName = function() {
+		return "2nd hit with "+toLocalize(this.getPassive().name);
+	};
 	this.canApply = function() {
 		return _isNormalDoubleAttack(this.getAtkInfo());
 	};
@@ -3507,6 +3513,20 @@ function AttackDmgDoubleSp047(actList, actId) { // Enhanced Double ATK % (Normal
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = dmg * (100 + this.modPct) / 100;
+	};
+}
+
+function AttackDmg2ndHit(actList, actId) { // 2hit damage reduction for (counter, reversal, phalanx, joint)
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.displayName = "2nd hit damage reduction";
+	this.canApply = function() {
+		var atkInfo = this.getAtkInfo();
+		return (atkInfo.attackType >= 1 && atkInfo.attackType <= 4) && atkInfo.isDoubleAttack;
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());
+		this.result = dmg * this.modPct / 100;
 	};
 }
 
@@ -3555,54 +3575,37 @@ function AttackDmgTech024(actList, actId) { // Research: Counter Riding
 	};
 }
 
-function AttackDmgCounter(actList, actId) { // Counterattack without passives
+function AttackDmgCounter(actList, actId) { // Counterattack without counterattack+
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.displayName = 'Counterattack Damage';
 	this.canApply = function() {
-		// no counterattack+ and chain attack
+		// no counterattack+
 		var atkInfo = this.getAtkInfo();
-		return atkInfo.attackType === 1  && !atkInfo.hasPassive(2200096) && !atkInfo.hasPassive(2200023);
+		return atkInfo.attackType === 1  && !atkInfo.hasPassive(2200096);
 	};
 	
 	this.adjustValue = function(dmg) {
-		this.modPct = 75;
-		this.result = dmg * 0.75;
+		this.modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());
+		this.result = dmg * this.modPct / 100;
 	};
 }
 
 function AttackDmgCounterSp096(actList, actId) { // Counterattack+
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
-		// no chain attack
-		var atkInfo = this.getAtkInfo();
-		return atkInfo.attackType === 1 && !atkInfo.hasPassive(2200023);
+		return this.getAtkInfo().attackType === 1;
 	};
 	
 	this.adjustValue = function(dmg) {
+		this.modPct = 100;
 		this.result = dmg;
 	};
 }
 
-function AttackDmgCounterSp023(actList, actId) { // Counterattack with chain attack
-	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
-	this.getDisplayName = function() {
-		return 'Counterattack damage with '+ toLocalize(passives[this.passiveId]['name']);
-	};
-	
-	this.canApply = function() {
-		var modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());
-		return this.getAtkInfo().attackType === 1 && modPct !== 100;
-	};
-	
-	this.adjustValue = function(dmg) {
-		this.modPct = 75; // TODO: decide again regarding to display info
-		this.result = dmg * 75 / 100;
-	};
-}
-
-function AttackDmgReversal(actList, actId) { // Reversal without passive
+function AttackDmgReversal(actList, actId) { // Reversal without counterattack+
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.displayName = 'Reversal Damage';
+	this.imgInfo = getPassiveIconInfo(passives[2200092].icon);
 	this.canApply = function() {
 		// no counterattack+
 		var atkInfo = this.getAtkInfo();
@@ -3610,8 +3613,8 @@ function AttackDmgReversal(actList, actId) { // Reversal without passive
 	};
 	
 	this.adjustValue = function(dmg) {
-		this.modPct = 75;
-		this.result = dmg * 0.75;
+		this.modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());;
+		this.result = dmg * this.modPct / 100;
 	};
 }
 
@@ -3649,6 +3652,7 @@ function AttackDmgReversalSp581(actList, actId) { // Quick Reflexes % (Reversal 
 function AttackDmgJoint(actList, actId) { // Joint attack damage reduction
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.displayName = 'Joint Attack Damage';
+	this.imgInfo = [ 'jointImg', [0,0] ];
 	this.canApply = function() {
 		return this.getAtkInfo().attackType === 2;
 	};
@@ -3686,6 +3690,7 @@ function AttackDmgJointSp445(actList, actId) { // Oathkeeper (joint)
 function AttackDmgPhalanx(actList, actId) { // Phalanx attack damage reduction
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.displayName = 'Phalanx Attack Damage';
+	this.imgInfo = getPassiveIconInfo(passives[2200097].icon);
 	this.canApply = function() {
 		return this.getAtkInfo().attackType === 4;
 	};
