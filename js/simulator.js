@@ -958,6 +958,15 @@ function UserUnit(unit, id) {
 			val -= 10;
 		if (val < 100 && this.hasPassive(2200037)) // Terrain Effect +
 			val = 100;
+		
+		// mountain, desert, castle, snow, river boost
+		var tilePassiveIds = [ 2200619, 2200620, 2200621, 2200622, 2200623 ];
+		for (var i = 0; i < tilePassiveIds; i++) {
+			var passiveId = tilePassiveIds[i];
+			if (this.hasPassive(passiveId))
+				val = Math.max(_getPassiveTerrainAdv(passiveId, this.tileId, this.isFlameTile), val);
+		}
+
 		// cavalry with heavy armor research (Enhance Horsemanship research)
 		if (isTypeHeavyCavalry(this.unit['jobTypeId']))
 			val += 5
@@ -967,11 +976,11 @@ function UserUnit(unit, id) {
 		if (this.hasPassive(2200036)) // Naval Battle+
 			val = Math.max(_getPassiveTerrainAdv(2200036, this.tileId, this.isFlameTile), val);
 		// 161: Water Walking (noone has. same as 036)
+		if (this.hasPassive(2200591)) // Naval Battle Specialization
+			val = Math.max(_getPassiveTerrainAdv(2200591, this.tileId, this.isFlameTile), val);
 		// 453: Mountain Battle Boost (noone has. same as 454)
 		if (this.hasPassive(2200454)) // Mountain Battle Specialization
 			val = Math.max(_getPassiveTerrainAdv(2200454, this.tileId, this.isFlameTile), val);
-		if (this.hasPassive(2200591)) // Naval Battle Specialization
-			val = Math.max(_getPassiveTerrainAdv(2200591, this.tileId, this.isFlameTile), val);
 		return val;
 	};
 	
@@ -1770,7 +1779,8 @@ function _getDefVal(defInfo, mainStat, subStat) {
 function getAttackBasicDmg(atkInfo, defInfo) {
 	var atkAtk = _getAtkVal(atkInfo, 'atk', 'wis');
 	var defDef = _getDefVal(defInfo, 'def', 'wis');
-	// TODO: sp625 Gale % (atkUnit passive. modify atkAtk for normal or reversal from normal (not joint/phalanx))
+	// sp625 Gale % (atkUnit passive. modify atkAtk for normal or reversal from normal (not joint/phalanx))
+	// - modPct = stepLeft * passiveVal
 	if (atkInfo.hasPassive(2200613)) { // destroy
 		defDef = monoMathRound(defDef * (1 - atkInfo.getPassiveTotalVal(2200613) / 100));
 	}
@@ -1913,15 +1923,15 @@ function AttackAccActionBase(actList, id, side, type, userVal=null, userType='in
 	
 	this.getIconHtml = function() {
 		var html = null;
-		if (this.passiveId) {
+		if ('imgInfo' in this) {
+			html = _iconHtml(this.imgInfo[0], this.imgInfo[1], 'frame-blue');
+		}
+		else if (this.passiveId) {
 			if (this.hasMainPassive)
 				html = getPassiveIconHtml(passives[this.passiveId]['icon'], 'frame-blue');
 		}
 		else if (this.techId) {
 			html = _iconHtml('tech', techIcons[research[this.techId]['icon']], 'frame-blue');
-		}
-		else if ('imgInfo' in this) {
-			html = _iconHtml(this.imgInfo[0], this.imgInfo[1], 'frame-blue');
 		}
 		return html;
 	};
@@ -2092,11 +2102,13 @@ function AttackAccSp208(actList) { // Narrow Escape
 
 function AttackAccSp447(actList) { // Command: Attack DEF Rate Pierce
 	AttackAccActionBase.call(this, actList, 2200447, SIDE_ATK, 2, 0, 'bool');
+	this.magic = _findObj(2000132, tactics);
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'In Emperor Aura';
 	
 	this.adjustValue = function(acc) {
 		if (this.userVal) {
-			this.modPct = 7; // passive from Emperor tactic (fixed value here)
+			this.modPct = this.magic.skillPower;
 			this.result = Math.min(acc * (1 + this.modPct / 100), 100);
 		} else {
 			this.modPct = 0;
@@ -2435,6 +2447,9 @@ function TacticAccSp405(actList) { // (Formation Effect) All DEF Rate +%
 
 function TacticDmgActionList(atkInfo) {
 	this.atkInfo = atkInfo;
+
+	this.actionPatience = new TacticDmgPatience(this, 18), // swift cavalry tactic
+	this.actionComposure = new TacticDmgComposure(this, 19), // swift cavalry tactic
 	
 	this.actionArr = [
 		new TacticDmgPower(this, 10),
@@ -2505,8 +2520,8 @@ function TacticDmgActionList(atkInfo) {
 		new TacticDmgSp415(this, 2200415), // Guard
 		new TacticDmgSp422(this, 2200422), // Song: Tactics Damage -%
 		// 462: Main Attack + (noone has)
-		new TacticDmgPatience(this, 18), // swift calvary tactic
-		new TacticDmgComposure(this, 19), // swift calvary tactic
+		this.actionPatience, // swift cavalry tactic
+		this.actionComposure, // swift cavalry tactic
 		new AttackDmgFlameMark(this, 7),
 		// 599: Defense Specialization % (hardened/weakness, meng mei)
 	];
@@ -2984,6 +2999,8 @@ function TacticDmgSp415(actList, actId) { // Guard
 
 function TacticDmgSp422(actList, actId) { // Song: Tactics Damage -%
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 2, 0, 'bool');
+	this.magic = _findObj(2000130, tactics);
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'In Song Aura';
 	this.canApply = function() {
 		return _isAttackSkill(this.getTactic());
@@ -2991,7 +3008,7 @@ function TacticDmgSp422(actList, actId) { // Song: Tactics Damage -%
 	
 	this.adjustValue = function(dmg) {
 		if (this.userVal) {
-			this.modPct = 25;
+			this.modPct = this.magic.skillPower;
 			this.result = dmg - dmg * this.modPct / 100;
 		}
 		else {
@@ -3001,7 +3018,7 @@ function TacticDmgSp422(actList, actId) { // Song: Tactics Damage -%
 	};
 }
 
-function TacticDmgPatience(actList, actId) { // swift calvary Patience tactic
+function TacticDmgPatience(actList, actId) { // swift cavalry Patience tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
 	this.magic = _findObj(2000170, tactics);
 	this.getDisplayName = function() { return toLocalize(this.magic.name); };
@@ -3010,10 +3027,15 @@ function TacticDmgPatience(actList, actId) { // swift calvary Patience tactic
 	this.canApply = function() {
 		return this.getTactic().skillType !== 25 && this.getDefInfo().unit.jobTypeId === 1210078;
 	};
+	this.setUserVal = function(val) {
+		this.userVal = val;
+		if (val === 1 && this.actList.actionComposure.userVal === 1)
+			this.actList.actionComposure.userVal = 0;
+	};
 	
 	this.adjustValue = function(dmg) {
 		if (this.userVal) {
-			this.modPct = 20;
+			this.modPct = this.magic.skillPower;
 			this.result = dmg + dmg * this.modPct / 100;
 		}
 		else {
@@ -3023,7 +3045,7 @@ function TacticDmgPatience(actList, actId) { // swift calvary Patience tactic
 	};
 }
 
-function TacticDmgComposure(actList, actId) { // swift calvary Tranquility tactic
+function TacticDmgComposure(actList, actId) { // swift cavalry Tranquility tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
 	this.magic = _findObj(2000171, tactics);
 	this.getDisplayName = function() { return toLocalize(this.magic.name); };
@@ -3032,10 +3054,15 @@ function TacticDmgComposure(actList, actId) { // swift calvary Tranquility tacti
 	this.canApply = function() {
 		return this.getTactic().skillType !== 25 && this.getDefInfo().unit.jobTypeId === 1210078;
 	};
+	this.setUserVal = function(val) {
+		this.userVal = val;
+		if (val === 1 && this.actList.actionPatience.userVal === 1)
+			this.actList.actionPatience.userVal = 0;
+	};
 	
 	this.adjustValue = function(dmg) {
 		if (this.userVal) {
-			this.modPct = 20;
+			this.modPct = this.magic.skillPower;
 			this.result = dmg - dmg * this.modPct / 100;
 		}
 		else {
@@ -3054,6 +3081,9 @@ function AttackDmgActionList(atkInfo) {
 	
 	this.actionSp543 = new AttackDmgSp543(this, 2200543); // Mortal Blaze (assume main target)
 	this.actionFlameMark = new AttackDmgFlameMark(this, 42);
+	
+	this.actionPatience = new AttackDmgPatience(this, 38), // swift cavalry tactic
+	this.actionComposure = new AttackDmgComposure(this, 39), // swift cavalry tactic
 	
 	this.actionArr = [
 		new AttackDmgRangeFold(this, 20),
@@ -3148,8 +3178,8 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp421(this, 2200421), // Song: Physical Damage -%
 		// 522: Vermilion Bird: Fire Attack % (only 4god)
 		new AttackDmgSp542(this, 2200542), // Fire Attack % (main target only)
-		new AttackDmgPatience(this, 38), // swift calvary tactic
-		new AttackDmgComposure(this, 39), // swift calvary tactic
+		this.actionPatience, // swift cavalry tactic
+		this.actionComposure, // swift cavalry tactic
 		new AttackDmgSp443(this, 2200443), // Overwhelm
 		this.actionSp543, // Mortal Blaze (assume main target)
 		this.actionFlameMark,
@@ -3251,24 +3281,6 @@ function AttackDmgSp044(actList, actId) { // Physical Attack +%
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = dmg + dmg * this.modPct / 100;
-	};
-}
-
-function AttackDmgSp009(actList, actId) { // % Charge Attack
-	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 1, 0, 'int');
-	this.userText = 'Move Step';
-	this.userValMax = 13;
-	this.setUserVal = function(userVal) {
-		this.userVal = userVal;
-		this.actList.actionSp570.userVal = userVal; // change userVal userVal too
-	};
-		
-	this.adjustValue = function(dmg) {
-		this.modPct = this.getPassiveTotalVal() * this.userVal;
-		var modPct = this.modPct;
-		if (this.getAtkInfo().hasPassive(2200570))
-			modPct += this.actList.actionSp570.modPct;
-		this.result =  dmg * (1 + modPct * 0.01);
 	};
 }
 
@@ -3449,11 +3461,13 @@ function AttackDmgTech027(actList, actId) { // Research: Ship Construction (navy
 
 function AttackDmgSp446(actList, actId) { // CMD: Physical Attack +%
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 2, 0, 'bool');
+	this.magic = _findObj(2000131, tactics);
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'In Emperor Aura';
 	
 	this.adjustValue = function(dmg) {
 		if (this.userVal) {
-			this.modPct = 15; // passive from Emperor tactic (fixed value here)
+			this.modPct = this.magic.skillPower;
 			this.result = dmg * (100 + this.modPct) / 100;
 		} else {
 			this.modPct = 0;
@@ -3734,15 +3748,6 @@ function AttackDmgPhalanxSp445(actList, actId) { // Oathkeeper (Phalanx)
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = dmg * (1 + this.modPct * 0.01);
-	};
-}
-
-function AttackDmgSp585(actList, actId) { // Zhao Family Triple Strike
-	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
-	
-	this.adjustValue = function(dmg) {
-		this.modPct = this.getPassiveTotalVal();
-		this.result = dmg * this.modPct * 0.01;
 	};
 }
 
@@ -4092,6 +4097,15 @@ function AttackDmgSp272(actList, actId) { // Max Damage Defense %
 	};
 }
 
+function AttackDmgSp585(actList, actId) { // Zhao Family Triple Strike
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg * this.modPct * 0.01;
+	};
+}
+
 function AttackDmgSp418(actList, actId) { // Deadly Attack
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
@@ -4139,11 +4153,13 @@ function AttackDmgSp415(actList, actId) { // Guard
 
 function AttackDmgSp421(actList, actId) { // Song: Physical Damage -%
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 2, 0, 'bool');
+	this.magic = _findObj(2000129, tactics);
+	this.imgInfo = [ 'magic', getMagicIconInfo(this.magic.icon) ];
 	this.userText = 'In Song Aura';
 	
 	this.adjustValue = function(dmg) {
 		if (this.userVal) {
-			this.modPct = 25;
+			this.modPct = this.magic.skillPower;
 			this.result = dmg - dmg * this.modPct / 100;
 		}
 		else {
@@ -4181,7 +4197,7 @@ function AttackDmgSp542(actList, actId) { // Fire Attack % (main target only)
 	};
 }
 
-function AttackDmgPatience(actList, actId) { // swift calvary Patience tactic
+function AttackDmgPatience(actList, actId) { // swift cavalry Patience tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 2, 0, 'bool');
 	this.magic = _findObj(2000170, tactics);
 	this.getDisplayName = function() { return toLocalize(this.magic.name); };
@@ -4190,10 +4206,15 @@ function AttackDmgPatience(actList, actId) { // swift calvary Patience tactic
 	this.canApply = function() {
 		return this.getDefInfo().unit.jobTypeId === 1210078;
 	};
+	this.setUserVal = function(val) {
+		this.userVal = val;
+		if (val === 1 && this.actList.actionComposure.userVal === 1)
+			this.actList.actionComposure.userVal = 0;
+	};
 	
 	this.adjustValue = function(dmg) {
 		if (this.userVal) {
-			this.modPct = 20;
+			this.modPct = this.magic.skillPower;
 			this.result = dmg - dmg * this.modPct / 100;
 		}
 		else {
@@ -4203,7 +4224,7 @@ function AttackDmgPatience(actList, actId) { // swift calvary Patience tactic
 	};
 }
 
-function AttackDmgComposure(actList, actId) { // swift calvary Tranquility tactic
+function AttackDmgComposure(actList, actId) { // swift cavalry Tranquility tactic
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 2, 0, 'bool');
 	this.magic = _findObj(2000171, tactics);
 	this.getDisplayName = function() { return toLocalize(this.magic.name); };
@@ -4212,10 +4233,15 @@ function AttackDmgComposure(actList, actId) { // swift calvary Tranquility tacti
 	this.canApply = function() {
 		return this.getDefInfo().unit.jobTypeId === 1210078;
 	};
+	this.setUserVal = function(val) {
+		this.userVal = val;
+		if (val === 1 && this.actList.actionPatience.userVal === 1)
+			this.actList.actionPatience.userVal = 0;
+	};
 	
 	this.adjustValue = function(dmg) {
 		if (this.userVal) {
-			this.modPct = 20;
+			this.modPct = this.magic.skillPower;
 			this.result = dmg + dmg * this.modPct / 100;
 		}
 		else {

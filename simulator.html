@@ -1950,10 +1950,18 @@ function _actionAccTableRowsCreator(uinfo, tableEle, actionList) {
 		var cellIdx = (action.side === 0) ? 1 : 4;
 		cells[cellIdx].getElementsByTagName('span')[0].innerText = getModTxt(action);
 		cells[2].innerText = getDecimalText(action.result);
-		if (action.type !== 0 && action.userValType === 'int') {
-			var input = cells[cellIdx].getElementsByTagName('input')[0];
-			if (action.userVal !== Number(input.value))
-				input.value = action.userVal;
+		if (action.type !== 0) {
+			var inputs = cells[cellIdx].getElementsByTagName('input');
+			if (action.userValType === 'int') {
+				var input = inputs[0];
+				if (action.userVal !== Number(input.value))
+					input.value = action.userVal;
+			}
+			else { // 'bool'
+				var input = inputs[action.userVal ? 0 : 1];
+				if (!input.checked)
+					input.checked = true;
+			}
 		}
 	}
 	
