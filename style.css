@@ -817,3 +817,74 @@ button.battleOpt {
 span.iconInactive {
   box-shadow:inset 0 0 0 20px rgba(10,10,10,0.7);
 }
+
+.relationBlock {
+  width: 1000px;
+  max-width: 1000px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid black;
+}
+
+.relationName {
+  flex-basis: 800px;
+  border-bottom: 1px solid black;
+  border-right: 1px solid black;
+  background-color: #fffacd;
+  padding-left: 5px;
+}
+
+.relationString {
+  flex-basis: 189px;
+  border-bottom: 1px solid black;
+  background-color: #fffacd;
+  padding: 1px 0 0 5px;
+}
+
+.relationUnits {
+  flex-basis: 220px;
+  border-right: 1px solid black;
+  padding: 2px 2px 0 2px;
+}
+
+.relationStats {
+  flex-basis: 80px;
+  border-right: 1px solid black;
+  padding: 2px 2px 0 2px;
+}
+
+.relationPassives {
+  flex-basis: 686px;
+  padding: 2px 2px 0 2px;
+}
+
+.relationPassives table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.relationPassives table td {
+  vertical-align: top;
+  padding: 0 0 0 0;
+  font-size: 14px;
+}
+
+td.relationPTxt {
+  padding: 0 5px 0 2px !important;
+  width: 250px;
+}
+
+td.relationTrigger {
+  padding-left: 5px !important;
+  position: relative;
+}
+
+td.relationTrigger:after {
+  content:"";
+  background: black;
+  position: absolute;
+  top: 5%;
+  left: 0;
+  height: 90%;
+  width: 1px;
+}

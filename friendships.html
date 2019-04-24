@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Friendships</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
+<script type="text/javascript" src="imgs/face.js"></script>
+<script type="text/javascript">
+var relationStatMap = [ 'ATK', 'DEF', 'WIS', 'AGI', 'MRL' ];
+var unitsMap = {};
+
+function popupPassive(td) {
+	var passiveList = td.passiveList;
+	var passiveId = passiveList['passiveId'];
+	var passive = passives[passiveId];
+	
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'], 'frame-blue')) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+function generateTableRows() {
+	var divBlocks = document.getElementById("relationList");
+	divBlocks.innerHTML = "";
+	
+	for (var i = 0; i < friendships.length; i++) {
+		var relation = friendships[i];
+		
+		// big block to lock whole width of screen
+		var divRelation = document.createElement("div");
+		divRelation.style.marginBottom = '10px';
+		divRelation.id = relation['id'];
+		divRelation.relation = relation;
+		
+		var divBlock = document.createElement("div");
+		divBlock.className = 'relationBlock';
+		divRelation.appendChild(divBlock);
+		
+		var divName = createHtmlNode("div", toLocalizes(relation['name'], ' &nbsp; '));
+		divName.className = 'relationName';
+		divBlock.appendChild(divName);
+		
+		var divString = createHtmlNode("div", 'Require String: ' + relation['needString']);
+		divString.className = 'relationString';
+		divBlock.appendChild(divString);
+		
+		var divCol = document.createElement("div");
+		divCol.className = 'relationUnits';
+		for (var j = 0; j < relation['unitId'].length; j++) {
+			var unit = unitsMap[relation['unitId'][j]];
+			var faceHtml =  makePreTxtIconHtml('<span class="face-mini frame-blue">' + getFaceIconHtml(unit['face']) + '</span>');
+			var html = faceHtml + '<span>' + toLocalizes(unit["name"]) + '</span>';
+			var div = createHtmlNode("div", html);
+			div.style.clear = 'both';
+			divCol.appendChild(div);
+		}
+		
+		divBlock.appendChild(divCol);
+		
+		
+		html = '';
+		for (var j = 0; j < relation['statType'].length; j++) {
+			if (j !== 0)
+				html += '<br/>';
+			html += relationStatMap[relation['statType'][j]] + ' +' + relation['statVal'][j];
+		}
+		divCol = createHtmlNode("div", html);
+		divCol.className = 'relationStats';
+		divBlock.appendChild(divCol);
+		
+		
+		var divCol = document.createElement("div");
+		divCol.className = 'relationPassives';
+		var table = document.createElement("table");
+		for (var j = 0; j < relation['passive'].length; j++) {
+			var passiveList = passiveLists[relation['passive'][j]];
+			var unitCount = relation['passiveUnitCount'][j];
+			var triggerType = relation['passiveType'][j];
+			
+			var row = table.insertRow(-1);
+			// passive image
+			var cell = row.insertCell(0);
+			cell.style.width = '40px';
+			cell.innerHTML = getPassiveIconHtml(passives[passiveList['passiveId']]['icon'], 'frame-blue');
+			// passive text
+			cell = row.insertCell(1);
+			cell.className = 'relationPTxt';
+			cell.passiveList = passiveList;
+			cell.innerHTML = '<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span><span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</span>';
+			// trigger text
+			cell = row.insertCell(2);
+			cell.className = 'relationTrigger';
+			var html = '';
+			if (triggerType === 0) {
+				if (unitCount === 0)
+					html = toLocalizes('모두 출진 시 발동');
+				else
+					html = toLocalizes('{0}명 이상 출진 시 발동').format(unitCount);
+			}
+			else if (triggerType === 1) {
+				if (unitCount === 0)
+					html = toLocalizes('퇴각 시 발동');
+				else
+					html = toLocalizes('{0}명 이상 퇴각 시 발동').format(unitCount);
+			}
+			else if (triggerType === 2) {
+				if (unitCount === 0)
+					html = toLocalizes('인접 시 발동');
+				else
+					html = toLocalizes('{0}명 이상 인접 시 발동').format(unitCount);
+			}
+			cell.innerHTML = html;
+		}
+		divCol.appendChild(table);
+		divBlock.appendChild(divCol);
+		
+		divBlocks.appendChild(divRelation);
+	}
+
+	doFilter();
+}
+
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+}
+
+function doFilter2(txt) {
+	txt = txt.trim();
+	
+	for (var i = 0; i < friendships.length; i++) {
+		var relation = friendships[i];
+		var divRelation = document.getElementById(relation['id']);
+		
+		if (txt === "") {
+			divRelation.style.display = "";
+			continue;
+		}
+		
+		// search from feat name
+		if (inLocalizeText(relation["name"], txt)) {
+			divRelation.style.display = "";
+			continue;
+		}
+		
+		// filter by unit name
+		var found = false;
+		for (var j = 0; j < relation['unitId'].length; j++) {
+			var unit = unitsMap[relation['unitId'][j]];
+			if (inLocalizeText(unit["name"], txt)) {
+				found = true;
+				break;
+			}
+		}
+		if (found) {
+			divRelation.style.display = "";
+			continue;
+		}
+		
+		divRelation.style.display = "none";
+	}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	for (var i = 0; i < units.length; i++)
+		unitsMap[units[i]['id']] = units[i];
+	
+	setLangChangeCallback(generateTableRows);
+	
+	generateTableRows();
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight+5) + "px";
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		Quick Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
+	</div>
+	<div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" class="topbar-bottom">
+</div>
+</div>
+
+<div id="content">
+
+<div id="relationList">
+</div>
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+	<div class="modal-content">
+		<div class="modal-header">
+			<span id="closeModal" class="close">&times;</span>
+			<h2 id="modalHeader">Modal Header</h2>
+		</div>
+		<div class="modal-body">
+			<p id="modalContent"></p>
+		</div>
+	</div>
+</div>
+</body>
+</html>
