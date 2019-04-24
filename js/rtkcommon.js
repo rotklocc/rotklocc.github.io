@@ -371,6 +371,8 @@ function createSideBarMenu() {
 	html += '<a href="tactics.html">Tactics</a>';
 	html += '<a href="terrains.html">Terrains</a>';
 	html += '<br/>';
+	html += '<a href="simulator.html">Calculator</a>';
+	html += '<br/>';
 	html += '<a href="artifacts.html">Artifacts</a>';
 	html += '<a href="artifactUpgradeStats.html">Artifacts Upgrade</a>';
 	html += '<a href="artifactUpgradePassives.html">Artifact Passives</a>';
@@ -380,6 +382,7 @@ function createSideBarMenu() {
 	html += '<a href="relicSets.html">Relic Sets</a>';
 	html += '<br/>';
 	html += '<a href="stories.html">Stories</a>';
+	html += '<a href="friendships.html">Friendships</a>';
 	html += '<br/>';
 	html += '<a href="feats.html">Feats</a>';
 	html += '<a href="guildMissions.html">Guild Missions</a>';
