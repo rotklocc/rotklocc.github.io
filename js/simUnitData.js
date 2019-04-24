@@ -9,11 +9,15 @@ var unitPreset = {
 	// xun yu
 	1100021: 'mhCwpZGHwBwFwBNrGlkpDAHAXAZZsqOWM8AcBcFBWzpcPHtKJcLEw5wsTDPCxMRcLEtanAKcApwAnAKbapwb',
 	// pang tong
-	1100664: 'mlU7CgmQCcAcBcATaxpZKQwBwFwGWbKjlibAHAXBgVs6XBx7SjnCxMN8LExBwsTEXCxLWpwCnAKcAJwCm2qcG-',
+	1100664: 'mlU7CgmQCcAcBcATaxpZKQwBwFwGWbKjlibAHAXBgVs6XJx7SjnAHEw3wBxMQcAcTEXAHEtanAKcApwAnAKbapwb',
 	// zhu huan
 	1100430: 'mjKbClkBTAHALEaLGlkUTAHALAZZsqORlsAcAsFxezpcbHtKPBxMfBxMBcHEwXwcS1oBTJwBTAFMAUtqDAs',
 	// sun shangxiang
 	1100478: 'mjZ7CgGSLAHALEaLGlkWnAHALAZZsqOSBcAcAsFJezpcbEtKPBxMfBxMBcHEwXwcS1oCTDHAJMAkxCtqDAs',
+	// gan ning
+	1100658: 'mlR7CgmQUcAcAsRosaGZYcAcAsBlmyoJkFLAHALBSXs6XGx7SjwMTAHAxMBcDEwXwMS1oDTJwDTANMVLapyb',
+	// zhou tai
+	1100660: 'mlWbCgmVfAHALEaLGhmWHAHALAZZsqOSBcAcAsFJezo8bHtKPExMfExMBcTEwXxMS1oCTJwCTAJMhLapyb',
 	// ma yunlu
 	1100484: 'mjc7ClmYbAHALEaLGlkWnAHALAZZsqOSBcAcAsFJezo8bHtKPBxMfBxMBcHEwXwcS1oAnFnACcAJwAm2osm-',
 	// cai yan
@@ -31,5 +35,5 @@ var unitPreset = {
 	// xiang yu
 	1100867: 'mnVrCgCWPAHALEaLGlkWnAHALAZZsqOUGMAcAsFVezpcbEtKPAxMfAxMGcDEwTwMS1oETJwETARMJLapyb',
 	// dong bai
-	1101163: 'mgBSsKWRgsAcAsRosaWRacAcAsBlmyo5IFwBwCwUl7Olxse0o8DEwBwMTAXAxMF8DEtaAEycAEwATABLapyb',
+	1101163: 'mgBSsKWRgsAcAsRosaWRacAcAsBlmyo5IFwBwCwUl7Olxse0o8DEwBwMTAXAxMF8DEtaAEw5wATABMAEtqnJs',
 };
