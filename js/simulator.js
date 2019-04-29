@@ -2821,7 +2821,7 @@ function TacticDmgNoSp059(actList, actId) {
 	};
 	
 	this.adjustValue = function(dmg) {
-		this.modPct = 25;
+		this.modPct = 75;
 		this.result = dmg * 75 / 100;
 	};
 }

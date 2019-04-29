@@ -1955,7 +1955,7 @@ function _actionAccTableRowsCreator(uinfo, tableEle, actionList) {
 		var cellIdx = (action.side === 0) ? 1 : 4;
 		cells[cellIdx].getElementsByTagName('span')[0].innerText = getModTxt(action);
 		cells[2].innerText = getDecimalText(action.result);
-		if (action.type !== 0) {
+		if ('userText' in action) {
 			var inputs = cells[cellIdx].getElementsByTagName('input');
 			if (action.userValType === 'int') {
 				var input = inputs[0];
