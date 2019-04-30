@@ -95,6 +95,15 @@ document.addEventListener('DOMContentLoaded', function() {
 	generateTableRows();
 	
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+	
+	document.addEventListener("keyup", function(evt) {
+		if (evt.keyCode == 70 && evt.target.tag !== 'INPUT') { // F
+			evt.preventDefault();
+			var input = document.getElementById('filterTxt');
+			input.focus();
+			input.select();
+		}
+	});
 }, false);
 </script>
 </head>
@@ -154,17 +163,5 @@ document.addEventListener('DOMContentLoaded', function() {
 </table>
 </div>
 
-<!-- Modal box -->
-<div id="modalDiv" class="modal">
-	<div class="modal-content">
-		<div class="modal-header">
-			<span id="closeModal" class="close">&times;</span>
-			<h2 id="modalHeader">Modal Header</h2>
-		</div>
-		<div class="modal-body">
-			<p id="modalContent"></p>
-		</div>
-	</div>
-</div>
 </body>
 </html>
