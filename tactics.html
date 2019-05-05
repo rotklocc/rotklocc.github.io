@@ -33,7 +33,8 @@ function popupInfo() {
 	txt += '- <b>Always Hit</b>: tactics cannot miss.<br/>';
 	txt += "</p>";
 	
-	txt += '<p><b>Double?:</b> Is it possible to cast double tactics. If this field value is "NO", critical attack is always disabled.</p>';
+	var tactic = document.getElementById(2000065).tactic;
+	txt += '<p><b>Double?:</b> Is it possible to cast double tactics. If this field value is "NO", critical attack is always disabled except "'+toLocalizes(tactic["name"])+'" tactic.</p>';
 	txt += '<p><b>Interrupt?:</b> Is it interrupt tactics. The interrupt tactics can be casted twice if caster has "' + toLocalize('방해 책략 전문화%') + '" passive.</p>';
 	
 	document.getElementById("modalContent").innerHTML = txt;

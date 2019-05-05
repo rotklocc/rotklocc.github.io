@@ -1020,7 +1020,7 @@ function UserUnit(unit, id) {
 	};
 	
 	this.canCriticalTactic = function() {
-		return this.tactic.canStreakCast;
+		return this.tactic.canStreakCast || this.tactic.id == 2000065; // 4god Azure Dragon is exception
 	};
 	
 	this.alwaysCriticalAttack = function() {
@@ -2814,7 +2814,7 @@ function TacticDmgSp059(actList, actId) { // Double Tactics +%
 
 function TacticDmgNoSp059(actList, actId) {
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
-	this.displayName = "Double Tactics Dmg Reduction";
+	this.displayName = "Double Tactics Dmg";
 	this.canApply = function() {
 		var atkInfo = this.getAtkInfo();
 		return atkInfo.isDoubleTactic && !atkInfo.hasPassive(2200059);
@@ -3116,7 +3116,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgDoubleSp022(this, 2200022), // Normal double attack with leading
 		new AttackDmgDoubleSp023(this, 2200023), // Normal double attack with chain
 		new AttackDmgDoubleSp047(this, 2200047), // Enhanced Double ATK % (normal)
-		new AttackDmg2ndHit(this, 24), // 2hit damage reduction for (counter, reversal, phalanx, joint)
+		new AttackDmg2ndHit(this, 24), // 2hit damage for (counter, reversal, phalanx, joint)
 		new AttackDmgTech014(this, 2500014), // Research: Counter Archery 1
 		new AttackDmgTech024(this, 2500024), // Research: Counter Riding
 		new AttackDmgCounter(this, 25), // Counterattack damage without sp096 (counterattack+)
@@ -3532,7 +3532,7 @@ function AttackDmgDoubleSp047(actList, actId) { // Enhanced Double ATK % (Normal
 
 function AttackDmg2ndHit(actList, actId) { // 2hit damage reduction for (counter, reversal, phalanx, joint)
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
-	this.displayName = "2nd hit damage reduction";
+	this.displayName = "2nd hit Damage";
 	this.canApply = function() {
 		var atkInfo = this.getAtkInfo();
 		return (atkInfo.attackType >= 1 && atkInfo.attackType <= 4) && atkInfo.isDoubleAttack;
