@@ -1190,6 +1190,82 @@ function onTrainStep(btn) {
 	onTrainSlider(slider);
 }
 
+function popupCustomStat(uid) {
+	var uinfo = punits[uid];
+	var hasCustomStat = (uinfo.overriddenStat !== null);
+	
+	var html = '';
+	html += '<div><input id="chkCustomStat" type="checkbox"><label for="chkCustomStat">Enable Stat Overriden</label></div>';
+	html += '<p>';
+	html += 'STR: <input id="strCustom" type="number" value="200"><br/>';
+	html += 'INT: <input id="intCustom" type="number" value="200"><br/>';
+	html += 'CMD: <input id="cmdCustom" type="number" value="200"><br/>';
+	html += 'DEX: <input id="dexCustom" type="number" value="200"><br/>';
+	html += 'LCK: <input id="lckCustom" type="number" value="200"><br/>';
+	html += '</p>';
+	html += '<p>';
+	html += 'ATK: <input id="atkCustom" type="number" value="1000"><br/>';
+	html += 'WIS: <input id="wisCustom" type="number" value="1000"><br/>';
+	html += 'DEF: <input id="defCustom" type="number" value="1000"><br/>';
+	html += 'AGI: <input id="agiCustom" type="number" value="1000"><br/>';
+	html += 'MRL: <input id="mrlCustom" type="number" value="1000"><br/>';
+	html += '</p>';
+
+	document.getElementById("modalHeader").innerHTML = "Custom Unit Stat";
+	var content = document.getElementById("modalContent");
+	content.innerHTML = html;
+	document.getElementById("modalDiv").style.display = "block";
+	
+	function updateCustomStat() {
+		if (!hasCustomStat)
+			return; // do nothing
+		var stat = {};
+		for (var i = 0; i < statNames.length; i++) {
+			var statName = statNames[i];
+			var val = Number(document.getElementById(statName + 'Custom').value);
+			if (val <= 0) val = 200;
+			stat[statName] = val;
+		}
+		for (var i = 0; i < attrNames.length; i++) {
+			var attrName = attrNames[i];
+			var val = Number(document.getElementById(attrName + 'Custom').value);
+			if (val <= 0) val = 1000;
+			stat[attrName] = val;
+		}
+		uinfo.setOverriddenStat(stat);
+		updateUnitAttributeInfo(uinfo);
+	}
+	
+	function onToggleCustomStat() {
+		if (this.checked) {
+			hasCustomStat = true;
+			updateCustomStat();
+		}
+		else {
+			hasCustomStat = false;
+			uinfo.setOverriddenStat(null);
+			updateUnitAttributeInfo(uinfo);
+		}
+	}
+	
+	var ele = document.getElementById('chkCustomStat');
+	ele.checked = hasCustomStat;
+	ele.onclick = onToggleCustomStat;
+	
+	for (var i = 0; i < statNames.length; i++) {
+		var statName = statNames[i];
+		var ele = document.getElementById(statName + 'Custom');
+		ele.value = uinfo.statBasic[statName];
+		ele.oninput = updateCustomStat;
+	}
+	for (var i = 0; i < attrNames.length; i++) {
+		var attrName = attrNames[i];
+		var ele = document.getElementById(attrName + 'Custom');
+		ele.value = uinfo.attrs[attrName];
+		ele.oninput = updateCustomStat;
+	}
+}
+
 function updateBattlePassiveIcons(uinfo) {
 	var frame = document.getElementById(uinfo.id+'battleIcons');
 	frame.innerHTML = '';
@@ -2793,6 +2869,8 @@ document.addEventListener('DOMContentLoaded', function() {
   <label for="p1agi" class="attrName">AGI: </label><span id="p1agi" class="statVal">50</span>
   <br/>
   <label for="p1mrl" class="attrName">MRL: </label><span id="p1mrl" class="statVal">50</span>
+  <br/>
+  <button style="color:#ccc; border:none; outline:none; cursor:pointer;" onclick="popupCustomStat('p1')">Custom</button>
 </span>
 
 <span class="block">

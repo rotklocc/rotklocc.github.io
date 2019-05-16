@@ -839,6 +839,13 @@ function UserUnit(unit, id) {
 	this.getStat = function(statName) {
 		return Math.min(2200, this.stat[statName]);
 	};
+
+	this.overriddenStat = null;
+	this.setOverriddenStat = function(val) {
+		this.overriddenStat = val;
+		this.calcuateAttrs();
+		this.calculateStat();
+	};
 	
 	this.getPassiveTotalVal = function(passiveId, defaultVal=0) {
 		return this.spActions.getPassiveTotalVal(passiveId, defaultVal);
@@ -1622,6 +1629,17 @@ function calculateStatBasic(uinfo) {
 	uinfo.statBasic['agi'] += uinfo.getPassiveTotalVal(2200113);
 	uinfo.statBasic['mrl'] += monoMathRound(uinfo.statBasic['mrl'] * uinfo.getPassiveTotalVal(2200116) / 100);
 	uinfo.statBasic['mrl'] += uinfo.getPassiveTotalVal(2200115);
+	
+	if (uinfo.overriddenStat !== null) {
+		for (var i = 0; i < statNames.length; i++) {
+			var statName = statNames[i];
+			uinfo.statBasic[statName] = uinfo.overriddenStat[statName];
+		}
+		for (var i = 0; i < attrNames.length; i++) {
+			var attrName = attrNames[i];
+			uinfo.attrs[attrName] = uinfo.overriddenStat[attrName];
+		}
+	}
 }
 
 function calculateStatFromBattlePassives(uinfo) {
