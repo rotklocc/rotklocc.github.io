@@ -173,14 +173,15 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 		// hp/mp
 		outObj.hp = [ uinfo.hp, uinfo.mp];
 		// battle passive
-		var bp = {}
+		var bp = []
 		for (var i = 0; i < uinfo.battlePassives.length; i++) {
 			var battlePassive = uinfo.battlePassives[i];
 			if (battlePassive.type === 0)
 				continue; // auto active (no need to serialize)
 			if (battlePassive.defaultVal === battlePassive.userVal)
 				continue;
-			bp[battlePassive.id-2200000] = battlePassive.userVal;
+			bp.push(battlePassive.id-2200000);
+			bp.push(battlePassive.userVal);
 		}
 		if (bp.length > 0)
 			outObj.battlePassives = bp;
@@ -404,13 +405,17 @@ function _serializedObj2UserUnit(sobj, uid) {
 		uinfo.formationPos = sobj.formation[1];
 	}
 	if ('battlePassives' in sobj) {
+		// convert array of battlePassives to dict
+		var bp = {};
+		for (var i = 0; i < sobj.battlePassives.length; i+=2)
+			bp[sobj.battlePassives[i]+2200000] = sobj.battlePassives[i+1];
+		
 		for (var i = 0; i < uinfo.battlePassives.length; i++) {
 			var battlePassive = uinfo.battlePassives[i];
 			if (battlePassive.type === 0)
 				continue; // auto active (no data)
-			var sid = battlePassive.id-2200000;
-			if (sid in sobj.battlePassives)
-				battlePassive.userVal = sobj.battlePassives[sid];
+			if (battlePassive.id in bp)
+				battlePassive.userVal = bp[battlePassive.id];
 		}
 	}
 	if ('conditions' in sobj) {
