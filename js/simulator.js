@@ -3452,7 +3452,7 @@ function AttackDmgSp435(actList, actId) { // Dignity (Emperor passive)
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	
 	this.adjustValue = function(dmg) {
-		var atkMrl = this.getDefInfo().stat['mrl'];
+		var atkMrl = this.getAtkInfo().stat['mrl'];
 		var val = Math.ceil((this.getDefInfo().stat['mrl'] - atkMrl) / atkMrl / 2 * 100);
 		this.modPct = mathClamp(val, 0, this.getPassiveTotalVal());
 		this.result = dmg * (1 - this.modPct / 100);
