@@ -1192,28 +1192,160 @@ function onTrainStep(btn) {
 
 function popupCustomStat(uid) {
 	var uinfo = punits[uid];
-	var hasCustomStat = (uinfo.overriddenStat !== null);
+	// TODO: allow specify terrain adv
 	
+	var divFlex = document.createElement("div");
+	divFlex.style.display = 'inline-flex';
+	
+	function _filterPassiveSelection(txt) {
+		txt = txt.trim();
+		for (var passiveId in passives) {
+			var passive = passives[passiveId];
+			if (passive['desc'].indexOf('{2}') !== -1 || passive['desc'].indexOf('{3}') !== -1 || passive['desc'].indexOf('{4}') !== -1)
+				continue;
+			var tr = document.getElementById("ssp"+passiveId);
+			if (txt === "")
+				tr.style.display = "";
+			else if (inLocalizeText(passive['name'], txt))
+				tr.style.display = "";
+			else
+				tr.style.display = "none";
+		}
+	}
+
+	var divFilter = document.createElement('div');
+	divFilter.appendChild(createTextNode('span', 'Filter: '));
+	var inputFilter = document.createElement('input');
+	inputFilter.type = 'text';
+	inputFilter.id = 'filterSelectCmd';
+	inputFilter.oninput = function() { _filterPassiveSelection(this.value); };
+	divFilter.appendChild(inputFilter);
+	
+	var hdrHtml = '<span style="width:42px"></span><span style="width:200px">Name</span>';
+	var divHdr = createHtmlNode('div', hdrHtml);
+	divHdr.className = 'listhdr';
+	divHdr.style.width = '300px';
+	divFilter.appendChild(divHdr);
+	
+	function onSelectPassive(evt) {
+		var ele = evt.target;
+		while (ele.tagName !== 'LI')
+			ele = ele.parentNode;
+		var passiveId = Number(ele.id.substring(3));
+		if (!(passiveId in uinfo.extraPassives)) {
+			uinfo.setExtraPassive(passiveId, 0);
+			addExtraPassiveRow(passiveId, 0);
+		}
+	}
+	
+	var ul = document.createElement('ul');
+	ul.className = 'list';
+	ul.style.height = '315px';
+	ul.style.width = '300px';
+	for (var passiveId in passives) {
+		var passive = passives[passiveId];
+		if (passive['desc'].indexOf('{2}') !== -1 || passive['desc'].indexOf('{3}') !== -1 || passive['desc'].indexOf('{4}') !== -1)
+			continue;
+		var li = document.createElement('li');
+		li.id = 'ssp'+passiveId;
+		li.addEventListener("click", onSelectPassive);
+		
+		var liHtml = getPassiveIconHtml(passive['icon'], 'frame-blue');
+		liHtml += '<span class="text" style="width:200px">'+toLocalize(passive['name'])+'</span>';
+		li.innerHTML = liHtml;
+		ul.appendChild(li);
+	}
+
+	var divLeft = document.createElement("div");
+	divLeft.style.minWidth = "340px";
+	divLeft.appendChild(divFilter);
+	divLeft.appendChild(ul);
+	
+	var ptable = document.createElement('table');
+	ptable.className = "table-container table-popup";
+	ptable.innerHTML = '<colgroup><col style="width:42px"/><col/><col style="width:100px"/><col style="width:40px"/></colgroup>';
+	
+	function removeExtraPassive(evt) {
+		var ele = evt.target;
+		while (ele.tagName !== 'TR')
+			ele = ele.parentNode;
+		uinfo.removeExtraPassive(ele.passiveId);
+		ele.parentNode.removeChild(ele);
+	}
+	
+	function onInputPassiveVal(evt) {
+		var ele = evt.target;
+		while (ele.tagName !== 'TR')
+			ele = ele.parentNode;
+		uinfo.setExtraPassive(ele.passiveId, Number(evt.target.value));
+	}
+	
+	function addExtraPassiveRow(passiveId, passiveVal) {
+		var passive = passives[passiveId];
+		var row = ptable.insertRow(-1);
+		row.passiveId = passiveId;
+		var cell = row.insertCell(0);
+		cell.className = "img";
+		cell.innerHTML = getPassiveIconHtml(passive['icon'], 'frame-blue');
+		// passive name
+		cell = row.insertCell(-1);
+		cell.innerHTML = toLocalize(passive['name']);
+		// passive value
+		cell = row.insertCell(-1);
+		cell.className = "number";
+		var input = document.createElement("input");
+		input.type = "number";
+		input.value = passiveVal;
+		input.style.width = "60px";
+		input.oninput = onInputPassiveVal;
+		cell.appendChild(input);
+		// remove passive column
+		cell = row.insertCell(-1);
+		var rmBtn = document.createElement("span");
+		rmBtn.className = 'clickable';
+		rmBtn.style.fontSize = '24px';
+		rmBtn.innerHTML = '&times;';
+		rmBtn.onclick = removeExtraPassive;
+		cell.appendChild(rmBtn);
+	}
+	
+	for (var passiveId in uinfo.extraPassives)
+		addExtraPassiveRow(passiveId, uinfo.extraPassives[passiveId]);
+	
+	var divRight = document.createElement('div');
+	divRight.appendChild(createTextNode('div', 'Additional Passives:'));
+	divRight.appendChild(ptable);
+	
+	divFlex.appendChild(divLeft);
+	divFlex.appendChild(divRight);
+	
+	document.getElementById("modalHeader").innerHTML = "Custom Unit";
+	var divStat = document.createElement('div');
+	divStat.style.marginTop = '10px';
+	
+	var hasCustomStat = (uinfo.overriddenStat !== null);
 	var html = '';
 	html += '<div><input id="chkCustomStat" type="checkbox"><label for="chkCustomStat">Enable Stat Overriden</label></div>';
-	html += '<p>';
-	html += 'STR: <input id="strCustom" type="number" value="200"><br/>';
-	html += 'INT: <input id="intCustom" type="number" value="200"><br/>';
-	html += 'CMD: <input id="cmdCustom" type="number" value="200"><br/>';
-	html += 'DEX: <input id="dexCustom" type="number" value="200"><br/>';
-	html += 'LCK: <input id="lckCustom" type="number" value="200"><br/>';
-	html += '</p>';
-	html += '<p>';
-	html += 'ATK: <input id="atkCustom" type="number" value="1000"><br/>';
-	html += 'WIS: <input id="wisCustom" type="number" value="1000"><br/>';
-	html += 'DEF: <input id="defCustom" type="number" value="1000"><br/>';
-	html += 'AGI: <input id="agiCustom" type="number" value="1000"><br/>';
-	html += 'MRL: <input id="mrlCustom" type="number" value="1000"><br/>';
-	html += '</p>';
+	html += '<div style="padding-top:2px">';
+	html += 'STR: <input id="strCustom" class="inputStat" type="number" value="200"> ';
+	html += 'INT: <input id="intCustom" class="inputStat" type="number" value="200"> ';
+	html += 'CMD: <input id="cmdCustom" class="inputStat" type="number" value="200"> ';
+	html += 'DEX: <input id="dexCustom" class="inputStat" type="number" value="200"> ';
+	html += 'LCK: <input id="lckCustom" class="inputStat" type="number" value="200">';
+	html += '<br/>';
+	html += 'ATK: <input id="atkCustom" class="inputStat" type="number" value="1000"> ';
+	html += 'WIS: <input id="wisCustom" class="inputStat" type="number" value="1000"> ';
+	html += 'DEF: <input id="defCustom" class="inputStat" type="number" value="1000"> ';
+	html += 'AGI: <input id="agiCustom" class="inputStat" type="number" value="1000"> ';
+	html += 'MRL: <input id="mrlCustom" class="inputStat" type="number" value="1000">';
+	html += '</div>';
 
-	document.getElementById("modalHeader").innerHTML = "Custom Unit Stat";
+	divStat.innerHTML = html;
+	
 	var content = document.getElementById("modalContent");
-	content.innerHTML = html;
+	content.innerHTML = '';
+	content.appendChild(divFlex);
+	content.appendChild(divStat);
 	document.getElementById("modalDiv").style.display = "block";
 	
 	function updateCustomStat() {
@@ -2276,9 +2408,14 @@ function popupAttackDmg(uid) {
 	html += 'ATK: '+uinfo.getStat('atk');
 	if (uinfo.hasPassive(2200104)) // atk stat switch
 		html += ', WIS: '+uinfo.getStat('wis');
+	if (uinfo.hasPassive(2200625) && uinfo.attackType === 0) // Gale %
+		html += '<br/>Passive: '+toLocalize(passives[2200625]['name'])+' ('+uinfo.getPassiveTotalVal(2200625)+')';
 	if (uinfo.hasPassive(2200613)) // destroy
 		html += '<br/>Passive: '+toLocalize(passives[2200613]['name'])+' ('+uinfo.getPassiveTotalVal(2200613)+')';
-	html += '<br/>Terrain Adv: '+uinfo.getTerrainAdvantage()+', '+toLocalize('연구')+': ATK +'+getResearchAtkBonus(uinfo.allowItemTypes[0]);
+	html += '<br/>';
+	if (uinfo.overriddenStat === null)
+		html += toLocalize('연구')+': ATK +'+getResearchAtkBonus(uinfo.allowItemTypes[0])+', ';
+	html += 'Terrain Adv: '+uinfo.getTerrainAdvantage();
 	html += ' => '+uinfo.attackDmgActionList.atkVal+'</td>';
 	html += '<td class="number">'+getDecimalText(uinfo.attackDmgActionList.basicDmg)+'</td>';
 	html += '<td></td><td>';
@@ -2689,6 +2826,8 @@ document.addEventListener('DOMContentLoaded', function() {
   <label for="p0agi" class="attrName">AGI: </label><span id="p0agi" class="statVal">50</span>
   <br/>
   <label for="p0mrl" class="attrName">MRL: </label><span id="p0mrl" class="statVal">50</span>
+  <br/><br/>
+  <button class="custom" onclick="popupCustomStat('p0')">Custom</button>
 </span>
 
 <span class="block">
@@ -2869,8 +3008,8 @@ document.addEventListener('DOMContentLoaded', function() {
   <label for="p1agi" class="attrName">AGI: </label><span id="p1agi" class="statVal">50</span>
   <br/>
   <label for="p1mrl" class="attrName">MRL: </label><span id="p1mrl" class="statVal">50</span>
-  <br/>
-  <button style="color:#ccc; border:none; outline:none; cursor:pointer;" onclick="popupCustomStat('p1')">Custom</button>
+  <br/><br/>
+  <button class="custom" onclick="popupCustomStat('p1')">Custom</button>
 </span>
 
 <span class="block">

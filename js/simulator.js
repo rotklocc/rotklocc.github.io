@@ -150,9 +150,10 @@ function _findObj(objId, objArr) {
 // for mapping key name to id. so always append to the array to reserve a old serialized data
 var serializeKeyNames = [
 	'id', 'weapon', 'armor', 'kit', 'passives', 'relics', 'scroll', 'formation', 'hp',
-	'battlePassives', 'conditions', 'terrain', 'tactic', 'gid', 'mid', 'wid', 'p0', 'p1'
+	'battlePassives', 'conditions', 'terrain', 'tactic', 'gid', 'mid', 'wid', 'p0', 'p1',
+	'extraPassives', 'customStat'
 ];
-var serializeKeyArray = ['battlePassives', 'conditions']; // data array that size can be any length
+var serializeKeyArray = ['battlePassives', 'conditions', 'extraPassives']; // data array that size can be any length
 function _userUnit2SerializeObj(uinfo, doFull=false) {
 	var outObj = {
 		'id': uinfo.unit['id'] - 1100000,
@@ -169,18 +170,31 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 		outObj.relics[i*3+1] = _findObjId(uinfo.relicPassives[i], relicPassives) - 13010000;
 		outObj.relics[i*3+2] = uinfo.relicPassivesLv[i];
 	}
+	if (uinfo.overriddenStat !== null) {
+		var os = uinfo.overriddenStat;
+		outObj.customStat = [ os['str'], os['int'], os['cmd'], os['dex'], os['lck'],
+			os['atk'], os['wis'], os['def'], os['agi'], os['mrl'] ];
+	}
+	var extraPassives = [];
+	for (var passiveId in uinfo.extraPassives) {
+		extraPassives.push(passiveId - 2200000);
+		extraPassives.push(uinfo.extraPassives[passiveId]);
+	}
+	if (extraPassives.length > 0)
+		outObj.extraPassives = extraPassives;
+	
 	if (doFull) {
 		// hp/mp
-		outObj.hp = [ uinfo.hp, uinfo.mp];
+		outObj.hp = [ uinfo.hp, uinfo.mp ];
 		// battle passive
-		var bp = []
+		var bp = [];
 		for (var i = 0; i < uinfo.battlePassives.length; i++) {
 			var battlePassive = uinfo.battlePassives[i];
 			if (battlePassive.type === 0)
 				continue; // auto active (no need to serialize)
 			if (battlePassive.defaultVal === battlePassive.userVal)
 				continue;
-			bp.push(battlePassive.id-2200000);
+			bp.push(battlePassive.id - 2200000);
 			bp.push(battlePassive.userVal);
 		}
 		if (bp.length > 0)
@@ -213,7 +227,7 @@ function _artifact2SerializedObj(equipInfo) {
 
 //var keyStrBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
-var txtChars = '1234567890:.,{}'; // 15 chars
+var txtChars = '1234567890:.,{}-'; // 16 chars (- is for ending for message too)
 function _compressSerializedTxt(txt) {
 	var out = '';
 	var nBit = 0;
@@ -262,11 +276,8 @@ function _decompressSerializedTxt(txt) {
 		else { // nBit === 2
 			out += txtChars[(n<<2) | (idx>>4)];
 			var tmp = idx&15;
-			if (tmp === 15) {
-				if (i !== txt.length - 1)
-					return null;
+			if (tmp === 15 && i === txt.length - 1)
 				break;
-			}
 			out += txtChars[tmp];
 			nBit = 0;
 		}
@@ -400,6 +411,16 @@ function _serializedObj2UserUnit(sobj, uid) {
 		uinfo.relicPassivesLv[i] = sobj.relics[i*3+2];
 	}
 	uinfo.relicSet = _findRelicSet(uinfo.relics);
+	if ('customStat' in sobj) {
+		uinfo.overriddenStat = {
+			'str': sobj.customStat[0], 'int': sobj.customStat[1], 'cmd': sobj.customStat[2], 'dex': sobj.customStat[3], 'lck': sobj.customStat[4],
+			'atk': sobj.customStat[5], 'wis': sobj.customStat[6], 'def': sobj.customStat[7], 'agi': sobj.customStat[8], 'mrl': sobj.customStat[9]
+		};
+	}
+	if ('extraPassives' in sobj) {
+		for (var i = 0; i < sobj.extraPassives.length; i+=2)
+			uinfo.extraPassives[sobj.extraPassives[i]+2200000] = sobj.extraPassives[i+1];
+	}
 	if ('formation' in sobj) {
 		uinfo.formationId = sobj.formation[0];
 		uinfo.formationPos = sobj.formation[1];
@@ -846,6 +867,15 @@ function UserUnit(unit, id) {
 		this.calcuateAttrs();
 		this.calculateStat();
 	};
+	this.extraPassives = {};
+	this.setExtraPassive = function(passiveId, passiveVal) {
+		this.extraPassives[passiveId] = passiveVal;
+		this.calculateStat();
+	};
+	this.removeExtraPassive = function(passiveId) {
+		delete this.extraPassives[passiveId];
+		this.calculateStat();
+	};
 	
 	this.getPassiveTotalVal = function(passiveId, defaultVal=0) {
 		return this.spActions.getPassiveTotalVal(passiveId, defaultVal);
@@ -973,7 +1003,7 @@ function UserUnit(unit, id) {
 		
 		// mountain, desert, castle, snow, river boost
 		var tilePassiveIds = [ 2200619, 2200620, 2200621, 2200622, 2200623 ];
-		for (var i = 0; i < tilePassiveIds; i++) {
+		for (var i = 0; i < tilePassiveIds.length; i++) {
 			var passiveId = tilePassiveIds[i];
 			if (this.hasPassive(passiveId))
 				val = Math.max(_getPassiveTerrainAdv(passiveId, this.tileId, this.isFlameTile), val);
@@ -1534,6 +1564,10 @@ function collectUnitPassives(uinfo) {
 		_addFormationPassive(uinfo, uinfo.formationPos+2);
 	}
 	
+	for (var passiveId in uinfo.extraPassives) {
+		uinfo.spActions.addSpAction(passiveId, uinfo.extraPassives[passiveId]);
+	}
+	
 	// set tactic again after collected all passive to check double/critical
 	uinfo.setTacticInternal(uinfo.tactic);
 	if (uinfo.alwaysCriticalAttack())
@@ -1802,15 +1836,23 @@ function _getDefVal(defInfo, mainStat, subStat) {
 function getAttackBasicDmg(atkInfo, defInfo) {
 	var atkAtk = _getAtkVal(atkInfo, 'atk', 'wis');
 	var defDef = _getDefVal(defInfo, 'def', 'wis');
-	// sp625 Gale % (atkUnit passive. modify atkAtk for normal or reversal from normal (not joint/phalanx))
-	// - modPct = stepLeft * passiveVal
+	if (atkInfo.hasPassive(2200625)) { // Gale %
+		// the correct one is only for normal or "reversal from normal". ignore reversal for now
+		if (atkInfo.attackType === 0) {
+			// - modPct = stepLeft * passiveVal
+			// now this one is only for meng mei boss. also changing display table is needed if allowing user to input step left
+			// so let user multiply the result in extra passive manually (now allow to modify step from dmg detail table)
+			atkAtk = atkAtk + atkAtk * atkInfo.getPassiveTotalVal(2200625) / 100;
+		}
+	}
 	if (atkInfo.hasPassive(2200613)) { // destroy
 		defDef = monoMathRound(defDef * (1 - atkInfo.getPassiveTotalVal(2200613) / 100));
 	}
 	
 	atkAtk = monoMathRound(atkAtk * atkInfo.getTerrainAdvantage() / 100);
 	defDef = monoMathRound(defDef * defInfo.getTerrainAdvantage() / 100);
-	atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
+	if (atkInfo.overriddenStat === null) // unit with overridden stat normally is special unit (no research)
+		atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
 	// TODO: now allowed game modes are same calculation (need when implemening 4gods or other modes)
 	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (5000 / 10000)); // min dmg is 1
 	return [ atkAtk, defDef, dmg ];
@@ -3166,7 +3208,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp061(this, 2200061), // Critical Attack
 		new AttackDmgCriticalBonus(this, 36), // additional crit damage from luck diff
 		new AttackDmgSp062(this, 2200062), // Critical Attack+
-		// 527: Critical Hit Damage -% (only 4god bird has)
+		new AttackDmgSp527(this, 2200527), // Critical Hit Damage -% (only boss has)
 		new AttackDmgSp060(this, 2200060), // Critical Attack Immunity
 		new AttackDmgSp027c(this, 2200027), // Special Attack Immunity (crit)
 		// 611: Special Attack Defense %. special attack immunity chance
@@ -3893,6 +3935,18 @@ function AttackDmgSp062(actList, actId) { // Critical Attack+
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = dmg * (1 + this.modPct/100);
+	};
+}
+
+function AttackDmgSp527(actList, actId) { // Critical Hit Damage -%
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
+	this.canApply = function() {
+		return this.getAtkInfo().isCriticalAttack;
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg * (1 - this.modPct/100);
 	};
 }
 

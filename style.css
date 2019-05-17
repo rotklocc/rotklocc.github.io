@@ -814,6 +814,17 @@ button.battleOpt {
   height: 100%;
 }
 
+.inputStat {
+  width: 60px;
+}
+
+button.custom {
+  color: #bbb;
+  border: none;
+  outline:none;
+  cursor: pointer;
+}
+
 span.iconInactive {
   box-shadow:inset 0 0 0 20px rgba(10,10,10,0.7);
 }
