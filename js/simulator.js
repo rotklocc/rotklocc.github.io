@@ -1842,7 +1842,7 @@ function getAttackBasicDmg(atkInfo, defInfo) {
 			// - modPct = stepLeft * passiveVal
 			// now this one is only for meng mei boss. also changing display table is needed if allowing user to input step left
 			// so let user multiply the result in extra passive manually (now allow to modify step from dmg detail table)
-			atkAtk = atkAtk + atkAtk * atkInfo.getPassiveTotalVal(2200625) / 100;
+			atkAtk = Math.trunc(atkAtk + atkAtk * atkInfo.getPassiveTotalVal(2200625) / 100);
 		}
 	}
 	if (atkInfo.hasPassive(2200613)) { // destroy
