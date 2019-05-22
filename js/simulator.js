@@ -3584,37 +3584,6 @@ function AttackDmgNormal2ndHit(actList, actId) { // Normal double attack
 	};
 }
 
-function AttackDmgDoubleSp022(actList, actId) { // Normal double attack with leading
-	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
-	this.getDisplayName = function() {
-		return "2nd hit with "+toLocalize(this.getPassive().name);
-	};
-	this.canApply = function() {
-		var atkInfo = this.getAtkInfo(); // must no chain
-		return _isNormalDoubleAttack(atkInfo) && !atkInfo.hasPassive(2200023);
-	};
-	
-	this.adjustValue = function(dmg) {
-		this.modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());
-		this.result = dmg * this.modPct / 100;
-	};
-}
-
-function AttackDmgDoubleSp023(actList, actId) { // Normal double attack with chain
-	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
-	this.getDisplayName = function() {
-		return "2nd hit with "+toLocalize(this.getPassive().name);
-	};
-	this.canApply = function() {
-		return _isNormalDoubleAttack(this.getAtkInfo());
-	};
-	
-	this.adjustValue = function(dmg) {
-		this.modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());
-		this.result = dmg * this.modPct / 100;
-	};
-}
-
 function AttackDmgDoubleSp047(actList, actId) { // Enhanced Double ATK % (Normal double)
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
