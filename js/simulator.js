@@ -2543,6 +2543,7 @@ function TacticDmgActionList(atkInfo) {
 		new TacticDmgSp607(this, 2200607), // Hail the Yellow Sky
 		new AttackDmgSp434(this, 2200434), // Impose (Emperor passive)
 		new TacticDmgSp056(this, 2200056), // Tactics Damage -%
+		new AttackDmgSp624(this, 2200624), // Damage Taken +%
 		new TacticDmgSp588(this, 2200588), // Tactics Offset %
 		new TacticDmgSp279(this, 2200279), // Decrease Tactics Damage (no 4gods)
 		new TacticDmgSp402(this, 2200402), // Decrease Tactics Damage (by tactic power)
@@ -3178,8 +3179,9 @@ function AttackDmgActionList(atkInfo) {
 		//new AttackDmgTech1019(this, 2501019), // Enhance Keep
 		new AttackDmgTech027(this, 2500027), // Research: Ship Construction (navy)
 		new AttackDmgSp446(this, 2200446), // CMD: Physical Attack +%
-		new AttackDmgDoubleSp022(this, 2200022), // Normal double attack with leading
-		new AttackDmgDoubleSp023(this, 2200023), // Normal double attack with chain
+		//new AttackDmgDoubleSp022(this, 2200022), // Normal double attack with leading
+		//new AttackDmgDoubleSp023(this, 2200023), // Normal double attack with chain
+		new AttackDmgNormal2ndHit(this, 23), // 2hit damage for normal attack (and post attack)
 		new AttackDmgDoubleSp047(this, 2200047), // Enhanced Double ATK % (normal)
 		new AttackDmg2ndHit(this, 24), // 2hit damage for (counter, reversal, phalanx, joint)
 		new AttackDmgTech014(this, 2500014), // Research: Counter Archery 1
@@ -3399,7 +3401,7 @@ function AttackDmgSp624(actList, actId) { // Damage Taken +%
 	
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
-		this.result = Math.max(0, dmg + dmg * this.modPct / 100);
+		this.result = dmg + dmg * this.modPct / 100;
 	};
 }
 
@@ -3550,6 +3552,36 @@ function _getDoubleAttackModPct(atkInfo, defInfo) {
 	if (atkInfo.getStat('agi') < defInfo.getStat('agi') * 3)
 		return 75;
 	return 100;
+}
+
+function AttackDmgNormal2ndHit(actList, actId) { // Normal double attack
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.getDisplayName = function() {
+		var atkInfo = this.getAtkInfo();
+		if (this.modPct !== 100) {
+			if (atkInfo.hasPassive(2200023))
+				return "2nd hit with "+toLocalize(passives[2200023].name);
+			else if (atkInfo.hasPassive(2200022))
+				return "2nd hit with "+toLocalize(passives[2200022].name);
+			return "2nd hit damage (bug)"
+		}
+		if (!atkInfo.hasPassive(2200022) && !atkInfo.hasPassive(2200023))
+			return "Natural 2nd hit damage";
+		return "2nd hit with AGI 3x damage";
+	};
+	this.canApply = function() {
+		var atkInfo = this.getAtkInfo();
+		return _isNormalDoubleAttack(atkInfo);
+	};
+	
+	this.adjustValue = function(dmg) {
+		var atkInfo = this.getAtkInfo();
+		if (!atkInfo.hasPassive(2200022) && !atkInfo.hasPassive(2200023))
+			this.modPct = 100;
+		else
+			this.modPct = _getDoubleAttackModPct(atkInfo, this.getDefInfo());
+		this.result = dmg * this.modPct / 100;
+	};
 }
 
 function AttackDmgDoubleSp022(actList, actId) { // Normal double attack with leading
