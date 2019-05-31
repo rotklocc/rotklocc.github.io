@@ -1592,12 +1592,14 @@ function calculateStatBasic(uinfo) {
 		hpBoost += uinfo['relics'][j]['hp'];
 		mpBoost += uinfo['relics'][j]['mp'];
 	}
-	uinfo.hpMax += hpBoost;
+	uinfo.hpMax += hpBoost; // cap is 5000 (before multiplication from game mode)
+	//if (uinfo.hpMax > 5000)
+	//	uinfo.hpMax = 5000
 	uinfo.mpMax = Math.min(uinfo.mpMax + mpBoost, 500);
 	uinfo.epMax = unit['ep'];
 	if (uinfo.epMax !== 0)
 		uinfo.mpMax = 0;
-	uinfo.hpMax = Math.trunc(uinfo.hpMax * gameMode.hpMul); // cap is 5000
+	uinfo.hpMax = Math.trunc(uinfo.hpMax * gameMode.hpMul);
 	// keep hp/mp percentage
 	uinfo.hp = Math.max(1, Math.trunc(uinfo.hpMax * uinfo.hpPct / 100));
 	uinfo.mp = Math.trunc(uinfo.mpMax * uinfo.mpPct / 100);
@@ -1627,6 +1629,7 @@ function calculateStatBasic(uinfo) {
 		if (nscroll > 100)
 			result += nscroll - 100;
 		uinfo.statBasic[statName] = result + unitType['rank12Stats'][statName];
+		// TODO: stat from friendships
 	}
 	
 	// Note: skip applying "Add*Pct" value from battle event script (no these values in Anni/PvP)

@@ -56,6 +56,7 @@ function doFilter2(txt) {
 	
 	// id is 7 digits. have to match from the end
 	var matchIdIdx = 7 - txt.length;
+	var isNumeric = !isNaN(txt);
 	for (var passiveId in passives) {
 		var passive = passives[passiveId];
 		// search in all languages
@@ -72,16 +73,18 @@ function doFilter2(txt) {
 			continue;
 		}
 		
-		// search from id
-		if (passiveId.toString().indexOf(txt) === matchIdIdx) {
-			tr.style.display = "";
-			continue;
-		}
-		
-		// parent id
-		if (passive['parentId'].toString().indexOf(txt) === matchIdIdx) {
-			tr.style.display = "";
-			continue;
+		if (isNumeric) {
+			// search from id
+			if (passiveId.toString().indexOf(txt) === matchIdIdx) {
+				tr.style.display = "";
+				continue;
+			}
+			
+			// parent id
+			if (passive['parentId'].toString().indexOf(txt) === matchIdIdx) {
+				tr.style.display = "";
+				continue;
+			}
 		}
 		
 		tr.style.display = "none";

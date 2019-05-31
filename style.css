@@ -598,6 +598,15 @@ span.absInside {
   transform-origin: 0 0;
 }
 
+.relationImg {
+  display: inline-block;
+  background: url('imgs/relation.png') no-repeat;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
 .jointImg {
   display: inline-block;
   background: url('imgs/joint.png'), rgba(200,200,20,.2) no-repeat;
