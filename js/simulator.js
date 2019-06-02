@@ -3475,6 +3475,9 @@ function AttackDmgSp057(actList, actId) { // MP Attack
 
 function AttackDmgSp608(actList, actId) { // MP ATK%
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.canApply = function() {
+		return !this.getAtkInfo().hasPassive(2200057);
+	};
 	
 	this.adjustValue = function(dmg) {
 		this.modVal = this.getAtkInfo().mp * this.getPassiveTotalVal() / 100;
