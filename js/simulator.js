@@ -1010,7 +1010,7 @@ function UserUnit(unit, id) {
 		}
 
 		// cavalry with heavy armor research (Enhance Horsemanship research)
-		if (isTypeHeavyCavalry(this.unit['jobTypeId']))
+		if (isTypeHeavyCavalry(this.unit['jobTypeId']) && this.overriddenStat == null)
 			val += 5
 		
 		// 253: (Formation Effect) Rough Terrain Boost (no in game)
