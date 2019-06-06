@@ -71,10 +71,11 @@ function popupNote() {
 function popupGameCode() {
 	document.getElementById("modalHeader").innerHTML = "Data Code";
 	
+	var gameCode = serializeGameInfo();
 	var textarea = document.createElement('textarea');
 	textarea.rows = 5;
 	textarea.cols = 100;
-	textarea.value = serializeGameInfo();
+	textarea.value = gameCode;
 	textarea.addEventListener("keyup", function(evt) {
 		if (evt.keyCode == 13) {
 			evt.preventDefault();
@@ -101,7 +102,9 @@ function popupGameCode() {
 	};
 	
 	var content = document.getElementById("modalContent");
-	content.innerHTML = '';
+	var url = window.location.href.split('#')[0];
+	url += '?code='+gameCode;
+	content.innerHTML = '<div><a href="'+url+'">Link to this setup</a></div>';
 	content.appendChild(textarea);
 	content.appendChild(document.createElement('br'));
 	content.appendChild(btnApply);
@@ -2603,6 +2606,23 @@ function popupTacticDmg(uid) {
 	}
 }
 
+function applyCodeFromUrl() {
+	var url = window.location.href;
+	var parts = url.split('?');
+	if (parts.length === 1)
+		return; // no argument. do nothing
+	var paramTxt = parts[1];
+	var paramArr = paramTxt.split('&');
+	for (var i = 0; i < paramArr.length; i++) {
+		parts = paramArr[i].split('=');
+		if (parts[0] === "code") {
+			unserializeGameInfo(parts[1]);
+			replaceDisplayLanguage();
+			setUserUnitInfo(punits['p0']);
+			setUserUnitInfo(punits['p1']);
+		}
+	}
+}
 
 document.addEventListener('DOMContentLoaded', function() {
 	rtkWebCommonInit();
@@ -2661,6 +2681,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	setUnit(units[25], 'p1');
 	createTerrainSelection(punits['p0']);
 	createTerrainSelection(punits['p1']);
+	
+	applyCodeFromUrl();
 }, false);
 </script>
 </head>
