@@ -782,7 +782,7 @@ function popupSelectRelicSet(uid) {
 
 function popupSelectRelic(uid, slotIdx) {
 	var uinfo = punits[uid];
-	var selectedRelic = uinfo['relics'][slotIdx];
+	var selectedRelic = uinfo.relics[slotIdx]; // might be null
 	var selectedSpan = null;
 
 	var sortedRelics = [];
@@ -828,7 +828,18 @@ function popupSelectRelic(uid, slotIdx) {
 		divLeft.appendChild(imgSpan);
 	}
 	
-	function getRelicInfoHtml(relic) {
+	var btnRemove = document.createElement('button');
+	btnRemove.innerText = 'Remove';
+	btnRemove.addEventListener("click", onRemoveRelic);
+	
+	var divRight = document.createElement("div");
+	if (selectedRelic)
+		setRelicInfoHtml(selectedRelic);
+	
+	divFlex.appendChild(divLeft);
+	divFlex.appendChild(divRight);
+
+	function setRelicInfoHtml(relic) {
 		var html = '<b>'+toLocalizes(relic["name"], ' ')+'</b><br/>';
 		html += '<b>Star:</b> ' + relic['tier'] + '<br/>';
 		var statTable = '<table class="stats"><tr><th>ATK</th><th>WIS</th><th>DEF</th><th>AGI</th><th>MRL</th><th>HP</th><th>MP</th></tr>';
@@ -838,25 +849,26 @@ function popupSelectRelic(uid, slotIdx) {
 		statTable += "<td>" + relic["mrl"] + "</td><td>" + relic["hp"] + "</td>";
 		statTable += "<td>" + relic["mp"] + "</td></tr></table>";
 		html += "<p>" + statTable + "</p>";
-		return html;
+		divRight.innerHTML = html;
+		divRight.appendChild(btnRemove);
 	}
 	
-	var divRight = document.createElement("div");
-	divRight.innerHTML = getRelicInfoHtml(selectedRelic);
+	function onRemoveRelic(evt) {
+		uinfo.setRelic(slotIdx, null);
+		document.getElementById("modalDiv").style.display = "none";
+	}
 	
-	divFlex.appendChild(divLeft);
-	divFlex.appendChild(divRight);
-
 	function onSelectRelic(evt) {
 		var ele = evt.target;
 		if (ele === selectedSpan) {
 			document.getElementById("modalDiv").style.display = "none";
 			return;
 		}
-		selectedSpan.classList.remove("frame-selected");
+		if (selectedSpan)
+			selectedSpan.classList.remove("frame-selected");
 		ele.classList.add("frame-selected");
 		selectedSpan = ele;
-		divRight.innerHTML = getRelicInfoHtml(ele.relic);
+		setRelicInfoHtml(ele.relic);
 		uinfo.setRelic(slotIdx, ele.relic);
 	}
 
@@ -869,8 +881,10 @@ function popupSelectRelic(uid, slotIdx) {
 
 function popupSelectRelicPassive(uid, slotIdx) {
 	var uinfo = punits[uid];
-	var selectedRelicPassive = uinfo['relicPassives'][slotIdx];
-	var selectedRelicPassiveLv = uinfo['relicPassivesLv'][slotIdx];
+	if (uinfo.relics[slotIdx] === null)
+		return;
+	var selectedRelicPassive = uinfo.relicPassives[slotIdx];
+	var selectedRelicPassiveLv = uinfo.relicPassivesLv[slotIdx];
 	var selectedSpan = null;
 
 	var divFlex = document.createElement("div");
@@ -982,6 +996,22 @@ function setPassiveListPic(eleId, passiveList) {
 	setPassivePic(eleId, passiveList ? passives[passiveList['passiveId']] : null);
 }
 
+function setRelicPic(eleId, relic) {
+	var icon, className;
+	if (relic === null) {
+		icon = passiveIcons['spAction_Bg'];
+		className = 'passive';
+	}
+	else {
+		icon = relicIcons[relic['icon']];
+		className = 'relic';
+	}
+	var ele = document.getElementById(eleId);
+	ele.classList.remove('passive', 'relic');
+	ele.classList.add(className);
+	ele.style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
+}
+
 function setCommanderArtifactPics(artifactInfo, slotName) {
 	var item = artifactInfo['item'];
 	setBackgroundPosition(slotName, artifactIcons[item['icon']]);
@@ -1046,12 +1076,12 @@ function fillCommanderInfo(uinfo) {
 	
 	setPassiveListPic(uinfo.id+'relicSet', uinfo['relicSet'] ? passiveLists[uinfo['relicSet']['passiveListId']] : null);
 	for (var i = 0; i < uinfo['relics'].length; i++) {
-		setBackgroundPosition(uinfo.id+'r'+i, relicIcons[uinfo['relics'][i]['icon']]);
+		setRelicPic(uinfo.id+'r'+i, uinfo['relics'][i]);
 	}
 	
 	for (var i = 0; i < uinfo['relicPassives'].length; i++) {
-		setPassivePic(uinfo.id+'rp'+i, passives[uinfo['relicPassives'][i]['passiveId']]);
-		document.getElementById(uinfo.id+'rp'+i+'lv').innerText = 'Lv' + uinfo['relicPassivesLv'][i];
+		setPassivePic(uinfo.id+'rp'+i, uinfo.relics[i] ? passives[uinfo['relicPassives'][i]['passiveId']] : null);
+		document.getElementById(uinfo.id+'rp'+i+'lv').innerText = uinfo.relics[i] ? ('Lv' + uinfo['relicPassivesLv'][i]) : '';
 	}
 	
 	updateUnitHpMp(uinfo);

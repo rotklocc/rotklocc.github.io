@@ -109,6 +109,12 @@ function _findArtifactEnhanceType(artifact) {
 }
 
 function _findRelicSet(relics) {
+	// must no empty relic slot
+	for (var i = 0; i < relics.length; i++) {
+		if (relics[i] === null)
+			return null;
+	}
+	
 	var rtype = relics[0]['type'];
 	var tier = relics[0]['tier'];
 	var hash = rtype << 7;
@@ -166,8 +172,8 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 		'formation': [ uinfo.formationId, uinfo.formationPos ],
 	};
 	for (var i = 0; i < 4; i++) {
-		outObj.relics[i*3] = _findObjId(uinfo.relics[i], relics) - 13000000;
-		outObj.relics[i*3+1] = _findObjId(uinfo.relicPassives[i], relicPassives) - 13010000;
+		outObj.relics[i*3] = uinfo.relics[i] ? (_findObjId(uinfo.relics[i], relics) - 13000000) : 0;
+		outObj.relics[i*3+1] = uinfo.relicPassives[i] ? (_findObjId(uinfo.relicPassives[i], relicPassives) - 13010000) : 0;
 		outObj.relics[i*3+2] = uinfo.relicPassivesLv[i];
 	}
 	if (uinfo.overriddenStat !== null) {
@@ -406,8 +412,8 @@ function _serializedObj2UserUnit(sobj, uid) {
 	uinfo.selectedPassiveLists = sobj.passives;
 	uinfo.scrolls = { 'str': sobj.scroll[0], 'int': sobj.scroll[1], 'cmd': sobj.scroll[2], 'dex': sobj.scroll[3], 'lck': sobj.scroll[4] };
 	for (var i = 0; i < 4; i++) {
-		uinfo.relics[i] = relics[sobj.relics[i*3] + 13000000];
-		uinfo.relicPassives[i] = relicPassives[sobj.relics[i*3+1] + 13010000];
+		uinfo.relics[i] = sobj.relics[i*3] ? (relics[sobj.relics[i*3] + 13000000]) : null;
+		uinfo.relicPassives[i] = sobj.relics[i*3+1] ? (relicPassives[sobj.relics[i*3+1] + 13010000]) : null;
 		uinfo.relicPassivesLv[i] = sobj.relics[i*3+2];
 	}
 	uinfo.relicSet = _findRelicSet(uinfo.relics);
@@ -1535,6 +1541,8 @@ function collectUnitPassives(uinfo) {
 	// relics. need to sum same relic passive values (then floor) before adding to spaction
 	var tmpRelicPassives = {};
 	for (var i = 0; i < uinfo.relicPassives.length; i++) {
+		if (uinfo.relics[i] === null)
+			continue;
 		var relicPassive = uinfo.relicPassives[i];
 		var passiveId = relicPassive['passiveId'];
 		if (!(passiveId in tmpRelicPassives))
@@ -1589,8 +1597,10 @@ function calculateStatBasic(uinfo) {
 	mpBoost += uinfo.getPassiveTotalVal(2200504); // Relic: MP Boost
 	mpBoost += monoMathRound(uinfo['hpMax'] * uinfo.getPassiveTotalVal(2200121) / 100); // MP Boost %
 	for (var j = 0; j < uinfo['relics'].length; j++) {
-		hpBoost += uinfo['relics'][j]['hp'];
-		mpBoost += uinfo['relics'][j]['mp'];
+		if (uinfo.relics[j]) {
+			hpBoost += uinfo.relics[j]['hp'];
+			mpBoost += uinfo.relics[j]['mp'];
+		}
 	}
 	uinfo.hpMax += hpBoost; // cap is 5000 (before multiplication from game mode)
 	//if (uinfo.hpMax > 5000)
@@ -1649,8 +1659,10 @@ function calculateStatBasic(uinfo) {
 		if (uinfo['kit']['enhance'])
 			uinfo.statBasic[statName] += uinfo['kit']['enhance'][statName];
 		
-		for (var j = 0; j < uinfo['relics'].length; j++)
-			uinfo.statBasic[statName] += uinfo['relics'][j][statName];
+		for (var j = 0; j < uinfo['relics'].length; j++) {
+			if (uinfo['relics'][j] !== null)
+				uinfo.statBasic[statName] += uinfo['relics'][j][statName];
+		}
 	}
 	
 	// passive stat boost
