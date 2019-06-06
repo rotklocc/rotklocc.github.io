@@ -882,6 +882,11 @@ function UserUnit(unit, id) {
 		delete this.extraPassives[passiveId];
 		this.calculateStat();
 	};
+	this.hasResearch = function() {
+		// only can has all research or no at all (for special unit, meng mei)
+		// now only check from stat overridden (TODO: has option to disable research)
+		return this.overriddenStat === null;
+	};
 	
 	this.getPassiveTotalVal = function(passiveId, defaultVal=0) {
 		return this.spActions.getPassiveTotalVal(passiveId, defaultVal);
@@ -1016,7 +1021,7 @@ function UserUnit(unit, id) {
 		}
 
 		// cavalry with heavy armor research (Enhance Horsemanship research)
-		if (isTypeHeavyCavalry(this.unit['jobTypeId']) && this.overriddenStat == null)
+		if (this.hasResearch() && isTypeHeavyCavalry(this.unit['jobTypeId']))
 			val += 5
 		
 		// 253: (Formation Effect) Rough Terrain Boost (no in game)
@@ -1866,7 +1871,7 @@ function getAttackBasicDmg(atkInfo, defInfo) {
 	
 	atkAtk = monoMathRound(atkAtk * atkInfo.getTerrainAdvantage() / 100);
 	defDef = monoMathRound(defDef * defInfo.getTerrainAdvantage() / 100);
-	if (atkInfo.overriddenStat === null) // unit with overridden stat normally is special unit (no research)
+	if (atkInfo.hasResearch())
 		atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
 	// TODO: now allowed game modes are same calculation (need when implemening 4gods or other modes)
 	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (5000 / 10000)); // min dmg is 1
@@ -1892,7 +1897,8 @@ function _getTacticPhysicalBasicDmg(atkInfo, defInfo) {
 	
 	atkAtk = monoMathRound(atkAtk * atkInfo.getTerrainAdvantage() / 100);
 	defDef = monoMathRound(defDef * defInfo.getTerrainAdvantage() / 100);
-	atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
+	if (atkInfo.hasResearch())
+		atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
 	// TODO: now allowed game modes are same calculation (need when implemening 4gods or other modes)
 	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (5000 / 10000)); // min dmg is 1
 	// Noone has Ignore Type Advantage (401)
@@ -2266,7 +2272,8 @@ function AttackAccSp571(actList) { // Long-Range Archery
 function AttackAccTech006(actList) { // Enhance Shields
 	AttackAccActionBase.call(this, actList, 2500006, SIDE_DEF, 0);
 	this.canApply = function() {
-		return this.getDefInfo().unit.jobTypeId === 1210002;
+		var defInfo = this.getDefInfo();
+		return defInfo.hasResearch() && defInfo.unit.jobTypeId === 1210002;
 	};
 	
 	this.adjustValue = function(acc) {
@@ -2278,7 +2285,8 @@ function AttackAccTech006(actList) { // Enhance Shields
 function AttackAccTech026(actList) { // Dancer Routine
 	AttackAccActionBase.call(this, actList, 2500026, SIDE_DEF, 0);
 	this.canApply = function() {
-		return this.getDefInfo().unit.jobTypeId === 1210016;
+		var defInfo = this.getDefInfo();
+		return defInfo.hasResearch() && defInfo.unit.jobTypeId === 1210016;
 	};
 	
 	this.adjustValue = function(acc) {
@@ -2820,7 +2828,8 @@ function TacticDmgSpReduction(actList, actId, allowType) {
 function TacticDmgTech030(actList, actId) { // Assess Terrain (outlaw)
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	this.canApply = function() {
-		return this.getTactic().skillType === 2 && this.getDefInfo().unit.jobTypeId === 1210012;
+		var defInfo = this.getDefInfo();
+		return defInfo.hasResearch() && this.getTactic().skillType === 2 && this.getDefInfo().unit.jobTypeId === 1210012;
 	};
 	
 	this.adjustValue = function(dmg) {
@@ -2833,7 +2842,7 @@ function TacticDmgTech027(actList, actId) { // Research: Ship Construction (navy
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	this.canApply = function() {
 		var defInfo = this.getDefInfo();
-		return this.getTactic().skillType === 1 && defInfo.unit.jobTypeId === 1210019 && defInfo.tileId === 4200014;
+		return defInfo.hasResearch() && this.getTactic().skillType === 1 && defInfo.unit.jobTypeId === 1210019 && defInfo.tileId === 4200014;
 	};
 	
 	this.adjustValue = function(dmg) {
@@ -3347,8 +3356,9 @@ function AttackDmgSp043(actList, actId) { // Mounted ATK +%
 function AttackDmgTech028(actList, actId) { // Research: Mount Slayer
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
+		var atkInfo = this.getAtkInfo();
 		var defInfo = this.getDefInfo();
-		return isCavalryUnit(defInfo.unit.jobTypeId) && !defInfo.hasPassive(2200042) && this.getAtkInfo().unit.jobTypeId === 1210005;
+		return atkInfo.hasResearch() && isCavalryUnit(defInfo.unit.jobTypeId) && !defInfo.hasPassive(2200042) && atkInfo.unit.jobTypeId === 1210005;
 	};
 	
 	this.adjustValue = function(dmg) {
@@ -3535,7 +3545,7 @@ function AttackDmgTech027(actList, actId) { // Research: Ship Construction (navy
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	this.canApply = function() {
 		var defInfo = this.getDefInfo();
-		return this.getAtkInfo().attackRole === 'Range' && defInfo.unit.jobTypeId === 1210019 && defInfo.tileId === 4200014;
+		return defInfo.hasResearch() && this.getAtkInfo().attackRole === 'Range' && defInfo.unit.jobTypeId === 1210019 && defInfo.tileId === 4200014;
 	};
 	
 	this.adjustValue = function(dmg) {
@@ -3633,8 +3643,8 @@ function AttackDmgTech014(actList, actId) { // Research: Counter Archery 1
 	this.userText = 'Enemy in blind spot';
 	this.canApply = function() {
 		var atkInfo = this.getAtkInfo();
-		if (atkInfo.attackType !== 1 || atkInfo.hasPassive(2200094))
-			return false; // Unlimited Counterattack
+		if (!atkInfo.hasResearch() || atkInfo.attackType !== 1 || atkInfo.hasPassive(2200094))
+			return false; // no research or Unlimited Counterattack
 		var weaponType = atkInfo.allowItemTypes[0];
 		return weaponType === 3 || weaponType === 4; // bow or xbow
 	};
@@ -3656,8 +3666,8 @@ function AttackDmgTech024(actList, actId) { // Research: Counter Riding
 	this.userText = 'Enemy in blind spot';
 	this.canApply = function() {
 		var atkInfo = this.getAtkInfo();
-		if (atkInfo.attackType !== 1 || atkInfo.hasPassive(2200094))
-			return false; // Unlimited Counterattack
+		if (!atkInfo.hasResearch() || atkInfo.attackType !== 1 || atkInfo.hasPassive(2200094))
+			return false; // no research or Unlimited Counterattack
 		return atkInfo.unit.jobTypeId === 1210006; // light cavalry only
 	};
 	
@@ -4036,7 +4046,7 @@ function AttackDmgTech010(actList, actId) { // Research: Ambush
 	this.canApply = function() {
 		var atkInfo = this.getAtkInfo();
 		// all forest tile is 4200003, 4200044 (snow), 4200047 (peach), 4200051 (night)
-		return atkInfo.allowItemTypes[0] === 2 && atkInfo.tileId === 4200003;
+		return atkInfo.hasResearch() && atkInfo.allowItemTypes[0] === 2 && atkInfo.tileId === 4200003;
 	};
 	
 	this.adjustValue = function(dmg) {
@@ -4049,7 +4059,7 @@ function AttackDmgTech023(actList, actId) { // Research: Exploit Weakness
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
 		var weaponType = this.getAtkInfo().allowItemTypes[0];
-		return weaponType === 3 || weaponType === 4;
+		return this.getAtkInfo().hasResearch() && (weaponType === 3 || weaponType === 4);
 	};
 	
 	this.adjustValue = function(dmg) {

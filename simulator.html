@@ -2446,7 +2446,7 @@ function popupAttackDmg(uid) {
 	if (uinfo.hasPassive(2200613)) // destroy
 		html += '<br/>Passive: '+toLocalize(passives[2200613]['name'])+' ('+uinfo.getPassiveTotalVal(2200613)+')';
 	html += '<br/>';
-	if (uinfo.overriddenStat === null)
+	if (uinfo.hasResearch())
 		html += toLocalize('연구')+': ATK +'+getResearchAtkBonus(uinfo.allowItemTypes[0])+', ';
 	html += 'Terrain Adv: '+uinfo.getTerrainAdvantage();
 	html += ' => '+uinfo.attackDmgActionList.atkVal+'</td>';
