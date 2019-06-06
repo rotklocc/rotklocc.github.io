@@ -1134,6 +1134,7 @@ function onUnitInfoChanged(uinfo, basicChanged, battlePassiveChanged, conditionC
 	if (formationChanged)
 		setFormationButton(uinfo);
 	updateUnitStats(uinfo);
+	document.getElementById(uinfo.id+'terrain').style.color = uinfo.isFlameTile ? 'red' : '';
 	if ('p1' in punits) // ready on both side
 		calculateDamageInfo();
 }
