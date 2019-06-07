@@ -31,7 +31,7 @@ var gameModes = [ // assume all unit lv is 99
 	{ name: '난투',  suffix: '', maps: brawlMaps, hpMul: 2, hasFormation: false, p0bonus: 0, p1bonus: 0 },
 	{ name: '섬멸전', suffix: ' - Player first', maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 0, p1bonus: 10 },
 	{ name: '섬멸전', suffix: ' - AI first',     maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 3, p1bonus: 7 },
-	//{ name: '몽매의 시련', suffix: '', maps: mengMeiMaps, hpMul: 2, hasFormation: false, p0bonus: 0, p1bonus: 0 },
+	{ name: '몽매의 시련', suffix: '', maps: mengMeiMaps, hpMul: 2, hasFormation: false, p0bonus: 0, p1bonus: 0 },
 ];
 var gameModeId = 0;
 var gameMode = gameModes[gameModeId];
