@@ -165,7 +165,7 @@ function _findObj(objId, objArr) {
 var serializeKeyNames = [
 	'id', 'weapon', 'armor', 'kit', 'passives', 'relics', 'scroll', 'formation', 'hp',
 	'battlePassives', 'conditions', 'terrain', 'tactic', 'gid', 'mid', 'wid', 'p0', 'p1',
-	'extraPassives', 'customStat'
+	'extraPassives', 'customStat', 'relation'
 ];
 var serializeKeyArray = ['battlePassives', 'conditions', 'extraPassives']; // data array that size can be any length
 function _userUnit2SerializeObj(uinfo, doFull=false) {
@@ -184,6 +184,20 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 		outObj.relics[i*3+1] = uinfo.relicPassives[i] ? (_findObjId(uinfo.relicPassives[i], relicPassives) - 13010000) : 0;
 		outObj.relics[i*3+2] = uinfo.relicPassivesLv[i];
 	}
+	var relation = [];
+	for (var rid in uinfo.activeRelation) {
+		relation.push(rid-1220000);
+		var val = 0;
+		var relationPassiveIdxs = uinfo.activeRelation[rid];
+		for (var i = 0; i < relationPassiveIdxs.length; i++) {
+			var idx = relationPassiveIdxs[i];
+			val |= (1 << idx);
+		}
+		relation.push(val);
+	}
+	if (relation.length > 0)
+		outObj.relation = relation;
+	
 	if (uinfo.overriddenStat !== null) {
 		var os = uinfo.overriddenStat;
 		outObj.customStat = [ os['str'], os['int'], os['cmd'], os['dex'], os['lck'],
@@ -411,7 +425,7 @@ function _unserializeArtifact(info) {
 	};
 }
 
-function _serializedObj2UserUnit(sobj, uid) {
+function _serializedObj2UserUnit(sobj, uid, fromPreset) {
 	var unit = _findObj(sobj.id + 1100000, units);	
 	var uinfo  = getDefaultUnitInfo(unit, uid);
 	uinfo.weapon = _unserializeArtifact(sobj.weapon);
@@ -425,6 +439,22 @@ function _serializedObj2UserUnit(sobj, uid) {
 		uinfo.relicPassivesLv[i] = sobj.relics[i*3+2];
 	}
 	uinfo.relicSet = _findRelicSet(uinfo.relics);
+	// if from preset unit data, don't overwrite active relation. so new relation can be activated automatically
+	if (!fromPreset) {
+		uinfo.activeRelation = {};
+		if ('relation' in sobj) {
+			for (var i = 0; i < sobj.relation.length; i+=2) {
+				var val = sobj.relation[i+1];
+				var arr = [];
+				for (var j = 0; val !== 0; j++) {
+					if (val & 1)
+						arr.push(j);
+					val >>= 1;
+				}
+				uinfo.activeRelation[sobj.relation[i]+1220000] = arr;
+			}
+		}
+	}
 	if ('customStat' in sobj) {
 		uinfo.overriddenStat = {
 			'str': sobj.customStat[0], 'int': sobj.customStat[1], 'cmd': sobj.customStat[2], 'dex': sobj.customStat[3], 'lck': sobj.customStat[4],
@@ -482,13 +512,13 @@ function _serializedObj2UserUnit(sobj, uid) {
 	return uinfo;
 }
 
-function unserializeUserUnit(uid, txt) {
+function unserializeUserUnit(uid, txt, fromPreset=false) {
 	txt = txt.trim();
 	if (txt === '') return;
 	var sobj = _serializedTxt2Obj(txt);
 	if (sobj === null)
 		return null;
-	var uinfo = _serializedObj2UserUnit(sobj, uid);
+	var uinfo = _serializedObj2UserUnit(sobj, uid, fromPreset);
 	return uinfo;
 }
 
@@ -576,6 +606,22 @@ function getDefaultRelicInfo(uinfo) {
 	}
 }
 
+function getRelationList(uinfo) {
+	uinfo.relations = {};
+	uinfo.activeRelation = {}; // map to array of active passive index
+	for (var i = 0; i < friendships.length; i++) {
+		var relation = friendships[i];
+		for (var j = 0; j < relation['unitId'].length; j++) {
+			if (uinfo.unit.id === relation['unitId'][j]) {
+				uinfo.relations[relation.id] = relation;
+				// by default, all relation is unlocked
+				//uinfo.activeRelation[relation.id] = [];
+				break;
+			}
+		}
+	}
+}
+
 function getDefaultUnitTerrainId(uinfo) {
 	var battleMap = getCurrentMapInfo();
 	if (battleMap.tiles.indexOf(uinfo.tileId) === -1)
@@ -584,7 +630,7 @@ function getDefaultUnitTerrainId(uinfo) {
 
 function getUnitInfo(unit, uid) {
 	if (unit.id in unitPreset) {
-		return unserializeUserUnit(uid, unitPreset[unit.id]);
+		return unserializeUserUnit(uid, unitPreset[unit.id], true);
 	}
 	return getDefaultUnitInfo(unit, uid);
 }
@@ -670,6 +716,8 @@ function getDefaultUnitInfo(unit, id) {
 	
 	getDefaultArtifactUpgradePassive(uinfo);
 	getDefaultRelicInfo(uinfo);
+	
+	getRelationList(uinfo); // fidn all possible friendship
 	
 	getDefaultUnitTerrainId(uinfo);
 	if (uinfo.unit['ep'] === 0)
@@ -1578,6 +1626,16 @@ function collectUnitPassives(uinfo) {
 		uinfo.spActions.addSpAction(2200116, extraPct);
 	}
 	
+	// passives from friendships
+	for (var rid in uinfo.activeRelation) {
+		var relation = uinfo.relations[rid];
+		var activePassives = uinfo.activeRelation[rid]; // array of index of active passive
+		for (var i = 0; i < activePassives.length; i++) {
+			var passiveListId = relation.passive[activePassives[i]];
+			uinfo.spActions.addSpActionFromPassiveList(passiveLists[passiveListId]);
+		}
+	}
+	
 	if (gameMode.hasFormation) {
 		// collect formation passives
 		_addFormationPassive(uinfo, 0);
@@ -1652,7 +1710,15 @@ function calculateStatBasic(uinfo) {
 		if (nscroll > 100)
 			result += nscroll - 100;
 		uinfo.statBasic[statName] = result + unitType['rank12Stats'][statName];
-		// TODO: stat from friendships
+	}
+	
+	// stat from friendships
+	for (var rid in uinfo.activeRelation) {
+		var relation = uinfo.relations[rid];
+		for (var j = 0; j < relation['statType'].length; j++) {
+			var statName = statNames[relation['statType'][j]];
+			uinfo.statBasic[statName] += relation['statVal'][j];
+		}
 	}
 	
 	// Note: skip applying "Add*Pct" value from battle event script (no these values in Anni/PvP)
