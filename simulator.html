@@ -103,7 +103,7 @@ function popupGameCode() {
 	};
 	
 	var content = document.getElementById("modalContent");
-	var url = window.location.href.split('#')[0];
+	var url = window.location.href.split('?')[0].split('#')[0];
 	url += '?code='+gameCode;
 	content.innerHTML = '<div><a href="'+url+'">Link to this setup</a></div>';
 	content.appendChild(textarea);
@@ -1471,6 +1471,7 @@ function popupCustomStat(uid) {
 	
 	var hasCustomStat = (uinfo.overriddenStat !== null);
 	var html = '';
+	html += '<div><input id="chkNoResearch" type="checkbox"><label for="chkNoResearch">Disable Research</label></div>';
 	html += '<div><input id="chkCustomStat" type="checkbox"><label for="chkCustomStat">Enable Stat Overridden</label></div>';
 	html += '<div style="padding-top:2px">';
 	html += 'STR: <input id="strCustom" class="inputStat" type="number" value="200"> ';
@@ -1493,6 +1494,14 @@ function popupCustomStat(uid) {
 	content.appendChild(divFlex);
 	content.appendChild(divStat);
 	document.getElementById("modalDiv").style.display = "block";
+	
+	function onToggleDisableResearch() {
+		uinfo.setDisableResearch(this.checked);
+	}
+	
+	var ele = document.getElementById('chkNoResearch');
+	ele.checked = uinfo.disableResearch;
+	ele.onclick = onToggleDisableResearch;
 	
 	function updateCustomStat() {
 		if (!hasCustomStat)

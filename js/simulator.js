@@ -165,7 +165,7 @@ function _findObj(objId, objArr) {
 var serializeKeyNames = [
 	'id', 'weapon', 'armor', 'kit', 'passives', 'relics', 'scroll', 'formation', 'hp',
 	'battlePassives', 'conditions', 'terrain', 'tactic', 'gid', 'mid', 'wid', 'p0', 'p1',
-	'extraPassives', 'customStat', 'relation'
+	'extraPassives', 'customStat', 'relation', 'disableResearch'
 ];
 var serializeKeyArray = ['battlePassives', 'conditions', 'extraPassives']; // data array that size can be any length
 function _userUnit2SerializeObj(uinfo, doFull=false) {
@@ -198,6 +198,8 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 	if (relation.length > 0)
 		outObj.relation = relation;
 	
+	if (uinfo.disableResearch)
+		outObj.disableResearch = 1;
 	if (uinfo.overriddenStat !== null) {
 		var os = uinfo.overriddenStat;
 		outObj.customStat = [ os['str'], os['int'], os['cmd'], os['dex'], os['lck'],
@@ -455,6 +457,8 @@ function _serializedObj2UserUnit(sobj, uid, fromPreset) {
 			}
 		}
 	}
+	if ('disableResearch' in sobj)
+		uinfo.disableResearch = true;
 	if ('customStat' in sobj) {
 		uinfo.overriddenStat = {
 			'str': sobj.customStat[0], 'int': sobj.customStat[1], 'cmd': sobj.customStat[2], 'dex': sobj.customStat[3], 'lck': sobj.customStat[4],
@@ -923,6 +927,12 @@ function UserUnit(unit, id) {
 		return Math.min(2200, this.stat[statName]);
 	};
 
+	this.disableResearch = false;
+	this.setDisableResearch = function(enabled) {
+		this.disableResearch = enabled;
+		this.calculateStat();
+	};
+	
 	this.overriddenStat = null;
 	this.setOverriddenStat = function(val) {
 		this.overriddenStat = val;
@@ -941,7 +951,7 @@ function UserUnit(unit, id) {
 	this.hasResearch = function() {
 		// only can has all research or no at all (for special unit, meng mei)
 		// now only check from stat overridden (TODO: has option to disable research)
-		return this.overriddenStat === null;
+		return !this.disableResearch && this.overriddenStat === null;
 	};
 	
 	this.getPassiveTotalVal = function(passiveId, defaultVal=0) {
