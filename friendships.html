@@ -96,26 +96,7 @@ function generateTableRows() {
 			// trigger text
 			cell = row.insertCell(2);
 			cell.className = 'relationTrigger';
-			var html = '';
-			if (triggerType === 0) {
-				if (unitCount === 0)
-					html = toLocalizes('모두 출진 시 발동');
-				else
-					html = toLocalizes('{0}명 이상 출진 시 발동').format(unitCount);
-			}
-			else if (triggerType === 1) {
-				if (unitCount === 0)
-					html = toLocalizes('퇴각 시 발동');
-				else
-					html = toLocalizes('{0}명 이상 퇴각 시 발동').format(unitCount);
-			}
-			else if (triggerType === 2) {
-				if (unitCount === 0)
-					html = toLocalizes('인접 시 발동');
-				else
-					html = toLocalizes('{0}명 이상 인접 시 발동').format(unitCount);
-			}
-			cell.innerHTML = html;
+			cell.innerHTML = getRelationTriggerText(triggerType, unitCount);
 		}
 		divCol.appendChild(table);
 		divBlock.appendChild(divCol);

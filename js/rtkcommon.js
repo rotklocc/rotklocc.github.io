@@ -132,16 +132,16 @@ function toLocalize2(tkey) {
 	return toLocalizeLang(tkey, selLang2);
 }
 
-function toLocalizes(tkey, sep="<br/>") {
+function toLocalizes(tkey, sep="<br/>", biLang=true) {
 	var txt = toLocalizeLang(tkey, selLang);
-	if (selLang2 !== -1) {
+	if (biLang && selLang2 !== -1) {
 		txt += sep;
 		txt += toLocalizeLang(tkey, selLang2);
 	}
 	return txt;
 }
 
-function localizePassiveName(passiveId, val, sep="<br/>") {
+function localizePassiveName(passiveId, val, sep="<br/>", biLang=true) {
 	var passive = passives[passiveId];
 	txt = toLocalize(passive['name']);
 	// list of passive that should have value
@@ -153,7 +153,7 @@ function localizePassiveName(passiveId, val, sep="<br/>") {
 		txt += " (" + val + ")";
 	}
 	
-	if (selLang2 !== -1) {
+	if (biLang && selLang2 !== -1) {
 		txt += sep;
 		txt += toLocalizeLang(passive['name'], selLang2);
 	}
@@ -443,4 +443,27 @@ function getRelicIconHtml(iconName, extraClass="") {
 
 function isTypeHeavyCavalry(typeId) {
 	return ([1210001, 1210007, 1210009, 1210017, 1210069, 1210070, 1210078].indexOf(typeId) !== -1);
+}
+
+function getRelationTriggerText(triggerType, unitCount, biLang=true) {
+	var html;
+	if (triggerType === 0) {
+		if (unitCount === 0)
+			html = toLocalizes('모두 출진 시 발동', '<br/>', biLang);
+		else
+			html = toLocalizes('{0}명 이상 출진 시 발동', '<br/>', biLang).format(unitCount);
+	}
+	else if (triggerType === 1) {
+		if (unitCount === 0)
+			html = toLocalizes('퇴각 시 발동', '<br/>', biLang);
+		else
+			html = toLocalizes('{0}명 이상 퇴각 시 발동', '<br/>', biLang).format(unitCount);
+	}
+	else if (triggerType === 2) {
+		if (unitCount === 0)
+			html = toLocalizes('인접 시 발동', '<br/>', biLang);
+		else
+			html = toLocalizes('{0}명 이상 인접 시 발동', '<br/>', biLang).format(unitCount);
+	}
+	return html;
 }

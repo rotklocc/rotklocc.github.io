@@ -615,7 +615,7 @@ function getRelationList(uinfo) {
 			if (uinfo.unit.id === relation['unitId'][j]) {
 				uinfo.relations[relation.id] = relation;
 				// by default, all relation is unlocked
-				//uinfo.activeRelation[relation.id] = [];
+				uinfo.activeRelation[relation.id] = [];
 				break;
 			}
 		}
@@ -1008,6 +1008,35 @@ function UserUnit(unit, id) {
 	
 	this.setRelicPassiveLv = function(slotIdx, lv) {
 		this.relicPassivesLv[slotIdx] = lv;
+		this.calculateStat();
+	};
+	
+	this.setRelation = function(relationId, enabled) {
+		if (relationId in this.activeRelation) {
+			if (!enabled)
+				delete this.activeRelation[relationId];
+		}
+		else {
+			if (enabled)
+				this.activeRelation[relationId] = [];
+		}
+		this.calculateStat();
+	};
+	this.setRelationPassive = function(relationId, passiveIdx, enabled) {
+		// Note: can check triggerType. all triggerType=0 MUST be enabled when one of passive is enabled
+		// but it's hard when removing. removing one of triggerType=0 (remove all?). so let user add/remove manually
+		if (!(relationId in this.activeRelation))
+			this.activeRelation[relationId] = [];
+		var activePassives = this.activeRelation[relationId];
+		var idx = activePassives.indexOf(passiveIdx);
+		if (enabled) {
+			if (idx === -1)
+				activePassives.push(passiveIdx);
+		}
+		else {
+			if (idx !== -1)
+				activePassives.splice(passiveIdx, 1);
+		}
 		this.calculateStat();
 	};
 	

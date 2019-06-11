@@ -23,6 +23,7 @@
 <script type="text/javascript" src="imgs/tech.js"></script>
 <script type="text/javascript">
 var punits = {};
+var unitsMap = {};
 
 function lPassiveName(pid) {
 	return toLocalize(passives[pid].name);
@@ -972,6 +973,117 @@ function popupSelectRelicPassive(uid, slotIdx) {
 	content.innerHTML = '';
 	content.appendChild(divFlex);
 	document.getElementById("modalDiv").style.display = "block";
+}
+
+function popupSelectRelation(uid) {
+	var uinfo = punits[uid];
+
+	var divRoot = document.createElement("div");
+	
+	for (var rid in uinfo.relations) {
+		var relation = uinfo.relations[rid];
+		var chkTxt = '';
+		var activePassives = [];
+		if (rid in uinfo.activeRelation) {
+			chkTxt = 'checked="checked"';
+			activePassives = uinfo.activeRelation[rid];
+		}
+		
+		var divRelation = document.createElement("div");
+		
+		var inputId = 'rel'+relation.id;
+		var html = '<label class="chkBoxContainer"><div>';
+		var faces = [];
+		for (var j = 0; j < relation['unitId'].length; j++) {
+			var unit = unitsMap[relation['unitId'][j]];
+			faces.push('<span class="face-mini frame-blue">' + getFaceIconHtml(unit['face']) + '</span> ');
+		}
+		html += makePreTxtIconHtml(faces.join(' ')) + toLocalize(relation['name']);
+		var stats = [];
+		for (var j = 0; j < relation['statType'].length; j++) {
+			stats.push(statNames[relation['statType'][j]].toUpperCase() + ' +' + relation['statVal'][j]);
+		}
+		html += ' ('+stats.join(', ')+')</div>';
+		html += '<input type="checkbox" id="'+inputId+'" '+chkTxt+'/><span class="checkmark"></span></label>';
+		divRelation.innerHTML = html;
+		
+		divRoot.appendChild(divRelation);
+		var div = document.createElement("div");
+		div.style.clear = 'both';
+		divRoot.appendChild(div);
+		
+		for (var j = 0; j < relation['passive'].length; j++) {
+			var passiveList = passiveLists[relation['passive'][j]];
+			var unitCount = relation['passiveUnitCount'][j];
+			var triggerType = relation['passiveType'][j];
+			
+			var divPassive = document.createElement("div");
+			divPassive.style.marginLeft = '35px';
+			
+			var chkTxt = '';
+			if (activePassives.indexOf(j) !== -1)
+				chkTxt = 'checked="checked"';
+			
+			var inputId = 'relp'+relation.id+'_'+j;
+			var html = '<label class="chkBoxContainer"><div>';
+			html += makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList['passiveId']]['icon'], 'frame-blue'));
+			html += localizePassiveName(passiveList["passiveId"], passiveList["val"], '', false);
+			html += ' | ' + getRelationTriggerText(triggerType, unitCount, false);
+			html += '</div>';
+			html += '<input type="checkbox" id="'+inputId+'" '+chkTxt+'/><span class="checkmark"></span></label>';
+			
+			divPassive.innerHTML = html;
+			divRoot.appendChild(divPassive);
+			var div = document.createElement("div");
+			div.style.clear = 'both';
+			divRoot.appendChild(div);
+		}
+		var div = document.createElement("hr");
+		divRoot.appendChild(div);
+	}
+	
+	if (Object.keys(uinfo.relations).length === 0) {
+		// empty divRoot
+		divRoot.innerHTML = "No "+toLocalize('인연');
+	}
+	
+	document.getElementById("modalHeader").innerHTML = "<div style='height:1px'></div>";
+	var content = document.getElementById("modalContent");
+	content.innerHTML = '';
+	content.appendChild(divRoot);
+	document.getElementById("modalDiv").style.display = "block";
+
+	function onRelationChange(evt) {
+		var chkId = evt.target.id;
+		var rid = Number(chkId.substr(3, 7));
+		uinfo.setRelation(rid, evt.target.checked);
+		if (!evt.target.checked) {
+			// remove all passive too
+			var relation = uinfo.relations[rid];
+			for (var j = 0; j < relation['passive'].length; j++)
+				document.getElementById('relp'+rid+'_'+j).checked = false;
+		}
+	}
+
+	function onRelationPassiveChange(evt) {
+		var chkId = evt.target.id;
+		var rid = Number(chkId.substr(4, 7));
+		var pIdx = Number(chkId.substr(chkId.length - 1)); // assume number of passive is less than 10
+		uinfo.setRelationPassive(rid, pIdx, evt.target.checked);
+		if (evt.target.checked) {
+			// enable the main relation too
+			document.getElementById('rel'+rid).checked = true;
+		}
+	}
+	
+	// loop again to set onchange event
+	for (var rid in uinfo.relations) {
+		var relation = uinfo.relations[rid];
+		document.getElementById('rel'+rid).addEventListener('change', onRelationChange);
+		for (var j = 0; j < relation['passive'].length; j++) {
+			document.getElementById('relp'+rid+'_'+j).addEventListener('change', onRelationPassiveChange);
+		}
+	}
 }
 
 function setBackgroundPosition(eleId, icon) {
@@ -2660,6 +2772,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	setLangChangeCallback(replaceDisplayLanguage);
 	
+	for (var i = 0; i < units.length; i++)
+		unitsMap[units[i]['id']] = units[i];
+	
 	// When the user clicks anywhere outside of the slider div, close it
 	window.addEventListener("click", function(event) {
 		var div = document.getElementById("sliderDiv");
@@ -2801,13 +2916,13 @@ document.addEventListener('DOMContentLoaded', function() {
   <span id="p0utp2" class="passive frame-red clickable" onclick="popupUnitTypePassive('p0',2)"></span>
 </div>
 
-<!-- relic group -->
+<!-- relic group and friendship -->
 <div>
 <span class="block" style="width:41px">
   <span id="p0relicSet" class="passive frame-red clickable" style="margin-top:18px;" onclick="popupSelectRelicSet('p0')"></span>
 </span>
 
-<span class="block">
+<span class="block" style="width:200px">
   <span id="p0r0" class="relic frame-red clickable" onclick="popupSelectRelic('p0', 0)"></span>
   <span id="p0r1" class="relic frame-red clickable" onclick="popupSelectRelic('p0', 1)"></span>
   <span id="p0r2" class="relic frame-red clickable" onclick="popupSelectRelic('p0', 2)"></span>
@@ -2825,6 +2940,10 @@ document.addEventListener('DOMContentLoaded', function() {
   <span id="p0rp3" class="passive frame-red clickable absInside" onclick="popupSelectRelicPassive('p0', 3)">
 	<span id="p0rp3lv" class="relicLvTxt">Lv5</span>
   </span>
+</span>
+
+<span class="block" style="width:41px">
+  <span id="p1relation" class="relationImg frame-red clickable" style="margin-top:18px;" onclick="popupSelectRelation('p0')"></span>
 </span>
 </div>
 
@@ -3009,9 +3128,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </span>
 </span>
 
-<!--<span class="block" style="width:41px">
-  <span id="p1relation" class="relationImg frame-red clickable" style="margin-top:18px;" onclick="popupRelation('p1')"></span>
-</span>-->
+<span class="block" style="width:41px">
+  <span id="p1relation" class="relationImg frame-red clickable" style="margin-top:18px;" onclick="popupSelectRelation('p1')"></span>
+</span>
 </div>
 
 <!-- attribute/scroll/battle passives/buff/debuff -->
