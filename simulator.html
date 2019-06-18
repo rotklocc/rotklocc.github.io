@@ -536,8 +536,17 @@ function _popupPassiveInfo(passiveId, passiveVal) {
 	document.getElementById("modalDiv").style.display = "block";
 }
 
+function popupSelectCraftArtifactPassive(uid, slotNo, idx) {
+	// TODO:
+}
+
 function popupArtifactPassive(uid, slotNo, idx) {
 	var item = punits[uid][slotNames[slotNo]].item;
+	if (item.unitId !== 0 && item.passive.length === 1 && idx === 1) {
+		// specific commander craftable weapon
+		popupSelectCraftArtifactPassive(uid, slotNo, idx);
+		return;
+	}
 	if (item.passive.length <= idx)
 		return;
 	var passiveId = item.passive[idx];
@@ -555,7 +564,7 @@ function popupSelectArtifactUpgradePassive(uid, slotNo, passiveLv) {
 	var selectedItemPassive = currentSlotInfo['p'+passiveLv];
 	
 	// show only unique passive with highest value
-	var allowedEnhanceTypes = (passiveLv === 6) ? [1] : _findArtifactEnhanceType(artifact);
+	var allowedEnhanceTypes = (passiveLv === 6) ? [1] : findArtifactPassive12Group(artifact);
 	var availPassiveDict = {};
 	for (var enhancePassiveId in itemEnhancePassives) {
 		var itemPassive = itemEnhancePassives[enhancePassiveId];
@@ -2714,10 +2723,11 @@ function popupTacticDmg(uid) {
 	html += '<td></td><td>';
 	if (uinfo.tactic.damageType === 'Fixed')
 		html += 'WIS: 0';
-	else if (defInfo.hasPassive(2200105)) // def stat switch
-		html += 'WIS: '+defInfo.getStat('wis')+', DEF: '+defInfo.getStat('def');
-	else if (uinfo.tactic.damageType === 'Physical')
+	else if (uinfo.tactic.damageType === 'Physical') {
 		html += 'DEF: '+defInfo.getStat('def');
+		if (defInfo.hasPassive(2200105)) // def stat switch
+			html += ', WIS: '+defInfo.getStat('wis');
+	}
 	else
 		html += 'WIS: '+defInfo.getStat('wis');
 	html += '<br/>Terrain Adv: '+defInfo.getTerrainAdvantage()+' => '+uinfo.tacticDmgActionList.defVal+'</td>';

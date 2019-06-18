@@ -108,7 +108,7 @@ function doFilter2(txt) {
 		var tr = document.getElementById(item["id"]);
 		
 		// check commander artifacts
-		if (item["passive"].length > 1) {
+		if (item['unitId'] !== 0) {
 			if (filterTiers[7] === false) {
 				tr.style.display = "none";
 				return;

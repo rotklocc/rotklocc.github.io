@@ -99,8 +99,9 @@ function findItemEnhance(itemTier, eType, lv) {
 	return null;
 }
 
+// find main enhance type for upgrade stat
 function _findArtifactEnhanceType(artifact) {
-	if (artifact['itemType'] <= 6) {
+	/*if (artifact['itemType'] <= 6) {
 		// physical weapon (type: 1,2,3,4,5,6)
 		return [1];
 	}
@@ -111,6 +112,27 @@ function _findArtifactEnhanceType(artifact) {
 		return [3];
 	}
 	else if (artifact['itemType'] <= 11) {
+		return [5]; // armor/robe/dress
+	}
+	return [8]; // acc*/
+	return findArtifactPassive12Group(artifact)[0];
+}
+
+// find +12 passive groups
+function findArtifactPassive12Group(artifact) {
+	if (artifact['enhanceType'] <= 2) {
+		// melee: 1, range: 2
+		// physical weapon (type: 1,2,3,4,5,6)
+		return [1];
+	}
+	else if (artifact['enhanceType'] === 3) {
+		// fan except jade fan
+		return [3];
+	}
+	else if (artifact['enhanceType'] === 4) {
+		return [3,1];
+	}
+	else if (artifact['enhanceType'] <= 7) {
 		return [5]; // armor/robe/dress
 	}
 	return [8]; // acc
@@ -423,7 +445,7 @@ function _unserializeArtifact(info) {
 		'lv': info[1],
 		'p6': info[2] ? itemEnhancePassives[info[2] + 2700000] : null,
 		'p12': info[3] ? itemEnhancePassives[info[3] + 2700000] : null,
-		'enhance': findItemEnhance(item.tier, _findArtifactEnhanceType(item)[0], info[1])
+		'enhance': findItemEnhance(item.tier, _findArtifactEnhanceType(item), info[1])
 	};
 }
 
@@ -950,7 +972,6 @@ function UserUnit(unit, id) {
 	};
 	this.hasResearch = function() {
 		// only can has all research or no at all (for special unit, meng mei)
-		// now only check from stat overridden (TODO: has option to disable research)
 		return !this.disableResearch && this.overriddenStat === null;
 	};
 	
@@ -966,7 +987,7 @@ function UserUnit(unit, id) {
 		var slotInfo = this[slotNames[slotNo]];
 		// if item tier is not changed, no need to find new enhance info
 		if (slotInfo.item.tier !== item.tier) {
-			slotInfo.enhance = findItemEnhance(item.tier, _findArtifactEnhanceType(item)[0], slotInfo.lv);
+			slotInfo.enhance = findItemEnhance(item.tier, _findArtifactEnhanceType(item), slotInfo.lv);
 			// verify +6/+12 passive if current passive might not able to get
 			if (slotInfo.p6 !== null && slotInfo.p6.itemTier > item.tier)
 				slotInfo.p6 = null;
@@ -982,7 +1003,7 @@ function UserUnit(unit, id) {
 		var slotInfo = this[slotNames[slotNo]];
 		var item = slotInfo.item;
 		slotInfo.lv = lv;
-		slotInfo.enhance = findItemEnhance(item.tier, _findArtifactEnhanceType(item)[0], lv);
+		slotInfo.enhance = findItemEnhance(item.tier, _findArtifactEnhanceType(item), lv);
 		// Note: no need to check +6/+12 passive because the old is kept but never be used in calculation
 		this.calculateStat();
 	};
@@ -1124,6 +1145,8 @@ function UserUnit(unit, id) {
 		if (this.hasPassive(2200036)) // Naval Battle+
 			val = Math.max(_getPassiveTerrainAdv(2200036, this.tileId, this.isFlameTile), val);
 		// 161: Water Walking (noone has. same as 036)
+		if (this.hasPassive(2200628)) // Desert Battle+
+			val = Math.max(_getPassiveTerrainAdv(2200628, this.tileId, this.isFlameTile), val);
 		if (this.hasPassive(2200591)) // Naval Battle Specialization
 			val = Math.max(_getPassiveTerrainAdv(2200591, this.tileId, this.isFlameTile), val);
 		// 453: Mountain Battle Boost (noone has. same as 454)
@@ -1217,6 +1240,7 @@ function UserUnit(unit, id) {
 		// 106: Enemy stat Reduction (noone has)
 		new BattleSp006(),  // rage %
 		new BattleSp584(),  // Overwhelming Strength (zhang fei)
+		new BattleSp627(),  // Ma Chao of Xiliang
 		new BattleSp038(),  // second wind
 		new BattleSp537(),  // Hero of the Ages
 		// 470: God of war (noone has)
@@ -1388,6 +1412,16 @@ function BattleSp584() { // Overwhelming Strength (zhang fei)
 	this.userText = 'Number of attacks';
 	this.calculate = function(uinfo) {
 		this.modPct = this.userVal * uinfo.getPassiveTotalVal(this.id);
+		this.atk = monoMathRound(uinfo.statBasic.atk * this.modPct / 100);
+	};
+}
+
+function BattleSp627() { // Ma Chao of Xiliang
+	BattleSpAction.call(this, 2200627, 1, 0);
+	this.userValMax = 6;
+	this.userText = 'Hit/Miss Count';
+	this.calculate = function(uinfo) {
+		this.modPct = Math.min(this.userVal * uinfo.getPassiveTotalVal(this.id), 60);
 		this.atk = monoMathRound(uinfo.statBasic.atk * this.modPct / 100);
 	};
 }
@@ -1959,9 +1993,6 @@ function _getDefVal(defInfo, mainStat, subStat) {
 	if (defInfo.hasPassive(2200105)) { // def stat switch
 		var subVal = defInfo.getStat(subStat);
 		defVal = monoMathRound((defVal + subVal) * defInfo.getPassiveTotalVal(2200105) / 100);
-		//var subVal = defInfo.getStat(subStat);
-		//if (subVal > defVal)
-		//	defVal = subVal;
 	}
 	return defVal;
 }
@@ -1993,7 +2024,8 @@ function getAttackBasicDmg(atkInfo, defInfo) {
 
 function _getTacticMagicBasicDmg(atkInfo, defInfo) {
 	var atkWis = _getAtkVal(atkInfo, 'wis', 'atk');
-	var defWis = _getDefVal(defInfo, 'wis', 'def');
+	// for non physical spell. just use wis for def (no def stat switch)
+	var defWis = defInfo.getStat('wis');
 	
 	if (atkInfo.tactic.damageType === 'Fixed') // crimson lotus
 		defWis = 0;
@@ -2166,6 +2198,7 @@ function AttackAccActionList(atkInfo) {
 		new AttackAccSp416(this), // Attack DEF Rate Pierce
 		new AttackAccSp505(this), // Relic: Melee Attack DEF Rate Pierce
 		new AttackAccSp506(this), // Relic: Ranged Attack DEF Rate Pierce
+		new AttackAccSp627(this), // Ma Chao of Xiliang
 		new AttackAccSp571(this), // Long-Range Archery (for extra range)
 		new AttackAccTech006(this), // Research footman
 		new AttackAccTech026(this), // Research dancer
@@ -2372,6 +2405,17 @@ function AttackAccSp506(actList) { // Relic: Ranged Attack DEF Rate Pierce
 	};
 }
 
+function AttackAccSp627(actList) { // Ma Chao of Xiliang
+	AttackAccActionBase.call(this, actList, 2200627, SIDE_DEF, 1, 0, 'int');
+	this.userText = 'Hit/Miss Count';
+	this.userValMax = 3;
+	
+	this.adjustValue = function(acc) {
+		this.modPct = Math.min(30 + this.userVal * this.getPassiveTotalVal(), 60);
+		this.result = Math.max(acc * (1 - this.modPct / 100), 30);
+	};
+}
+
 function AttackAccSp571(actList) { // Long-Range Archery
 	AttackAccActionBase.call(this, actList, 2200571, SIDE_ATK, 1, 0, 'bool');
 	this.userText = 'Extra Range';
@@ -2422,7 +2466,7 @@ function AttackAccSp406(actList) { // (Formation Effect) Attack ACC +%
 	
 	this.adjustValue = function(acc) {
 		this.modPct = this.getPassiveTotalVal();
-		this.result = mathClamp(acc + acc * this.modPct * 0.01, 30, 100);
+		this.result = mathClamp(acc + acc * this.modPct * 0.01, 0, 100);
 	};
 }
 
@@ -2446,6 +2490,7 @@ function TacticAccActionList(atkInfo) {
 		new TacticAccSp032(this), // Tactics DEF Rate +
 		new TacticAccSp510(this), // Relic: Tactics DEF Rate +
 		new AttackAccSp033(this), // All DEF Rate + (allowed tactics cannot self target. so can reuse)
+		new AttackAccSpTileBoost(this, 2200628), // Desert Battle+
 		new AttackAccSp208(this), // Narrow Escape (condition) (*0.5)
 		new TacticAccSp417(this), // Tactics DEF Rate Pierce
 		new TacticAccSp507(this), // Relic: Tactics DEF Rate Pierce
@@ -2691,6 +2736,7 @@ function TacticDmgActionList(atkInfo) {
 		new TacticDmgSpReduction(this, 2200260, 3), // Decrease Wind Tactics Damage %
 		new TacticDmgSpReduction(this, 2200261, 1), // Decrease Water Tactics Damage %
 		new TacticDmgSpReduction(this, 2200262, 2), // Decrease Earth Tactics Damage %
+		new AttackDmgSpTileBoost(this, 2200628), // Desert Battle+
 		new TacticDmgTech030(this, 2500030), // Research: Assess Terrain (outlaw)
 		new TacticDmgTech027(this, 2500027), // Research: Ship Construction (navy)
 		//new TacticDmgSp229(this), // (Bloody Battle) Enhanced Offensive Tactics %
@@ -3290,6 +3336,7 @@ function AttackDmgActionList(atkInfo) {
 	
 	this.actionArr = [
 		new AttackDmgRangeFold(this, 20),
+		// 041: Ignore Type Advantage
 		new AttackDmgUnitTypeAdv(this, 21),
 		new AttackDmgSp042(this, 2200042), // Ignore Mounted Attack+
 		new AttackDmgSp043(this, 2200043), // Mounted ATK +%
@@ -3298,7 +3345,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp603(this, 2200603), // Approaching Shot
 		new AttackDmgSp434(this, 2200434), // Impose (Emperor passive)
 		//new AttackDmgSp228(this, 2200228), // (Bloody Battle) Enhanced Physical Attack %
-		new AttackDmgSp036(this, 2200036), // Naval Battle +
+		new AttackDmgSpTileBoost(this, 2200036), // Naval Battle +
 		new AttackDmgSp045(this, 2200045), // Physical Damage -%
 		//new AttackDmgSp448(this, 2200448), // Azure Dragon's Protection
 		//new AttackDmgSp449(this, 2200449), // Azure Dragon's Blessing
@@ -3327,15 +3374,15 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgCounterSp096(this, 2200096), // Counterattack+
 		new AttackDmgReversal(this, 28), // Reversal damage without sp096 (counterattack+)
 		new AttackDmgReversalSp096(this, 2200096), // Counterattack+ (reversal)
-		// 533: Vermilion Bird: Quick Reflexes (for 4god only)
+		new AttackDmgReversalSp533(this, 2200533), // Vermilion Bird: Quick Reflexes (for 4god and boss) (Reversal Phalanx)
 		new AttackDmgReversalSp581(this, 2200581), // Quick Reflexes % (Reversal Phalanx)
 		new AttackDmgJoint(this, 30), // Joint attack damage reduction
 		new AttackDmgJointSp047(this, 2200047), // Enhanced Double ATK % (joint)
 		new AttackDmgJointSp445(this, 2200445), // Oathkeeper (joint)
 		new AttackDmgPhalanx(this, 32), // Phalanx attack damage reduction
 		new AttackDmgPhalanxSp047(this, 2200047), // Enhanced Double ATK % (phalanx)
-		// 533: Vermilion Bird: Quick Reflexes (for 4god only)
-		new AttackDmgPhalanxSp581(this, 2200581), // Quick Reflexes %
+		new AttackDmgPhalanxSp533(this, 2200533), // Vermilion Bird: Quick Reflexes (for 4god and boss) (phalanx)
+		new AttackDmgPhalanxSp581(this, 2200581), // Quick Reflexes % (Phalanx)
 		new AttackDmgPhalanxSp445(this, 2200445), // Oathkeeper (Phalanx)
 		new AttackDmgRandom(this, 35), // random damage -2 to 4
 		this.actionSp570, // wheel upgrade %
@@ -3513,7 +3560,7 @@ function AttackDmgSp434(actList, actId) { // Impose (Emperor passive)
 	};
 }
 
-function AttackDmgSp036(actList, actId) { // Naval Battle +
+function AttackDmgSpTileBoost(actList, actId) { // // damage boost when on specific tile
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
 		return (this.getAtkInfo().tileId in this.getPassive().tileAdvs);
@@ -3850,6 +3897,26 @@ function AttackDmgReversalSp096(actList, actId) { // Counterattack+ (reversal ca
 	};
 }
 
+function AttackDmgReversalSp533(actList, actId) { // Vermilion Bird: Quick Reflexes (for 4god and boss only) (Reversal Phalanx)
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
+	this.userText = 'Reversal Phalanx';
+	this.canApply = function() {
+		var atkInfo = this.getAtkInfo(); // must have phalanx
+		return atkInfo.attackType === 3 && atkInfo.hasPassive(2200097);
+	};
+	
+	this.adjustValue = function(dmg) {
+		if (this.userVal) {
+			this.modPct = this.getPassiveTotalVal();
+			this.result = dmg - (dmg * this.modPct * 0.01);
+		}
+		else {
+			this.modPct = 0;
+			this.result = dmg;
+		}
+	};
+}
+
 function AttackDmgReversalSp581(actList, actId) { // Quick Reflexes % (Reversal Phalanx)
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
 	this.userText = 'Reversal Phalanx';
@@ -3931,6 +3998,18 @@ function AttackDmgPhalanxSp047(actList, actId) { // Enhanced Double ATK % (phala
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = dmg * (100 + this.modPct) / 100;
+	};
+}
+
+function AttackDmgPhalanxSp533(actList, actId) { // Vermilion Bird: Quick Reflexes (for 4god and boss) (phalanx)
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
+	this.canApply = function() {
+		return this.getAtkInfo().attackType === 4;
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg - (dmg * this.modPct * 0.01);
 	};
 }
 
