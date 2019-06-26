@@ -9,7 +9,7 @@ var unitPreset = {
 	// xun yu
 	1100021: 'mhCwpZGHwBwFwBNrGlkpDAHAXAZZsqOWM8AcBcFBWzpcPHtKJcLEw5wsTDPCxMRcLEtanAKcApwAnAKbapwb',
 	// pang tong
-	1100664: 'mlU7CgmQCcAcBcATaxpZKQwBwFwGWbKjlibAHAXBgVs6XJx7SjnAHEw3wBxMQcAcTEXAHEtanAKcApwAnAKbapwb',
+	1100664: 'mlU7CgmRRMAcBcATaxpZKQwBwFwGWbKgmRRcAcBcGBWzpcnHtKOcAcTDfAHExBwBxMRcAcS1qcApwCnACcAptqnBs',
 	// zhu huan
 	1100430: 'mjKbClkBTAHALEaLGlkUTAHALAZZsqORlsAcAsFxezpcbHtKPBxMfBxMBcHEwXwcS1oBTJwBTAFMAUtqDAs',
 	// sun shangxiang
