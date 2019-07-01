@@ -522,7 +522,7 @@ function _serializedObj2UserUnit(sobj, uid, fromPreset) {
 	}
 	if ('terrain' in sobj) {
 		// need UI to handle explicitly
-		uinfo.tileId = sobj.terrain[0];
+		uinfo.tileId = sobj.terrain[0]+4200001;
 		uinfo.isFlameTile = (sobj.terrain[1] === 1);
 	}
 	if ('tactic' in sobj)
