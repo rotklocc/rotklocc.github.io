@@ -99,6 +99,25 @@ function findItemEnhance(itemTier, eType, lv) {
 	return null;
 }
 
+function findArtifactEnhanceGroup(artifact) {
+	if (artifact['enhanceType'] <= 2) {
+		// melee: 1, range: 2
+		return 1;
+	}
+	else if (artifact['enhanceType'] === 3) {
+		// fan except jade fan
+		return 3;
+	}
+	else if (artifact['enhanceType'] === 4) {
+		return 4;
+	}
+	else if (artifact['enhanceType'] <= 7) {
+		return 5; // armor/robe/dress
+	}
+	//return artifact['enhanceType'];
+	return 8; // acc
+}
+
 // find main enhance type for upgrade stat
 function _findArtifactEnhanceType(artifact) {
 	/*if (artifact['itemType'] <= 6) {
@@ -274,7 +293,10 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 function _artifact2SerializedObj(equipInfo) {
 	var p6 = equipInfo['p6'] ? _findObjId(equipInfo['p6'], itemEnhancePassives) : 0;
 	var p12 = equipInfo['p12'] ? _findObjId(equipInfo['p12'], itemEnhancePassives) : 0;
-	return [ equipInfo['item']['id']-3000000, equipInfo['lv'], p6 ? p6 - 2700000 : 0, p12 ? p12 - 2700000 : 0 ];
+	var out = [ equipInfo['item']['id']-3000000, equipInfo['lv'], p6 ? p6 - 2700000 : 0, p12 ? p12 - 2700000 : 0 ];
+	if ('pc' in equipInfo)
+		out.push(_findObjId(equipInfo['pc'], craftPassives[findArtifactEnhanceGroup(equipInfo['item'])]) - 2710000);
+	return out;
 }
 
 //var keyStrBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
@@ -440,13 +462,18 @@ function serializeUserUnit(uinfo, doFull=false) {
 
 function _unserializeArtifact(info) {
 	var item = _findObj(info[0]+3000000, artifacts);
-	return {
+	var out =  {
 		'item': item,
 		'lv': info[1],
 		'p6': info[2] ? itemEnhancePassives[info[2] + 2700000] : null,
 		'p12': info[3] ? itemEnhancePassives[info[3] + 2700000] : null,
 		'enhance': findItemEnhance(item.tier, _findArtifactEnhanceType(item), info[1])
 	};
+	if (info.length > 4)
+		out['pc'] = craftPassives[findArtifactEnhanceGroup(item)][info[4] + 2710000]
+	else if (isItemCraftable(item))
+		out['pc'] = _getDefaultCraftWeaponPassive(item);;
+	return out;
 }
 
 function _serializedObj2UserUnit(sobj, uid, fromPreset) {
@@ -575,6 +602,26 @@ function unserializeGameInfo(txt) {
 	punits['p1'] = _serializedObj2UserUnit(sobj.p1, 'p1');
 }
 
+function _getDefaultCraftWeaponPassive(item) {
+	var enhanceGroup = findArtifactEnhanceGroup(item);
+	
+	if (enhanceGroup === 1)
+		return craftPassives[1][2710002]; // Physical Attack +% (5)
+	else if (enhanceGroup === 3)
+		return craftPassives[3][2710016]; // Offensive Tactics +% (4)
+	else // 4
+		return craftPassives[4][2710025]; // Offensive Tactics +% (4)
+}
+
+function getDefaultCraftArtifactPassive(info) {
+	var item = info.weapon.item;
+	if (!isItemCraftable(item)) {
+		delete info.weapon['pc']
+		return;
+	}
+	info.weapon['pc'] = _getDefaultCraftWeaponPassive(item);
+}
+
 function getDefaultArtifactUpgradePassive(info) {
 	var weapon = info['weapon']['item'];
 	if (info.attackRole === 'Magic') {
@@ -661,6 +708,11 @@ function getUnitInfo(unit, uid) {
 	return getDefaultUnitInfo(unit, uid);
 }
 
+function isItemCraftable(item) {
+	// specific commander artifact but has only 1 passive
+	return (item.unitId !== 0 && item.passive.length === 1);
+}
+
 function getDefaultUnitInfo(unit, id) {
 	var uinfo = new UserUnit(unit, id);
 	
@@ -740,6 +792,7 @@ function getDefaultUnitInfo(unit, id) {
 		}
 	}
 	
+	getDefaultCraftArtifactPassive(uinfo);
 	getDefaultArtifactUpgradePassive(uinfo);
 	getDefaultRelicInfo(uinfo);
 	
@@ -805,6 +858,8 @@ function SpActionList(uinfo) {
 		var item = artifactInfo.item;
 		for (var i = 0; i < item.passive.length; i++)
 			this.addSpAction(item.passive[i], item.passiveVal[i]);
+		if ('pc' in artifactInfo)
+			this.addSpActionFromPassiveList(passiveLists[artifactInfo.pc]);
 		
 		if (artifactInfo.lv !== 0) {
 			this.addSpActionFromPassiveList(passiveLists[artifactInfo.enhance.passiveListId]);
@@ -995,6 +1050,14 @@ function UserUnit(unit, id) {
 				slotInfo.p12 = null;
 		}
 		slotInfo.item = item;
+		if (slotNo === 4)
+			getDefaultCraftArtifactPassive(this);
+		this.calculateStat();
+	};
+	
+	this.setCraftArtifactPassive = function(slotNo, passiveListId) {
+		var slotInfo = this[slotNames[slotNo]];
+		slotInfo.pc = passiveListId;
 		this.calculateStat();
 	};
 	

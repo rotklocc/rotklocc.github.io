@@ -537,12 +537,80 @@ function _popupPassiveInfo(passiveId, passiveVal) {
 }
 
 function popupSelectCraftArtifactPassive(uid, slotNo, idx) {
-	// TODO:
+	// no check if item is specific commander craftable weapon (must be checked before calling this function)
+	var uinfo = punits[uid];
+	var item = uinfo[slotNames[slotNo]].item;
+	var enhanceGroup = findArtifactEnhanceGroup(item);
+	var allowCraftPassives = craftPassives[enhanceGroup];
+	
+	var selectedSpan = null;
+	var selectedPassiveListId = uinfo.weapon.pc;
+	
+	var divFlex = document.createElement("div");
+	divFlex.style.display = 'flex';
+	
+	var divLeft = document.createElement("div");
+	divLeft.style.minWidth = "250px";
+	
+	var i = 0;
+	for (var craftPassiveId in allowCraftPassives) {
+		var passiveListId = allowCraftPassives[craftPassiveId];
+		var passiveList = passiveLists[passiveListId];
+		var passiveId = passiveList['passiveId'];
+		if (i > 0 && (i % 5) === 0)
+			divLeft.appendChild(document.createElement("br"));
+		var iconInfo = getPassiveIconInfo(passives[passiveId]['icon']);
+		var imgSpan = document.createElement("span");
+		imgSpan.className = iconInfo[0] + " frame-selectable";
+		if (passiveListId === selectedPassiveListId) {
+			imgSpan.classList.add("frame-selected");
+			selectedSpan = imgSpan;
+		}
+		imgSpan.style.backgroundPosition = "-"+iconInfo[1][0]+"px -"+iconInfo[1][1]+"px";
+		imgSpan.itemPassive = passiveListId;
+		imgSpan.addEventListener("click", onSelectCraftPassive);
+		divLeft.appendChild(imgSpan);
+		i++;
+	}
+	
+	function getArtifactPassiveInfoHtml(passiveListId) {
+		if (!passiveListId) return '';
+		var passiveList = passiveLists[passiveListId];
+		var html = '<b>'+localizePassiveName(passiveList['passiveId'], -1, ' ')+'</b><br/>';
+		html += getHtmlPassiveListDesc(passiveList, true);
+		return html;
+	}
+	
+	var divRight = document.createElement("div");
+	divRight.innerHTML = getArtifactPassiveInfoHtml(selectedPassiveListId);
+	
+	divFlex.appendChild(divLeft);
+	divFlex.appendChild(divRight);
+	
+	function onSelectCraftPassive(evt) {
+		var ele = evt.target;
+		if (ele === selectedSpan) {
+			document.getElementById("modalDiv").style.display = "none";
+			return;
+		}
+		if (selectedSpan)
+			selectedSpan.classList.remove("frame-selected");
+		ele.classList.add("frame-selected");
+		selectedSpan = ele;
+		divRight.innerHTML = getArtifactPassiveInfoHtml(ele.itemPassive);
+		uinfo.setCraftArtifactPassive(slotNo, ele.itemPassive);
+	}
+
+	document.getElementById("modalHeader").innerHTML = "<div style='height:1px'></div>";
+	var content = document.getElementById("modalContent");
+	content.innerHTML = '';
+	content.appendChild(divFlex);
+	document.getElementById("modalDiv").style.display = "block";
 }
 
 function popupArtifactPassive(uid, slotNo, idx) {
 	var item = punits[uid][slotNames[slotNo]].item;
-	if (item.unitId !== 0 && item.passive.length === 1 && idx === 1) {
+	if (isItemCraftable(item) && idx === 1) {
 		// specific commander craftable weapon
 		popupSelectCraftArtifactPassive(uid, slotNo, idx);
 		return;
@@ -1141,7 +1209,12 @@ function setCommanderArtifactPics(artifactInfo, slotName) {
 	// artifact passive (commander artifact has 2 passives)
 	var passiveIds = item['passive'];
 	setPassivePic(slotName+'p1', passives[passiveIds[0]]);
-	setPassivePic(slotName+'p2', (passiveIds.length > 1) ? passives[passiveIds[1]] : null);
+	if (passiveIds.length > 1)
+		setPassivePic(slotName+'p2', passives[passiveIds[1]]);
+	else if (isItemCraftable(item))
+		setPassivePic(slotName+'p2', passives[passiveLists[artifactInfo.pc].passiveId]);
+	else
+		setPassivePic(slotName+'p2', null);
 	
 	setPassiveListPic(slotName+'u6', (artifactInfo['lv'] >= 6 && artifactInfo['p6']) ? getItemEnhancePassiveList(artifactInfo['p6']) : null);
 	setPassiveListPic(slotName+'u12', (artifactInfo['lv'] == 12 && artifactInfo['p12']) ? getItemEnhancePassiveList(artifactInfo['p12']) : null);
@@ -2861,7 +2934,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		&nbsp; <button onclick="popupGameCode()">Code</button>
 	</div>
 	<div class="topbar-right" id="langSelection"></div>
-	<div class="topbar-right">66992 <button onclick="popupNote()">Note</button></div>
+	<div class="topbar-right">69333 <button onclick="popupNote()">Note</button></div>
 </div>
 
 <div id="advanceTool" style="padding-top: 5px">
