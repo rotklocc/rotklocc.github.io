@@ -25,13 +25,19 @@ var mmTileIds = Object.keys(tiles).map(Number).filter( function(tid) {
 var mengMeiMaps = [
 	{ name: 'Any', tiles: mmTileIds, weather: [ 20, 20, 20, 20, 20 ] } // Allow all weather
 ];
+var fourGodMaps = [
+	{ name: '청룡', tiles: [4200053, 4200009], weather: [ 0, 50, 0, 20, 30 ] }, // dragon
+	// TODO: tile in bird raid has no flame tiles
+	//{ name: '주작', tiles: [4200058, 4200059], weather: [ 70, 30, 0, 0, 0 ] }, // bird
+];
 
 var gameModes = [ // assume all unit lv is 99
-	{ name: '경쟁전', suffix: '', maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 0, p1bonus: 0 },  // pvp
-	{ name: '난투',  suffix: '', maps: brawlMaps, hpMul: 2, hasFormation: false, p0bonus: 0, p1bonus: 0 },
-	{ name: '섬멸전', suffix: ' - Player first', maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 0, p1bonus: 10 },
-	{ name: '섬멸전', suffix: ' - AI first',     maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 3, p1bonus: 7 },
-	{ name: '몽매의 시련', suffix: '', maps: mengMeiMaps, hpMul: 2, hasFormation: false, p0bonus: 0, p1bonus: 0 },
+	{ name: '경쟁전', suffix: '', maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 0, p1bonus: 0, gfe: 50, pRawDmg: 5000 },  // pvp
+	{ name: '난투',  suffix: '', maps: brawlMaps, hpMul: 2, hasFormation: false, p0bonus: 0, p1bonus: 0, gfe: 50, pRawDmg: 5000 },
+	{ name: '섬멸전', suffix: ' - Player first', maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 0, p1bonus: 10, gfe: 50, pRawDmg: 5000 },
+	{ name: '섬멸전', suffix: ' - AI first',     maps: pvpMaps, hpMul: 1.5, hasFormation: true, p0bonus: 3, p1bonus: 7, gfe: 50, pRawDmg: 5000 },
+	{ name: '몽매의 시련', suffix: '', maps: mengMeiMaps, hpMul: 2, hasFormation: false, p0bonus: 0, p1bonus: 0, gfe: 50, pRawDmg: 5000 },
+	//{ name: '사신전', suffix: '', maps: fourGodMaps, hpMul: 1, hasFormation: false, p0bonus: 0, p1bonus: 0, gfe: 100, pRawDmg: 2500 },
 ];
 var gameModeId = 0;
 var gameMode = gameModes[gameModeId];
@@ -1310,7 +1316,7 @@ function UserUnit(unit, id) {
 		new BattleSp039(),  // Peerless %
 		new BattleSp160(),  // elusive
 		new BattleSp419(),  // Mental Exhaustion
-		// 455: Rage (only Awaken Azure Dragon has this passive. no implement)
+		new BattleSp455(),  // Rage (only Awaken Azure Dragon has this passive)
 		// 475: Guerrilla War (noone has)
 		new BattleSp442(),  // give and take
 		new BattleSp589(),  // Little Conquerer (sun ce)
@@ -1440,9 +1446,8 @@ function BattleSp433() { // MRL Surge (Emperor passive)
 function BattleSp011() { // Good from Evil
 	BattleSpAction.call(this, 2200011, 0);
 	this.calculate = function(uinfo) {
-		// TODO: game mode. now there is no mode that started from 100
-		var val = Math.max(50 - Math.trunc(uinfo['hpPct']), 0);
-		this.modPct = Math.min(val * 100 / (50 * 2), 48);
+		var val = Math.max(gameMode.gfe - Math.trunc(uinfo['hpPct']), 0);
+		this.modPct = Math.min(val * 100 / (gameMode.gfe * 2), 48);
 		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
 	};
 }
@@ -1555,6 +1560,14 @@ function BattleSp419() { // Mental Exhaustion
 			this.modPct = -this.modPct;
 			this.wis = -this.wis;
 		}
+	};
+}
+
+function BattleSp455() { // Rage (only Awaken Azure Dragon has this passive)
+	BattleSpAction.call(this, 2200455, 0);
+	this.calculate = function(uinfo) {
+		this.modPct = Math.trunc((100 - Math.trunc(uinfo['hpPct'])) / 10) * uinfo.getPassiveTotalVal(this.id);
+		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
 	};
 }
 
@@ -1810,8 +1823,8 @@ function calculateStatBasic(uinfo) {
 		}
 	}
 	uinfo.hpMax += hpBoost; // cap is 5000 (before multiplication from game mode)
-	//if (uinfo.hpMax > 5000)
-	//	uinfo.hpMax = 5000
+	if (uinfo.hpMax > 5000)
+		uinfo.hpMax = 5000
 	uinfo.mpMax = Math.min(uinfo.mpMax + mpBoost, 500);
 	uinfo.epMax = unit['ep'];
 	if (uinfo.epMax !== 0)
@@ -2080,8 +2093,7 @@ function getAttackBasicDmg(atkInfo, defInfo) {
 	defDef = monoMathRound(defDef * defInfo.getTerrainAdvantage() / 100);
 	if (atkInfo.hasResearch())
 		atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
-	// TODO: now allowed game modes are same calculation (need when implemening 4gods or other modes)
-	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (5000 / 10000)); // min dmg is 1
+	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (gameMode.pRawDmg / 10000)); // min dmg is 1
 	return [ atkAtk, defDef, dmg ];
 }
 
@@ -2107,8 +2119,7 @@ function _getTacticPhysicalBasicDmg(atkInfo, defInfo) {
 	defDef = monoMathRound(defDef * defInfo.getTerrainAdvantage() / 100);
 	if (atkInfo.hasResearch())
 		atkAtk += getResearchAtkBonus(atkInfo.allowItemTypes[0]);
-	// TODO: now allowed game modes are same calculation (need when implemening 4gods or other modes)
-	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (5000 / 10000)); // min dmg is 1
+	var dmg = Math.max(1, (atkInfo.lv + 30) + (atkAtk - defDef) * (gameMode.pRawDmg / 10000)); // min dmg is 1
 	// Noone has Ignore Type Advantage (401)
 	return [ atkAtk, defDef, dmg ];
 }
@@ -3410,8 +3421,8 @@ function AttackDmgActionList(atkInfo) {
 		//new AttackDmgSp228(this, 2200228), // (Bloody Battle) Enhanced Physical Attack %
 		new AttackDmgSpTileBoost(this, 2200036), // Naval Battle +
 		new AttackDmgSp045(this, 2200045), // Physical Damage -%
-		//new AttackDmgSp448(this, 2200448), // Azure Dragon's Protection
-		//new AttackDmgSp449(this, 2200449), // Azure Dragon's Blessing
+		new AttackDmgSp045(this, 2200448), // Azure Dragon's Protection (calculation same as 045)
+		new AttackDmgSp045(this, 2200449), // Azure Dragon's Blessing (calculation same as 045)
 		new AttackDmgSp624(this, 2200624), // Damage Taken +%
 		new AttackDmgSp280(this, 2200280), // Decrease Physical Damage
 		new AttackDmgSp500(this, 2200500), // Relic: Melee Damage -
