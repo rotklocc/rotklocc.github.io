@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
 	
 	document.addEventListener("keyup", function(evt) {
-		if (evt.keyCode == 70 && evt.target.tag !== 'INPUT') { // F
+		if (evt.keyCode == 70 && evt.target.tagName !== 'INPUT') { // F
 			evt.preventDefault();
 			var input = document.getElementById('filterTxt');
 			input.focus();

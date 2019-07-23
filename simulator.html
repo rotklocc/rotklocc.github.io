@@ -732,22 +732,23 @@ function popupSelectCommanderPassive(uid, slotIdx) {
 		if (i > 0 && (i % 4) === 0)
 			divLeft.appendChild(document.createElement("br"));
 		var passiveList = uinfo['commanderPasiveLists'][i];
-		var icon = passiveIcons[passives[passiveList['passiveId']]['icon']];
+		var iconInfo = getPassiveIconInfo(passives[passiveList['passiveId']]['icon']);
 		var imgSpan = document.createElement("span");
 		var selectable = true;
+		imgSpan.className = iconInfo[0]
 		if (i === selectedIdx) {
-			imgSpan.className = "passive frame-selectable frame-selected";
+			imgSpan.className += " frame-selectable frame-selected";
 			selectedSpan = imgSpan;
 		}
 		else if (uinfo['selectedPassiveLists'].indexOf(i) === -1) {
-			imgSpan.className = "passive frame-selectable";
+			imgSpan.className += " frame-selectable";
 		}
 		else {
-			imgSpan.className = "passive frame-noselect";
+			imgSpan.className += " frame-noselect";
 			imgSpan.innerHTML = '<span class="overlay-disable"></span>';
 			selectable = false;
 		}
-		imgSpan.style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
+		imgSpan.style.backgroundPosition = "-"+iconInfo[1][0]+"px -"+iconInfo[1][1]+"px";
 		imgSpan.listIdx = i;
 		if (selectable)
 			imgSpan.addEventListener("click", onSelectCommanderPassive);
@@ -1169,16 +1170,11 @@ function setBackgroundPosition(eleId, icon) {
 
 function setPassivePic(eleId, passive) {
 	var iconName = (passive === null) ? 'spAction_Bg' : passive['icon'];
-	var className = 'passive';
-	var icon = passiveIcons[iconName];
-	if (!icon) {
-		icon = magicIcons[iconName];
-		className = 'magic';
-	}
+	var iconInfo = getPassiveIconInfo(iconName);
 	var ele = document.getElementById(eleId);
 	ele.classList.remove('passive', 'magic');
-	ele.classList.add(className);
-	ele.style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
+	ele.classList.add(iconInfo[0]);
+	ele.style.backgroundPosition = "-"+iconInfo[1][0]+"px -"+iconInfo[1][1]+"px";
 }
 
 function setPassiveListPic(eleId, passiveList) {
