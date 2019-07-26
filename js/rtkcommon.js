@@ -386,6 +386,7 @@ function createSideBarMenu() {
 	html += '<br/>';
 	html += '<a href="feats.html">Feats</a>';
 	html += '<a href="guildMissions.html">Guild Missions</a>';
+	html += '<a href="shop.html">Shop</a>';
 	
 	ele.innerHTML = html;
 	body.appendChild(ele);

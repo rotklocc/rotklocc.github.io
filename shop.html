@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<!--<meta name="viewport" content="width=device-width"/>-->
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Shop</title>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="js/shop.js"></script>
+<script type="text/javascript">
+
+function toLocalizeFromTexts(txts) {
+	var out;
+	var txt = txts[selLang];
+	if (txt === '')
+		txt = txts[0];
+	out = txt.replace(/(?:\r\n|\r|\n)/g, '<br>');;
+	
+	if (selLang2 !== -1) {
+		txt = txts[selLang2];
+		if (txt === '')
+			txt = txts[0];
+		out += '<br/>' + txt.replace(/(?:\r\n|\r|\n)/g, '<br>');;
+	}
+	return out;
+}
+
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	goodsShop.forEach(function(item) {
+		var tr = document.createElement("tr");
+		
+		var td = createTdHtmlNode('<span>'+toLocalizes(goodTypes[item['goodId']])+'</span> x'+item['cost']);
+		tr.appendChild(td);
+
+		tr.appendChild(createTdHtmlNode(toLocalizeFromTexts(item['name'])));
+		tr.appendChild(createTdHtmlNode(toLocalizeFromTexts(item['desc'])));
+		
+		tbody.appendChild(tr);
+	});
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	setLangChangeCallback(generateTableRows);
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+	generateTableRows();
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+	</div>
+	<div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col style="width:150px"/>
+	<col style="width:300px"/>
+	<col/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th>Cost</th>
+	  <th>Name</th>
+	  <th>Description</th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col style="width:150px"/>
+	<col style="width:300px"/>
+	<col/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+</body>
+</html>
