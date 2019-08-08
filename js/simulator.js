@@ -1815,7 +1815,7 @@ function calculateStatBasic(uinfo) {
 	hpBoost += monoMathRound(uinfo['hpMax'] * uinfo.getPassiveTotalVal(2200119) / 100); // HP Boost %
 	var mpBoost = uinfo.getPassiveTotalVal(2200120); // MP Boost
 	mpBoost += uinfo.getPassiveTotalVal(2200504); // Relic: MP Boost
-	mpBoost += monoMathRound(uinfo['hpMax'] * uinfo.getPassiveTotalVal(2200121) / 100); // MP Boost %
+	mpBoost += monoMathRound(uinfo['mpMax'] * uinfo.getPassiveTotalVal(2200121) / 100); // MP Boost %
 	for (var j = 0; j < uinfo['relics'].length; j++) {
 		if (uinfo.relics[j]) {
 			hpBoost += uinfo.relics[j]['hp'];
