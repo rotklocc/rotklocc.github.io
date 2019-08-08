@@ -20,7 +20,7 @@ function popupPassive(td) {
 	var passiveId = passiveList['passiveId'];
 	var passive = passives[passiveId];
 	
-	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'], 'frame-blue')) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveListIconHtml(passiveList, 'frame-blue')) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
 	document.getElementById("modalDiv").style.display = "block";
 }
@@ -87,7 +87,7 @@ function generateTableRows() {
 			// passive image
 			var cell = row.insertCell(0);
 			cell.style.width = '40px';
-			cell.innerHTML = getPassiveIconHtml(passives[passiveList['passiveId']]['icon'], 'frame-blue');
+			cell.innerHTML = getPassiveListIconHtml(passiveList, 'frame-blue');
 			// passive text
 			cell = row.insertCell(1);
 			cell.className = 'relationPTxt';

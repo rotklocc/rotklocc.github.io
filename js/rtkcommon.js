@@ -141,16 +141,18 @@ function toLocalizes(tkey, sep="<br/>", biLang=true) {
 	return txt;
 }
 
-function localizePassiveName(passiveId, val, sep="<br/>", biLang=true) {
+function localizePassiveName(passiveId, val, sep="<br/>", biLang=true, showVal=true) {
 	var passive = passives[passiveId];
-	txt = toLocalize(passive['name']);
+	var txt = toLocalize(passive['name']);
 	// list of passive that should have value
 	// 2200062: Critical Attack+
 	// 2200005: Expand AoE
 	// 2200002: Expand ATK RNG
-	value_pids = [2200062, 2200005, 2200002];
-	if (val !== -1 && (passive["desc"].indexOf("{0}") !== -1 || value_pids.indexOf(passiveId) !== -1)) {
-		txt += " (" + val + ")";
+	if (showVal) {
+		value_pids = [2200062, 2200005, 2200002];
+		if (val !== -1 && (passive["desc"].indexOf("{0}") !== -1 || value_pids.indexOf(passiveId) !== -1)) {
+			txt += " (" + val + ")";
+		}
 	}
 	
 	if (biLang && selLang2 !== -1) {
@@ -160,25 +162,39 @@ function localizePassiveName(passiveId, val, sep="<br/>", biLang=true) {
 	return txt
 }
 
-function getPassiveDescSimple(passive, passiveVal, langId) {
-	var desc = toLocalizeLang(passive['desc'], langId);
+function getPassiveDescSimple(passiveId, passiveVal, langId) {
+	var desc;
+	if (passiveId == 2200005) // Expand AoE
+		desc = toLocalizeLang(atkDmgShapes[passiveVal]['desc'], langId);
+	else if (passiveId == 2200002) // Expand ATK RNG
+		desc = toLocalizeLang(atkRngShapes[passiveVal]['desc'], langId);
+	else
+		desc = toLocalizeLang(passives[passiveId]['desc'], langId);
+	
 	while (desc.indexOf('{0}') !== -1) {
 		desc = desc.replace('{0}', passiveVal);
 	}
 	return desc;
 }
 
-function localizePassiveDescSimple(passive, passiveVal, sep="<br/>") {
-	var txt = getPassiveDescSimple(passive, passiveVal, selLang);
+function localizePassiveDescSimple(passiveId, passiveVal, sep="<br/>") {
+	var txt = getPassiveDescSimple(passiveId, passiveVal, selLang);
 	if (selLang2 !== -1) {
-		txt += sep + getPassiveDescSimple(passive, passiveVal, selLang2);
+		txt += sep + getPassiveDescSimple(passiveId, passiveVal, selLang2);
 	}
 	return txt;
 }
 
 function getPassiveDesc(passiveList, langId) {
-	var passive = passives[passiveList['passiveId']];
-	var desc = toLocalizeLang(passive['desc'], langId);
+	var passiveId = passiveList['passiveId'];
+	var passive = passives[passiveId];
+	var desc;
+	if (passiveId == 2200005) // Expand AoE
+		desc = toLocalizeLang(atkDmgShapes[passiveList['val']]['desc'], langId);
+	else if (passiveId == 2200002) // Expand ATK RNG
+		desc = toLocalizeLang(atkRngShapes[passiveList['val']]['desc'], langId);
+	else
+		desc = toLocalizeLang(passive['desc'], langId);
 	
 	while (desc.indexOf('{0}') !== -1) {
 		desc = desc.replace('{0}', passiveList['val']);
@@ -216,7 +232,7 @@ function localizePassiveListDesc(passiveList, sep="<br/>") {
 function getHtmlPassiveDesc(passiveId, passiveVal) {
 	var passive = passives[passiveId];
 	var txt = "<b>Stack:</b> " + (passive["accumulate"] == 0 ? "No" : "Yes") + "<br/>";
-	txt += "<b>Description:</b><br/>" + localizePassiveDescSimple(passive, passiveVal);
+	txt += "<b>Description:</b><br/>" + localizePassiveDescSimple(passiveId, passiveVal);
 	
 	if (passiveId == 2200005) {  // Expand AoE
 		txt += '<p>' + getShapeHtml(passiveVal, false) + '</p>';
@@ -243,6 +259,7 @@ function getHtmlPassiveListDesc(passiveList, hasStackInfo=true) {
 	
 	if (passiveId == 2200005) {  // Expand AoE
 		txt += '<p>' + getShapeHtml(passiveList["val"], false) + '</p>';
+		//txt += '<p>' + getPassiveIconHtml(atkDmgShapes[passiveList['val']]['icon']) + '</p>';
 	}
 	else if (passiveId == 2200002) {  // Expand ATK RNG
 		txt += '<p>' + getShapeHtml(passiveList["val"], true) + '</p>';
@@ -414,11 +431,34 @@ function getConditionIconHtml(iconName, extraClass="") {
 	return _iconHtml('condition', conditionIcons[iconName], extraClass);
 }
 
-function getPassiveIconHtml(iconName, extraClass="") {
+function getPassiveIconName(passiveId, passiveVal) {
+	if (passiveId == 2200005) {  // Expand AoE
+		return atkDmgShapes[passiveVal]['icon'];
+	}
+	else if (passiveId == 2200002) {  // Expand ATK RNG
+		return atkRngShapes[passiveVal]['icon'];
+	}
+	return passives[passiveId]['icon'];
+}
+
+function getPassiveListIconName(passiveList) {
+	return getPassiveIconName(passiveList['passiveId'], passiveList['val']);
+}
+
+function getPassiveIconNameHtml(iconName, extraClass="") {
 	var icon = passiveIcons[iconName];
 	if (!icon)  // some passive icon is in magic
 		return getMagicIconHtml(iconName, extraClass)
 	return _iconHtml('passive', icon, extraClass);
+}
+
+function getPassiveIconHtml(passiveId, passiveVal, extraClass="") {
+	var iconName = getPassiveIconName(passiveId, passiveVal);
+	return getPassiveIconNameHtml(iconName, extraClass);
+}
+
+function getPassiveListIconHtml(passiveList, extraClass="") {
+	return getPassiveIconHtml(passiveList['passiveId'], passiveList['val'], extraClass);
 }
 
 function getPassiveIconInfo(iconName) {

@@ -75,7 +75,7 @@ function generateTableRows() {
 		tr.appendChild(td);
 				
 		var passiveList = passiveLists[item['passiveListId']];
-		var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList["passiveId"]]['icon'], 'frame-blue'));
+		var iconHtml = makePreTxtIconHtml(getPassiveListIconHtml(passiveList, 'frame-blue'));
 		var html = iconHtml + localizePassiveName(passiveList["passiveId"], -1);
 		td = createTdHtmlNode(html);
 		//td.svalue = (passiveList["passiveId"] * 1000) + passiveList["val"];

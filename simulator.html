@@ -486,11 +486,11 @@ function popupSelectArtifact(uid, slotNo) {
 		
 		var html = '';
 		if (item["passive"].length > 0) {
-			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[item['passive'][0]]['icon']));
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(item['passive'][0], item['passiveVal'][0]));
 			html += "<p style='height:30px'>" + iconHtml + localizePassiveName(item['passive'][0], item['passiveVal'][0]) + "</p>";
 		}
 		if (item["passive"].length > 1) {
-			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[item['passive'][1]]['icon']));
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(item['passive'][1], item['passiveVal'][1]));
 			html += "<p>" + iconHtml + localizePassiveName(item['passive'][1], item['passiveVal'][1]) + "</p>";
 		}
 		document.getElementById('artiPassives').innerHTML = html;
@@ -530,7 +530,7 @@ function popupSelectArtifact(uid, slotNo) {
 
 function _popupPassiveInfo(passiveId, passiveVal) {
 	var passive = passives[passiveId];
-	var hdr = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'])) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
+	var hdr = makePreTxtIconHtml(getPassiveIconHtml(passiveId, passiveVal)) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
 	document.getElementById("modalHeader").innerHTML = hdr;
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveDesc(passiveId, passiveVal);
 	document.getElementById("modalDiv").style.display = "block";
@@ -732,7 +732,7 @@ function popupSelectCommanderPassive(uid, slotIdx) {
 		if (i > 0 && (i % 4) === 0)
 			divLeft.appendChild(document.createElement("br"));
 		var passiveList = uinfo['commanderPasiveLists'][i];
-		var iconInfo = getPassiveIconInfo(passives[passiveList['passiveId']]['icon']);
+		var iconInfo = getPassiveIconInfo(getPassiveListIconName(passiveList));
 		var imgSpan = document.createElement("span");
 		var selectable = true;
 		imgSpan.className = iconInfo[0]
@@ -1168,8 +1168,8 @@ function setBackgroundPosition(eleId, icon) {
 	document.getElementById(eleId).style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
 }
 
-function setPassivePic(eleId, passive) {
-	var iconName = (passive === null) ? 'spAction_Bg' : passive['icon'];
+function setPassivePic(eleId, passiveId=0, passiveVal=0) {
+	var iconName = (passiveId === 0) ? 'spAction_Bg' : getPassiveIconName(passiveId, passiveVal);
 	var iconInfo = getPassiveIconInfo(iconName);
 	var ele = document.getElementById(eleId);
 	ele.classList.remove('passive', 'magic');
@@ -1178,7 +1178,10 @@ function setPassivePic(eleId, passive) {
 }
 
 function setPassiveListPic(eleId, passiveList) {
-	setPassivePic(eleId, passiveList ? passives[passiveList['passiveId']] : null);
+	if (passiveList)
+		setPassivePic(eleId, passiveList['passiveId'], passiveList['val']);
+	else
+		setPassivePic(eleId);
 }
 
 function setRelicPic(eleId, relic) {
@@ -1204,13 +1207,13 @@ function setCommanderArtifactPics(artifactInfo, slotName) {
 	
 	// artifact passive (commander artifact has 2 passives)
 	var passiveIds = item['passive'];
-	setPassivePic(slotName+'p1', passives[passiveIds[0]]);
+	setPassivePic(slotName+'p1', passiveIds[0], item['passiveVal'][0]);
 	if (passiveIds.length > 1)
-		setPassivePic(slotName+'p2', passives[passiveIds[1]]);
+		setPassivePic(slotName+'p2', passiveIds[1], item['passiveVal'][1]);
 	else if (isItemCraftable(item))
-		setPassivePic(slotName+'p2', passives[passiveLists[artifactInfo.pc].passiveId]);
+		setPassiveListPic(slotName+'p2', passiveLists[artifactInfo.pc]);
 	else
-		setPassivePic(slotName+'p2', null);
+		setPassivePic(slotName+'p2', 0);
 	
 	setPassiveListPic(slotName+'u6', (artifactInfo['lv'] >= 6 && artifactInfo['p6']) ? getItemEnhancePassiveList(artifactInfo['p6']) : null);
 	setPassiveListPic(slotName+'u12', (artifactInfo['lv'] == 12 && artifactInfo['p12']) ? getItemEnhancePassiveList(artifactInfo['p12']) : null);
@@ -1256,8 +1259,7 @@ function fillCommanderInfo(uinfo) {
 	
 	var utypePassives = unitType["job5"]["passives"];
 	for (var i = 0; i < utypePassives.length; i++) {
-		var passive = passives[utypePassives[i][0]];
-		setPassivePic(uinfo.id+'utp'+i, passive);
+		setPassivePic(uinfo.id+'utp'+i, utypePassives[i][0]);
 	}
 	
 	// commander passives
@@ -1270,7 +1272,7 @@ function fillCommanderInfo(uinfo) {
 	}
 	
 	for (var i = 0; i < uinfo['relicPassives'].length; i++) {
-		setPassivePic(uinfo.id+'rp'+i, uinfo.relics[i] ? passives[uinfo['relicPassives'][i]['passiveId']] : null);
+		setPassivePic(uinfo.id+'rp'+i, uinfo.relics[i] ? uinfo['relicPassives'][i]['passiveId'] : 0);
 		document.getElementById(uinfo.id+'rp'+i+'lv').innerText = uinfo.relics[i] ? ('Lv' + uinfo['relicPassivesLv'][i]) : '';
 	}
 	
@@ -1474,7 +1476,7 @@ function popupCustomStat(uid) {
 		li.id = 'ssp'+passiveId;
 		li.addEventListener("click", onSelectPassive);
 		
-		var liHtml = getPassiveIconHtml(passive['icon'], 'frame-blue');
+		var liHtml = getPassiveIconHtml(passiveId, 0, 'frame-blue');
 		liHtml += '<span class="text" style="width:200px">'+toLocalize(passive['name'])+'</span>';
 		li.innerHTML = liHtml;
 		ul.appendChild(li);
@@ -1510,7 +1512,7 @@ function popupCustomStat(uid) {
 		row.passiveId = passiveId;
 		var cell = row.insertCell(0);
 		cell.className = "img";
-		cell.innerHTML = getPassiveIconHtml(passive['icon'], 'frame-blue');
+		cell.innerHTML = getPassiveIconHtml(passiveId, passiveVal, 'frame-blue');
 		// passive name
 		cell = row.insertCell(-1);
 		cell.innerHTML = toLocalize(passive['name']);
@@ -1645,7 +1647,7 @@ function updateBattlePassiveIcons(uinfo) {
 		if (!battlePassive.isActivated())
 			continue;
 		var passive = battlePassive.getPassive();
-		var spanIcon = createHtmlNode('span', getPassiveIconHtml(passive['icon']));
+		var spanIcon = createHtmlNode('span', getPassiveIconNameHtml(passive['icon']));
 		spanIcon.className = 'icon20 frame-orange';
 		frame.appendChild(spanIcon);
 		numIcon++;
@@ -1827,7 +1829,7 @@ function popupBattlePassives(uid) {
 		// img
 		cell = row.insertCell(0);
 		cell.className = "img";
-		cell.innerHTML = getPassiveIconHtml(passive['icon'], 'frame-blue');
+		cell.innerHTML = getPassiveIconNameHtml(passive['icon'], 'frame-blue');
 		// passive name
 		cell = row.insertCell(-1);
 		cell.innerHTML = toLocalize(passive['name']) + ' (<span>' + getDecimalText(battlePassive.modPct) + '</span>%)';
@@ -2557,7 +2559,7 @@ function _actionAccTableRowsCreator(uinfo, tableEle, actionList) {
 				var div = document.createElement("div");
 				div.className = 'subPassiveBlock';
 				// img
-				var spanIcon = createHtmlNode('span', getPassiveIconHtml(subPassive['icon']));
+				var spanIcon = createHtmlNode('span', getPassiveIconNameHtml(subPassive['icon']));
 				spanIcon.className = 'icon30 frame-orange';
 				var spanPretxt = document.createElement("span");
 				spanPretxt.className = 'icon-pretxt';
@@ -2898,14 +2900,14 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 	
-	setPassivePic('p0atkDouble', passives[2200023]);
-	setPassivePic('p0atkCritical', passives[2200061]);
-	setPassivePic('p1atkDouble', passives[2200023]);
-	setPassivePic('p1atkCritical', passives[2200061]);
-	setPassivePic('p0spellDouble', passives[2200024]);
-	setPassivePic('p0spellCritical', passives[2200061]);
-	setPassivePic('p1spellDouble', passives[2200024]);
-	setPassivePic('p1spellCritical', passives[2200061]);
+	setPassivePic('p0atkDouble', 2200023);
+	setPassivePic('p0atkCritical', 2200061);
+	setPassivePic('p1atkDouble', 2200023);
+	setPassivePic('p1atkCritical', 2200061);
+	setPassivePic('p0spellDouble', 2200024);
+	setPassivePic('p0spellCritical', 2200061);
+	setPassivePic('p1spellDouble', 2200024);
+	setPassivePic('p1spellCritical', 2200061);
 	
 	createGameModeSelection();
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight+5) + "px";

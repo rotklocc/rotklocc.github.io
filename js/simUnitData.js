@@ -19,7 +19,7 @@ var unitPreset = {
 	// zhou tai
 	1100660: 'mlWbCgmVfAHALEaLGhmWHAHALAZZsqOSBcAcAsFJezo8bHtKPExMfExMBcTEwXxMS1oCTJwCTAJMhLapyb',
 	// ma yunlu
-	1100484: 'mjc7ClmYbAHALEaLGlkWnAHALAZZsqOSBcAcAsFJezo8bHtKPBxMfBxMBcHEwXwcS1oAnFnACcAJwAm2osm-',
+	1100484: 'mjc7ClmYnAHALEaLGlkWnAHALAZZsqOSBcAcAsFJezo8bHtKPBxMfBxMBcHEwXwcS1oAnFnACcAJwAm2osm-',
 	// cai yan
 	1100475: 'mjZLClkYfAHAXAE2saWSkMAcBcBlmyo5YzwBwFwUFbOlxse0olwsTDnCxMM8LExFwsS1qcAZwBnAGcAZtqnBs',
 	// zgl (demon)

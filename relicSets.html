@@ -70,7 +70,7 @@ function generateTableRows() {
 		}
 		
 		var passiveList = passiveLists[relicSet['passiveListId']];
-		var html = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList["passiveId"]]['icon'], 'frame-blue'))
+		var html = makePreTxtIconHtml(getPassiveListIconHtml(passiveList, 'frame-blue'))
 		html += '<span>' + localizePassiveName(passiveList["passiveId"], -1) + '</span>';
 		var td = createTdHtmlNode(html);
 		tr.appendChild(td);

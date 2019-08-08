@@ -21,7 +21,7 @@ function popupPassive(td, idx) {
 	var passiveVal = item['passiveVal'][idx];
 	var passive = passives[passiveId];
 	
-	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'])) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passiveId, passiveVal)) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveDesc(passiveId, passiveVal);
 	document.getElementById("modalDiv").style.display = "block";
 }
@@ -55,7 +55,7 @@ function generateTableRows() {
 		tr.appendChild(createTdNumberColorTagNode('statMrl', item['mrl']));
 		
 		if (item["passive"].length > 0) {
-			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[item['passive'][0]]['icon'], 'frame-blue'));
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(item['passive'][0], item['passiveVal'][0], 'frame-blue'));
 			var html = iconHtml + '<span class="info" onclick="popupPassive(this.parentNode, 0)">&#x1f6c8;</span>' + localizePassiveName(item['passive'][0], item['passiveVal'][0]);
 			tr.appendChild(createTdHtmlNode(html));
 		}
@@ -64,7 +64,7 @@ function generateTableRows() {
 		}
 
 		if (item["passive"].length > 1) {
-			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[item['passive'][1]]['icon']));
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(item['passive'][1], item['passiveVal'][1], 'frame-blue'));
 			var html = iconHtml + '<span class="info" onclick="popupPassive(this.parentNode, 1)">&#x1f6c8;</span>' + localizePassiveName(item['passive'][1], item['passiveVal'][1]);
 			tr.appendChild(createTdHtmlNode(html));
 		}

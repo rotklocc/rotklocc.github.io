@@ -47,10 +47,9 @@ function popupPrefect(td) {
 
 function popupPassive(td) {
 	var passiveList = td.passiveList;
-	var passiveId = passiveList['passiveId'];
-	var passive = passives[passiveId];
+	var passive = passives[passiveList['passiveId']];
 	
-	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveIconHtml(passive['icon'], 'frame-blue')) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveListIconHtml(passiveList, 'frame-blue')) + "&nbsp;" + toLocalizes(passive['name'], " &nbsp; ");
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
 	document.getElementById("modalDiv").style.display = "block";
 }
@@ -80,7 +79,7 @@ function popupUnitType(td) {
 		var passiveVal = utypePassives[i][1];
 		txt += '<tr>';
 		txt += '<td>' + localizePassiveName(passiveId, passiveVal) + '</td>';
-		txt += '<td>' + localizePassiveDescSimple(passives[passiveId], passiveVal) + '</td>';
+		txt += '<td>' + localizePassiveDescSimple(passiveId, passiveVal) + '</td>';
 		txt += '</tr>';
 	}
 	txt += '</tbody></table>';
@@ -268,7 +267,7 @@ function generateTableRows() {
 		
 		for (var i = 0 ; i < unit["passiveListIds"].length; i++) {
 			var passiveList = passiveLists[unit["passiveListIds"][i]];
-			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList['passiveId']]['icon'], 'frame-blue'), hideImg);
+			var iconHtml = makePreTxtIconHtml(getPassiveListIconHtml(passiveList, 'frame-blue'), hideImg);
 			td = createTdHtmlNode(iconHtml + '<span class="info" onclick="popupPassive(this.parentNode)">&#x1f6c8;</span><span>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</span>');
 			td.passiveList = passiveList;
 			td.setAttribute("name", "up"+passiveList["passiveId"]);

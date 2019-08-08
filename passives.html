@@ -27,7 +27,7 @@ function generateTableRows() {
 		tr.appendChild(createTdHtmlNode(passiveId));
 		tr.appendChild(createTdHtmlNode(passive['parentId']));
 		
-		var td = createTdHtmlNode(getPassiveIconHtml(passive['icon'], 'frame-blue'));
+		var td = createTdHtmlNode(getPassiveIconHtml(passiveId, 0, 'frame-blue'));
 		td.className = "img";
 		tr.appendChild(td);
 
@@ -37,6 +37,7 @@ function generateTableRows() {
 		td = createTdHtmlNode(passive['accumulate'] ? 'Y' : 'N');
 		tr.appendChild(td);
 		
+		// TODO: terrain adv modifier passive detail
 		td = createTdHtmlNode(toLocalizes(passive['desc']));
 		tr.appendChild(td);
 

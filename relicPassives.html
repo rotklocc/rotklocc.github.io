@@ -43,7 +43,7 @@ function generateTableRows() {
 		
 		var passive = passives[relicPassive['passiveId']];
 		
-		var td = createTdHtmlNode(getPassiveIconHtml(passive['icon'], 'frame-blue'));
+		var td = createTdHtmlNode(getPassiveIconHtml(relicPassive['passiveId'], 0, 'frame-blue'));
 		td.className = "img";
 		tr.appendChild(td);
 		
