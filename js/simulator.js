@@ -2233,7 +2233,7 @@ function AttackAccActionBase(actList, id, side, type, userVal=null, userType='in
 		}
 		else if (this.passiveId) {
 			if (this.hasMainPassive)
-				html = getPassiveIconHtml(passives[this.passiveId]['icon'], 'frame-blue');
+				html = getPassiveIconHtml(this.passiveId, 0, 'frame-blue');
 		}
 		else if (this.techId) {
 			html = _iconHtml('tech', techIcons[research[this.techId]['icon']], 'frame-blue');
