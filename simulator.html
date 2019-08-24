@@ -1104,7 +1104,7 @@ function popupSelectRelation(uid) {
 			
 			var inputId = 'relp'+relation.id+'_'+j;
 			var html = '<label class="chkBoxContainer"><div>';
-			html += makePreTxtIconHtml(getPassiveIconHtml(passives[passiveList['passiveId']]['icon'], 'frame-blue'));
+			html += makePreTxtIconHtml(getPassiveIconHtml(passiveList['passiveId'], passiveList['val'], 'frame-blue'));
 			html += localizePassiveName(passiveList["passiveId"], passiveList["val"], '', false);
 			html += ' | ' + getRelationTriggerText(triggerType, unitCount, false);
 			html += '</div>';
@@ -1259,7 +1259,7 @@ function fillCommanderInfo(uinfo) {
 	
 	var utypePassives = unitType["job5"]["passives"];
 	for (var i = 0; i < utypePassives.length; i++) {
-		setPassivePic(uinfo.id+'utp'+i, utypePassives[i][0]);
+		setPassivePic(uinfo.id+'utp'+i, utypePassives[i][0], utypePassives[i][1]);
 	}
 	
 	// commander passives
