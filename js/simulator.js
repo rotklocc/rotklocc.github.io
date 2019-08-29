@@ -131,10 +131,10 @@ function _findArtifactEnhanceType(artifact) {
 		return [1];
 	}
 	else if (artifact['itemType'] <= 8) {
-		// legendary sword, fan
-		if (artifact['itemType'] === 8 || artifact['id'] === 3016043)
+		// legendary sword
+		if (artifact['itemType'] === 8)
 			return [3,1];
-		return [3];
+		return [3]; // fan
 	}
 	else if (artifact['itemType'] <= 11) {
 		return [5]; // armor/robe/dress
@@ -151,7 +151,7 @@ function findArtifactPassive12Group(artifact) {
 		return [1];
 	}
 	else if (artifact['enhanceType'] === 3) {
-		// fan except jade fan
+		// fan
 		return [3];
 	}
 	else if (artifact['enhanceType'] === 4) {
