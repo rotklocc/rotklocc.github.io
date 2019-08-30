@@ -1902,8 +1902,10 @@ function calculateStatBasic(uinfo) {
 	uinfo.statBasic['def'] += monoMathRound(baseDef * uinfo.getPassiveTotalVal(2200112) / 100);
 	uinfo.statBasic['def'] += uinfo.getPassiveTotalVal(2200111);
 	uinfo.statBasic['def'] += monoMathRound(baseDef * uinfo.getPassiveTotalVal(2200596) / 100); // Charge fortification %
-	uinfo.statBasic['agi'] += monoMathRound(uinfo.statBasic['agi'] * uinfo.getPassiveTotalVal(2200114) / 100);
+	var baseAgi = uinfo.statBasic['agi'];
+	uinfo.statBasic['agi'] += monoMathRound(baseAgi * uinfo.getPassiveTotalVal(2200114) / 100);
 	uinfo.statBasic['agi'] += uinfo.getPassiveTotalVal(2200113);
+	uinfo.statBasic['agi'] += monoMathRound(baseAgi * 12 / 100); // 674: Wild Agility (fix 12%)
 	uinfo.statBasic['mrl'] += monoMathRound(uinfo.statBasic['mrl'] * uinfo.getPassiveTotalVal(2200116) / 100);
 	uinfo.statBasic['mrl'] += uinfo.getPassiveTotalVal(2200115);
 	
@@ -2790,6 +2792,7 @@ function TacticDmgActionList(atkInfo) {
 		new TacticDmgSpBoost(this, 2200573, [0]), // Fire Tactics Synergy %
 		new TacticDmgSpBoost(this, 2200574, [3]), // Wind Tactics Synergy %
 		new TacticDmgSpBoost(this, 2200575, [16,17]), // Interrupt Tactics Synergy %
+		new TacticDmgSpBoost(this, 2200640, [1]), // Water Tactics Synergy %
 		new TacticDmgSpBoost(this, 2200576, null), // Deadly Tactics
 		new TacticDmgSp438(this, 2200438), // Godly Tactics
 		new TacticDmgSpBoost(this, 2200520, [0], [2000105]), // Fire Tactics Specialization %
@@ -2799,6 +2802,9 @@ function TacticDmgActionList(atkInfo) {
 		new AttackDmgSp434(this, 2200434), // Impose (Emperor passive)
 		new TacticDmgSp056(this, 2200056), // Tactics Damage -%
 		new AttackDmgSp624(this, 2200624), // Damage Taken +%
+		new TacticDmgSpTaken(this, 2200631, null), // Tactics Vulnerability %
+		new TacticDmgSpTaken(this, 2200632, [16,17]), // Interrupt Tactics Vulnerability %
+		new TacticDmgSpTaken(this, 2200633, [0,1,2,3]), // Elemental Tactics Vulnerability %
 		new TacticDmgSp588(this, 2200588), // Tactics Offset %
 		new TacticDmgSp279(this, 2200279), // Decrease Tactics Damage (no 4gods)
 		new TacticDmgSp402(this, 2200402), // Decrease Tactics Damage (by tactic power)
@@ -2923,6 +2929,23 @@ function TacticDmgUnitTypeFold(actList, actId) {
 
 function TacticDmgSpBoost(actList, actId, allowTypes, allowIds=[]) {
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.allowTypes = allowTypes; // null for allow all. only offensive tactics get calculated
+	this.allowIds = allowIds;
+	this.canApply = function() {
+		if (this.allowTypes === null)
+			return true;
+		var tactic = this.getTactic();
+		return (this.allowTypes.indexOf(tactic.skillType) !== -1) || (this.allowIds.indexOf(tactic.id) !== -1);
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg * (this.modPct + 100) / 100;
+	};
+}
+
+function TacticDmgSpTaken(actList, actId, allowTypes, allowIds=[]) {
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	this.allowTypes = allowTypes; // null for allow all. only offensive tactics get calculated
 	this.allowIds = allowIds;
 	this.canApply = function() {
@@ -3424,6 +3447,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp045(this, 2200448), // Azure Dragon's Protection (calculation same as 045)
 		new AttackDmgSp045(this, 2200449), // Azure Dragon's Blessing (calculation same as 045)
 		new AttackDmgSp624(this, 2200624), // Damage Taken +%
+		new AttackDmgSp634(this, 2200634), // Ranged Attack Vulnerability %
 		new AttackDmgSp280(this, 2200280), // Decrease Physical Damage
 		new AttackDmgSp500(this, 2200500), // Relic: Melee Damage -
 		new AttackDmgSp046(this, 2200046), // Ranged DMG -%
@@ -3434,6 +3458,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp608(this, 2200608), // MP ATK%
 		new AttackDmgSp592(this, 2200592), // Desperate Countermeasure
 		new AttackDmgSp617(this, 2200617), // Lucky Feint
+		new AttackDmgSp674(this, 2200674), // Wild Agility
 		//new AttackDmgTech1019(this, 2501019), // Enhance Keep
 		new AttackDmgTech027(this, 2500027), // Research: Ship Construction (navy)
 		new AttackDmgSp446(this, 2200446), // CMD: Physical Attack +%
@@ -3664,6 +3689,18 @@ function AttackDmgSp624(actList, actId) { // Damage Taken +%
 	};
 }
 
+function AttackDmgSp634(actList, actId) { // Ranged Attack Vulnerability %
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
+	this.canApply = function() {
+		return this.getAtkInfo().attackRole === 'Range';
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg + dmg * this.modPct / 100;
+	};
+}
+
 function AttackDmgSp280(actList, actId) { // Decrease Physical Damage
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
 	
@@ -3772,6 +3809,18 @@ function AttackDmgSp617(actList, actId) { // Lucky Feint
 			this.modPct = 0;
 			this.result = dmg;
 		}
+	};
+}
+
+function AttackDmgSp674(actList, actId) { // Wild Agility
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
+	this.canApply = function() {
+		return this.getAtkInfo().attackType === 1; // must be counterattack
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg * (1 - this.modPct / 100);
 	};
 }
 
