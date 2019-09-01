@@ -212,7 +212,7 @@ function _findObj(objId, objArr) {
 var serializeKeyNames = [
 	'id', 'weapon', 'armor', 'kit', 'passives', 'relics', 'scroll', 'formation', 'hp',
 	'battlePassives', 'conditions', 'terrain', 'tactic', 'gid', 'mid', 'wid', 'p0', 'p1',
-	'extraPassives', 'customStat', 'relation', 'disableResearch'
+	'extraPassives', 'customStat', 'relation', 'disableResearch', 'lv'
 ];
 var serializeKeyArray = ['battlePassives', 'conditions', 'extraPassives']; // data array that size can be any length
 function _userUnit2SerializeObj(uinfo, doFull=false) {
@@ -245,6 +245,8 @@ function _userUnit2SerializeObj(uinfo, doFull=false) {
 	if (relation.length > 0)
 		outObj.relation = relation;
 	
+	if (uinfo.lv !== 99)
+		outObj.lv = uinfo.lv;
 	if (uinfo.disableResearch)
 		outObj.disableResearch = 1;
 	if (uinfo.overriddenStat !== null) {
@@ -512,6 +514,8 @@ function _serializedObj2UserUnit(sobj, uid, fromPreset) {
 			}
 		}
 	}
+	if ('lv' in sobj)
+		uinfo.setLv(sobj.lv);
 	if ('disableResearch' in sobj)
 		uinfo.disableResearch = true;
 	if ('customStat' in sobj) {
@@ -934,7 +938,7 @@ var onUserUnitInfoChangedCb = null;
 function UserUnit(unit, id) {
 	this.unit = unit;
 	this.id = id;
-	this.lv = 99; // fix all commander level to 99
+	//this.lv = 99; // fix all commander level to 99
 	this.weapon = { 'lv':12 };
 	this.armor = { 'lv':12 };
 	this.kit = { 'lv':12 };
@@ -951,6 +955,12 @@ function UserUnit(unit, id) {
 	this.isCriticalAttack = false;
 	this.isDoubleTactic = false;
 	this.isCriticalTactic = false;
+	
+	this.setLv = function(val) {
+		this.lv = val;
+		this.rank = Math.min(11, Math.trunc(val/7));
+	};
+	this.setLv(99); // default all commander level to 99
 	
 	this.setHp = function(val) {
 		this.hp = val;
@@ -1858,7 +1868,8 @@ function calculateStatBasic(uinfo) {
 		var result = monoMathRound(tmpVal);
 		if (nscroll > 100)
 			result += nscroll - 100;
-		uinfo.statBasic[statName] = result + unitType['rank12Stats'][statName];
+		//uinfo.statBasic[statName] = result + unitType['rank12Stats'][statName];
+		uinfo.statBasic[statName] = result + unitType['rankStats'][uinfo.rank][i];
 	}
 	
 	// stat from friendships
@@ -1875,7 +1886,8 @@ function calculateStatBasic(uinfo) {
 	// general equipments, artifacts and relics
 	for (var i = 0; i < statNames.length; i++) {
 		var statName = statNames[i];
-		uinfo.statBasic[statName] += unitType['lv99geStats'][statName];
+		//uinfo.statBasic[statName] += unitType['lv99geStats'][statName];
+		uinfo.statBasic[statName] += unitType['geStats'][uinfo.rank][i];
 
 		uinfo.statBasic[statName] += uinfo['weapon']['item'][statName];
 		if (uinfo['weapon']['enhance'])
@@ -1905,7 +1917,8 @@ function calculateStatBasic(uinfo) {
 	var baseAgi = uinfo.statBasic['agi'];
 	uinfo.statBasic['agi'] += monoMathRound(baseAgi * uinfo.getPassiveTotalVal(2200114) / 100);
 	uinfo.statBasic['agi'] += uinfo.getPassiveTotalVal(2200113);
-	uinfo.statBasic['agi'] += monoMathRound(baseAgi * 12 / 100); // 674: Wild Agility (fix 12%)
+	if (uinfo.hasPassive(2200674))
+		uinfo.statBasic['agi'] += monoMathRound(baseAgi * 12 / 100); // 674: Wild Agility (fix 12%)
 	uinfo.statBasic['mrl'] += monoMathRound(uinfo.statBasic['mrl'] * uinfo.getPassiveTotalVal(2200116) / 100);
 	uinfo.statBasic['mrl'] += uinfo.getPassiveTotalVal(2200115);
 	

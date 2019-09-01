@@ -1539,6 +1539,8 @@ function popupCustomStat(uid) {
 		addExtraPassiveRow(passiveId, uinfo.extraPassives[passiveId]);
 	
 	var divRight = document.createElement('div');
+	divRight.appendChild(createHtmlNode('div', 'Level: <input id="lvCustom" class="inputStat" type="number" value="99" min="1" max="99">'));
+	//divRight.appendChild(document.createElement('br'));
 	divRight.appendChild(createTextNode('div', 'Additional Passives:'));
 	divRight.appendChild(ptable);
 	
@@ -1574,6 +1576,17 @@ function popupCustomStat(uid) {
 	content.appendChild(divFlex);
 	content.appendChild(divStat);
 	document.getElementById("modalDiv").style.display = "block";
+	
+	function updateCustomLv() {
+		var val = Number(document.getElementById('lvCustom').value);
+		if (val <= 0 || val > 99) val = 99;
+		uinfo.setLv(val);
+		uinfo.calculateStat();
+	}
+	
+	var ele = document.getElementById('lvCustom');
+	ele.value = uinfo.lv;
+	ele.oninput = updateCustomLv;
 	
 	function onToggleDisableResearch() {
 		uinfo.setDisableResearch(this.checked);
