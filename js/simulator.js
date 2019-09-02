@@ -958,7 +958,13 @@ function UserUnit(unit, id) {
 	
 	this.setLv = function(val) {
 		this.lv = val;
-		this.rank = Math.min(11, Math.trunc(val/7));
+		if (val > 80)
+			this.rank = 11;
+		else if (val > 60)
+			this.rank = 8;
+		else
+			this.rank = Math.trunc(val/7);
+		//this.rank = Math.min(11, Math.trunc(val/7));
 	};
 	this.setLv(99); // default all commander level to 99
 	
