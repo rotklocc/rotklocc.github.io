@@ -158,6 +158,17 @@ function missionText(info) {
 	else if (mission === 15) { // NoTreasure
 		return toLocalizes("전략보물 미착용", missionLangSep);
 	}
+	else if (mission === 16) { // LessCost
+		return toLocalizesFormat("{0} COST 미만으로 편성", count);
+	}
+	else if (mission === 17) { // ExcludeJob
+		var jobType = unitTypes[info['jobType']]['name'];
+		return toLocalizesFormat("{0} 미편성", missionLangSep, jobType);
+	}
+	else if (mission === 18) { // NoTreasureItemType
+		var itemType = itemTypes[info['treasureType']];
+		return toLocalizesFormat("{0} 미착용", missionLangSep, itemType);
+	}
 	
 	return null;
 }
