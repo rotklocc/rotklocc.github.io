@@ -30,6 +30,12 @@
 4200009 Bridge
 4200058 Vermilion Bird's Flame
 4200059 Vermilion Bird Temple Interior
+
+4200064	Arena
+4200065	Yellow Sun
+4200066	Green Mountain
+4200067	Azure Sky
+4200068	White Frost
 */
 var pvpMaps = [
 	{ name: '익주, 산지 전투', tiles: [4200005, 4200003] }, // mountain
@@ -37,13 +43,14 @@ var pvpMaps = [
 	{ name: '기주, 초원 전투', tiles: [4200001, 4200002] }, // grassland
 	{ name: '옹주, 사막 전투', tiles: [4200004, 4200032] }, // desert
 	{ name: '사주, 도성 전투', tiles: [4200017, 4200024] }, // castle
-	{ name: '양주, 장강 전투', tiles: [4200014, 4200011] },  // river
+	{ name: '양주, 장강 전투', tiles: [4200014, 4200011] }, // river
 	{ name: '난투', tiles: [4200060] } // Brawl
 ];
 var godMaps = [
 	{ name: '청룡', tiles: [4200053, 4200054, 4200009] },
 	{ name: '주작', tiles: [4200058, 4200059] },
 ];
+var arenaTiles = [ 4200064, 4200065, 4200066, 4200067, 4200068 ];
 
 // initial variables
 var tileOrders = []; // display order
@@ -178,6 +185,14 @@ function _isAllTilesChecked(tileIdArr) {
 	return true;
 }
 
+function _isAllMapsTilesChecked(maps) {
+	for (var i = 0; i < maps.length; i++) {
+		if (!_isAllTilesChecked(maps[i]['tiles']))
+			return false;
+	}
+	return true;
+}
+
 function _setColumnDisplay(tileId, visible) {
 	var colIdx = tileOrders.indexOf(tileId) + 1; // +1 to skip unit type column
 	var colDisplay = visible ? 'table-column' : 'none';
@@ -206,12 +221,18 @@ function onTileChange() {
 	var mapIdx = _findMapTileIndex(pvpMaps, tileId);
 	if (mapIdx !== -1) {
 		document.getElementById("mapP"+mapIdx).checked = _isAllTilesChecked(pvpMaps[mapIdx]['tiles']);
+		document.getElementById("gPvp").checked = _isAllMapsTilesChecked(pvpMaps);
 	}
 	else {
 		// check god map, now god map has no same tile in pvp map
 		mapIdx = _findMapTileIndex(godMaps, tileId);
 		if (mapIdx !== -1) {
 			document.getElementById("mapG"+mapIdx).checked = _isAllTilesChecked(godMaps[mapIdx]['tiles']);
+			document.getElementById("gRaid").checked = _isAllMapsTilesChecked(godMaps);
+		}
+		// check arena tiles
+		else if (arenaTiles.indexOf(tileId) !== -1) {
+			document.getElementById("gArena").checked = _isAllTilesChecked(arenaTiles);
 		}
 	}
 	
@@ -219,18 +240,50 @@ function onTileChange() {
 	_setColumnDisplay(tileId, this.checked);
 }
 
+function _setFilterTiles(tileIds, bVal) {
+	for (var j = 0; j < tileIds.length; j++) {
+		var tileId = tileIds[j];
+		if (filterTiles[tileId] !== bVal) {
+			document.getElementById("tile"+tileId).checked = bVal;
+			filterTiles[tileId] = bVal;
+			_setColumnDisplay(tileId, bVal);
+		}
+	}
+}
 
 function onMapChange() {
 	// Note: assume only pvp map or 4gods map
-	var maps = this.id.startsWith("mapP") ? pvpMaps : godMaps;
-	var tileIdArr = maps[this.value]['tiles'];
-	for (var i = 0; i < tileIdArr.length; i++) {
-		var tileId = tileIdArr[i];
-		if (filterTiles[tileId] !== this.checked) {
-			document.getElementById("tile"+tileId).checked = this.checked;
-			filterTiles[tileId] = this.checked;
-			_setColumnDisplay(tileId, this.checked);
+	var maps, gameChkboxId;
+	if (this.id.startsWith("mapP")) {
+		maps = pvpMaps;
+		gameChkboxId = 'gPvp';
+	}
+	else {
+		maps = godMaps;
+		gameChkboxId = 'gRaid';
+	}
+	_setFilterTiles(maps[this.value]['tiles'], this.checked);
+	document.getElementById(gameChkboxId).checked = _isAllMapsTilesChecked(maps);
+}
+
+function onGameModeChange(chkbox) {
+	// Note: assume only pvp, raid and arena (office battle)
+	var cid = chkbox.id;
+	var isChecked = chkbox.checked;
+	if (cid === 'gPvp') {
+		for (var i = 0; i < pvpMaps.length; i++) {
+			document.getElementById("mapP"+i).checked = chkbox.checked;
+			_setFilterTiles(pvpMaps[i]['tiles'], chkbox.checked);
 		}
+	}
+	else if (cid === 'gRaid') {
+		for (var i = 0; i < godMaps.length; i++) {
+			document.getElementById("mapG"+i).checked = chkbox.checked;
+			_setFilterTiles(godMaps[i]['tiles'], chkbox.checked);
+		}
+	}
+	else if (cid === 'gArena') {
+		_setFilterTiles(arenaTiles, chkbox.checked);
 	}
 }
 
@@ -324,6 +377,10 @@ function checkSelectValues() {
 		appendCheckBoxAndLabel(grp, tileId, "tile"+tileId, onTileChange, filterTiles[tileId], "txtT"+tileId, toLocalize(tile));
 		i++;
 	}
+	
+	document.getElementById('gPvp').checked = true;
+	document.getElementById('gRaid').checked = false;
+	document.getElementById('gArena').checked = false;
 }
 
 var tableHdrBar;
@@ -351,6 +408,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	<div class="topbar-left">
 		Quick Unit Type Filter: <input type="text" id="filterTxt" tabindex="1" oninput="doFilter()" />
 		&nbsp; <button tabindex="2" onclick="popupFilter()">Filter Terrains</button>
+		<input type="checkbox" id="gPvp" onchange="onGameModeChange(this)"><label id="txtGPvg" for="gPvp">PvP</label>
+		<input type="checkbox" id="gRaid" onchange="onGameModeChange(this)"><label id="txtGRaid" for="gRaid">4 Gods</label>
+		<input type="checkbox" id="gArena" onchange="onGameModeChange(this)"><label id="txtGArena" for="gArena">Officer Battle</label>
 	</div>
 	<div class="topbar-right" id="langSelection"></div>
 </div>
