@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Officer Battle (Stage Detail)</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/magic.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
+<script type="text/javascript" src="imgs/artifact.js"></script>
+<script type="text/javascript" src="imgs/face.js"></script>
+<script type="text/javascript" src="js/arena.js"></script>
+<script type="text/javascript" src="js/arenaCommon.js"></script>
+<script type="text/javascript">
+var stage = arenaStages[0];
+var selEnemyIdx = -1;
+var selUnitIdx = [ 0, 0, 0, 0, 0 ]; // the unit index in each position
+var selUnitItem = new Array(5); // the unit items in each position (will be initialized)
+
+function getStageFromUrl() {
+	var url = window.location.href;
+	var parts = url.split('?');
+	if (parts.length === 1)
+		return; // no argument. do nothing
+	var stageId = 0;
+	var paramTxt = parts[1].split('#')[0];
+	var paramArr = paramTxt.split('&');
+	for (var i = 0; i < paramArr.length; i++) {
+		parts = paramArr[i].split('=');
+		if (parts[0] === "id") {
+			stageId = Number(parts[1]);
+		}
+	}
+	
+	for (var i = 0; i < arenaStages.length; i++) {
+		if (stageId === arenaStages[i]['id']) {
+			stage = arenaStages[i];
+			break;
+		}
+	}
+}
+
+function popupSelectEnemyUnit() {
+	var unitInfo = stage['npcs'][selEnemyIdx];
+	var unitIds = unitInfo['unit'];
+	var selectedSpan;
+	
+	var divFlex = document.createElement("div");
+	divFlex.style.display = 'flex';
+	
+	var divLeft = document.createElement("div");
+	divLeft.style.minWidth = "205px";
+	for (var i = 0; i < unitIds.length; i++) {
+		if (i > 0 && (i % 4) === 0)
+			divLeft.appendChild(document.createElement("br"));
+		var unit = arenaUnits[unitIds[i]];
+		var span = _createUnitSmallFaceSpan(unit['face'], 'absInside frame-selectable');
+		if (i === selUnitIdx[selEnemyIdx]) {
+			span.classList.add('frame-selected');
+			selectedSpan = span;
+		}
+		span.unitIdx = i;
+		span.unit = unit;
+		span.onclick = onSelectEnemyUnit;
+		divLeft.appendChild(span);
+	}
+	
+	var divRight = document.createElement("div");
+	divRight.innerHTML = _getUnitInfoHtml(arenaUnits[unitIds[selectedSpan.unitIdx]]);
+	
+	divFlex.appendChild(divLeft);
+	divFlex.appendChild(divRight);
+	
+	function onSelectEnemyUnit() {
+		if (this === selectedSpan) {
+			document.getElementById("modalDiv").style.display = "none";
+			return;
+		}
+		selectedSpan.classList.remove("frame-selected");
+		this.classList.add("frame-selected");
+		selectedSpan = this;
+		selUnitIdx[selEnemyIdx] = this.unitIdx;
+		divRight.innerHTML = _getUnitInfoHtml(arenaUnits[unitIds[this.unitIdx]]);
+		// update face
+		setBackgroundPosition('npcface', faceImgs[this.unit['face']]);
+		setBackgroundPosition('fpos'+unitInfo['tileIndex'], faceImgs[this.unit['face']]);
+	}
+
+	document.getElementById("modalHeader").innerHTML = "<div style='height:1px'></div>";
+	var content = document.getElementById("modalContent");
+	content.innerHTML = '';
+	content.appendChild(divFlex);
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+var slotNames = { 4: 'weapon', 5: 'armor', 6: 'kit' }; // artifact slot name
+var statNames = [ 'atk', 'wis', 'def', 'agi', 'mrl' ]; // stat name
+function popupSelectArtifact(slotNo) {
+	var unitInfo = stage['npcs'][selEnemyIdx];
+	var npcTreasureId = unitInfo[slotNames[slotNo]];
+	if (npcTreasureId === 0)
+		return;
+	var itemIds = arenaNPCTreasures[npcTreasureId];
+	var selectedItem = selUnitItem[selEnemyIdx][slotNo-4];
+	var selectedSpan;
+	
+	var divFlex = document.createElement("div");
+	divFlex.style.display = 'flex';
+	
+	var divLeft = document.createElement("div");
+	divLeft.style.minWidth = "205px";
+	for (var i = 0; i < itemIds.length; i++) {
+		if (i > 0 && (i % 7) === 0)
+			divLeft.appendChild(document.createElement("br"));
+		var item = arenaArtifacts[itemIds[i]];
+		var icon = artifactIcons[item['icon']];
+		var imgSpan = document.createElement("span");
+		imgSpan.className = "artifact frame-selectable";
+		if (item === selectedItem) {
+			imgSpan.classList.add("frame-selected");
+			selectedSpan = imgSpan;
+		}
+		imgSpan.style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
+		imgSpan.item = item;
+		imgSpan.onclick = onSelectArtifact;
+		divLeft.appendChild(imgSpan);
+	}
+	
+	// Note: modified from simulator.html
+	var divRight = document.createElement("div");
+	var span = createHtmlNode('span', '<b>'+toLocalizes(item['name'], ' ')+'</b>', 'artiName');
+	divRight.appendChild(span);
+	divRight.appendChild(document.createElement("br"));
+	divRight.appendChild(createHtmlNode('span', '<b>Star</b>: '+item['tier'], 'artiTier'));
+	divRight.appendChild(document.createElement("br"));
+	var statTable = '<table id="itemStatTable" class="stats"><tr><th>ATK</th><th>WIS</th><th>DEF</th><th>AGI</th><th>MRL</th></tr>';
+	statTable += '<tr><td></td><td></td><td></td><td></td><td></td></tr></table>';
+	divRight.appendChild(createHtmlNode('p', statTable));
+	var divPassives = document.createElement("div");
+	divPassives.id = 'artiPassives'
+	divRight.appendChild(divPassives);
+	
+	divFlex.appendChild(divLeft);
+	divFlex.appendChild(divRight);
+	
+	function updateArtifactStat() {
+		var item = selectedSpan.item;
+		var cells = document.getElementById('itemStatTable').rows[1].cells;
+		for (var i = 0; i < statNames.length; i++) {
+			var statName = statNames[i];
+			var val = item[statName];
+			cells[i].innerText = val;
+		}
+	}
+	
+	function updateArtifactInfo() {
+		var item = selectedSpan.item;
+		
+		document.getElementById('artiName').innerHTML = '<b>'+toLocalizes(item['name'], ' ')+'</b>';
+		document.getElementById('artiTier').innerHTML = '<b>Star</b>: '+item['tier'];
+		
+		var html = '';
+		if (item["passive"].length > 0) {
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(item['passive'][0], item['passiveVal'][0]));
+			html += "<p style='height:30px'>" + iconHtml + localizePassiveName(item['passive'][0], item['passiveVal'][0]) + "</p>";
+		}
+		if (item["passive"].length > 1) {
+			var iconHtml = makePreTxtIconHtml(getPassiveIconHtml(item['passive'][1], item['passiveVal'][1]));
+			html += "<p>" + iconHtml + localizePassiveName(item['passive'][1], item['passiveVal'][1]) + "</p>";
+		}
+		document.getElementById('artiPassives').innerHTML = html;
+		updateArtifactStat();
+	}
+	
+	function onSelectArtifact() {
+		if (this === selectedSpan) {
+			document.getElementById("modalDiv").style.display = "none";
+			return;
+		}
+		selectedSpan.classList.remove("frame-selected");
+		this.classList.add("frame-selected");
+		selectedSpan = this;
+		selUnitItem[selEnemyIdx][slotNo-4] = this.item;
+		updateArtifactInfo();
+		// update item pic
+		setBackgroundPosition('npcs'+slotNo, artifactIcons[this.item['icon']]);
+	}
+
+	document.getElementById("modalHeader").innerHTML = "<div style='height:1px'></div>";
+	var content = document.getElementById("modalContent");
+	content.innerHTML = '';
+	content.appendChild(divFlex);
+	document.getElementById("modalDiv").style.display = "block";
+	
+	updateArtifactInfo();
+}
+
+function onLangChanged() {
+	document.getElementById("mapName").innerHTML = toLocalize(tiles[stage['tile']]);
+	displayEnemyDetail(stage, selEnemyIdx);
+}
+
+function setBackgroundPosition(eleId, icon) {
+	document.getElementById(eleId).style.backgroundPosition = "-"+icon[0]+"px -"+icon[1]+"px";
+}
+
+function setArtifactPic(slotNo, item) {
+	var ele = document.getElementById('npcs'+slotNo);
+	if (item === null) {
+		ele.classList.remove('artifact', 'clickable');
+		ele.classList.add('passive');
+		setBackgroundPosition('npcs'+slotNo, passiveIcons['spAction_Bg']);
+	}
+	else {
+		ele.classList.remove('passive');
+		ele.classList.add('artifact', 'clickable');
+		setBackgroundPosition('npcs'+slotNo, artifactIcons[item['icon']]);
+	}
+}
+
+function displayEnemyDetail(stage, enemyNo) {
+	var unitInfo = stage['npcs'][enemyNo];
+	var unit = arenaUnits[unitInfo['unit'][selUnitIdx[enemyNo]]];
+	setBackgroundPosition('npcface', faceImgs[unit['face']]);
+	document.getElementById('npcOrder').innerText = unitInfo['order'];
+	
+	setArtifactPic(4, selUnitItem[enemyNo][0]);
+	setArtifactPic(5, selUnitItem[enemyNo][1]);
+	setArtifactPic(6, selUnitItem[enemyNo][2]);
+
+	var tbody = document.getElementById("listPasiveBody");
+	tbody.innerHTML = "";
+	for (var i = 0; i < unitInfo['passive'].length; i++) {
+		var plist = arenaPassiveLists[unitInfo['passive'][i]];
+		var passive = passives[plist['passiveId']];
+		var tr = document.createElement("tr");
+		var td = createTdHtmlNode(getPassiveListIconHtml(plist, 'frame-blue'));
+		td.className = "img";
+		tr.appendChild(td);
+		
+		// TODO: terrain adv modifier passive detail
+		td = createTdHtmlNode('<b>'+localizePassiveListName(plist, ' &nbsp;') + '</b><br/>' + localizePassiveListDesc(plist));
+		tr.appendChild(td);
+		tbody.appendChild(tr);
+	}
+}
+
+function _onSelectEnemyIdx() {
+	selEnemyIdx = this.enemyIdx;
+	displayEnemyDetail(stage, selEnemyIdx);
+}
+
+function displayEnemyFormation(stage) {
+	var table = document.getElementById('formation');
+	
+	for (var i = 0; i < stage['npcs'].length; i++) {
+		var enemyInfo = stage['npcs'][i];
+		if (enemyInfo === 0)
+			continue;
+		var unitId = enemyInfo['unit'][0]; // pick the first one
+		var unit = arenaUnits[unitId];
+		var span = _createUnitSmallFaceSpan(unit['face'], 'absInside');
+		span.firstChild.id = 'fpos' + enemyInfo['tileIndex']; // set id of child span for updating face
+		span.enemyIdx = i;
+		span.onclick = _onSelectEnemyIdx;
+		var orderSpan = document.createElement('span');
+		orderSpan.className = 'turnOrderTxt';
+		orderSpan.innerText = enemyInfo['order'];
+		span.appendChild(orderSpan);
+		var rowIdx = Math.floor(enemyInfo['tileIndex'] / 3);
+		var colIdx = enemyInfo['tileIndex'] % 3;
+		table.rows[rowIdx].cells[colIdx].appendChild(span);
+	}
+}
+
+function displayGlobalPassives(stage) {
+	var ele = document.getElementById('gPassives');
+	for (var j = 0; j < stage['gPassive'].length; j++) {
+		ele.appendChild(_createGlobalPassiveSpan(stage['gPassive'][j]));
+	}
+}
+
+function initStageUnitInfo() {
+	selEnemyIdx = stage['leaderNo'];
+	for (var i = 0; i < stage['npcs'].length; i++) {
+		var enemyInfo = stage['npcs'][i];
+		if (enemyInfo === 0) {
+			selUnitItem[i] = null;
+			continue;
+		}
+		selUnitItem[i] = new Array(3);
+		selUnitItem[i][0] = (enemyInfo['weapon'] === 0) ? null : arenaArtifacts[arenaNPCTreasures[enemyInfo['weapon']][0]];
+		selUnitItem[i][1] = (enemyInfo['armor'] === 0) ? null : arenaArtifacts[arenaNPCTreasures[enemyInfo['armor']][0]];
+		selUnitItem[i][2] = (enemyInfo['kit'] === 0) ? null : arenaArtifacts[arenaNPCTreasures[enemyInfo['kit']][0]];
+	}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	getStageFromUrl();
+	
+	setLangChangeCallback(onLangChanged);
+	
+	initStageUnitInfo();
+	document.getElementById("mapName").innerHTML = toLocalize(tiles[stage['tile']]);
+	displayEnemyFormation(stage);
+	displayGlobalPassives(stage);
+	displayEnemyDetail(stage, selEnemyIdx);
+	
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight+20) + "px";
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+	<div class="topbar-left">
+		<button onclick="_popupStageInfo(stage)">Stage Info</button>
+		Map: <span id="mapName"></span>
+	</div>
+	<div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+</div>
+
+<div id="content">
+
+<div style="display:flex;">
+
+<div style="min-width:220px"> <!-- left panel -->
+<div>
+<b>Layout:</b>
+<table id="formation" class="arenaFormation">
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td></tr>
+</table>
+</div>
+
+<div style="margin-top:10px">
+<b>Global Passives:</b>
+<div id="gPassives"></div>
+</div>
+</div>
+
+<!-- enemy detail -->
+<div>
+<span id="npcface" class="face clickable frame-face absInside" onclick="popupSelectEnemyUnit()"><span id="npcOrder" class="turnOrderTxt">0</span></span>
+<span id="npcs4" class="frame-red" onclick="popupSelectArtifact(4)"></span>
+<span id="npcs5" class="frame-red" onclick="popupSelectArtifact(5)"></span>
+<span id="npcs6" class="frame-red" onclick="popupSelectArtifact(6)"></span>
+
+<div id="listPassive">
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col style="width:42px"/>
+	<col/>
+  </colgroup>
+  <tbody id="listPasiveBody">
+  </tbody>
+</table>
+</div>
+</div>
+
+</div> <!-- flex -->
+
+</div>
+
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+	  <span id="closeModal" class="close">&times;</span>
+	  <h2 id="modalHeader">Modal Header</h2>
+	</div>
+	<div class="modal-body">
+	  <p id="modalContent"></p>
+	</div>
+  </div>
+</div>
+</body>
+</html>

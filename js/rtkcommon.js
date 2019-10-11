@@ -162,6 +162,10 @@ function localizePassiveName(passiveId, val, sep="<br/>", biLang=true, showVal=t
 	return txt
 }
 
+function localizePassiveListName(passiveList, sep="<br/>", biLang=true, showVal=true) {
+	return localizePassiveName(passiveList['passiveId'], passiveList['val'], sep, biLang, showVal);
+}
+
 function getPassiveDescSimple(passiveId, passiveVal, langId) {
 	var desc;
 	if (passiveId == 2200005) // Expand AoE
@@ -251,6 +255,7 @@ function getHtmlPassiveDesc(passiveId, passiveVal) {
 function getHtmlPassiveListDesc(passiveList, hasStackInfo=true) {
 	var passiveId = passiveList['passiveId'];
 	var passive = passives[passiveId];
+	var parentPassive = passive['parentId'] ? passives[passive['parentId']] : passive;
 	
 	var txt = "";
 	if (hasStackInfo)
@@ -265,8 +270,8 @@ function getHtmlPassiveListDesc(passiveList, hasStackInfo=true) {
 		txt += '<p>' + getShapeHtml(passiveList["val"], true) + '</p>';
 	}
 	
-	if ('tileAdvs' in passive) {
-		txt += '<p>' + getTileAdvHtml(passive['tileAdvs']) + '</p>';
+	if ('tileAdvs' in parentPassive) {
+		txt += '<p>' + getTileAdvHtml(parentPassive['tileAdvs']) + '</p>';
 	}
 	
 	return txt;
@@ -398,6 +403,7 @@ function createSideBarMenu() {
 	html += '<a href="relicPassives.html">Relic Passives</a>';
 	html += '<a href="relicSets.html">Relic Sets</a>';
 	html += '<br/>';
+	html += '<a href="arenaStages.html">Officer Battle</a>';
 	html += '<a href="stories.html">Stories</a>';
 	html += '<a href="friendships.html">Friendships</a>';
 	html += '<br/>';
@@ -507,4 +513,152 @@ function getRelationTriggerText(triggerType, unitCount, biLang=true) {
 			html = toLocalizes('{0}명 이상 인접 시 발동', '<br/>', biLang).format(unitCount);
 	}
 	return html;
+}
+
+function toLocalizeStoryVictoryTexts(txts) {
+	var lines = [];
+	if (txts !== '') {
+		var txt = txts[selLang];
+		if (txt === '')
+			txt = txts[0];
+		lines = txt.split("\n");
+		
+		if (selLang2 !== -1) {
+			txt = txts[selLang2];
+			if (txt === '')
+				txt = txts[0];
+			lines2 = txt.split("\n");
+			// use line2.length because some translation language is wrong (new line is removed)
+			for (var i = 0; i < lines2.length; i++)
+				lines[i] += " &nbsp; " + lines2[i].substr(2); // remove number order
+		}
+	}
+	return lines;
+}
+
+function toLocalizeFormat(tkey, localizeFn, params) {
+	var args = []
+	// localize all string params
+	for (var i = 0; i < params.length; i++) {
+		if (typeof params[i] === 'string' || params[i] instanceof String)
+			args.push(localizeFn(params[i]));
+		else
+			args.push(params[i]);
+	}
+	var fmt = localizeFn(tkey);
+	return fmt.format.apply(fmt, args);
+}
+
+function toLocalizesFormat(tkey, langSep, ...params) {
+	var txt = toLocalizeFormat(tkey, toLocalize, params);
+	if (selLang2 !== -1) {
+		txt += langSep + toLocalizeFormat(tkey, toLocalize2, params);
+	}
+	return txt;
+}
+
+function missionText(info, unitsInfo, langSep) {
+	var mission = info['mission'];
+	var unit1 = ('unitId01' in info) ? unitsInfo[info['unitId01']] : 0;
+	var unit2 = ('unitId02' in info) ? unitsInfo[info['unitId02']] : 0;
+	var unit3 = ('unitId03' in info) ? unitsInfo[info['unitId03']] : 0;
+	var forceType = ('forceType' in info) ? forceTypes[info['forceType']] : forceTypes[0];
+	var count = info['count'] || 0;
+	var limitTurn = info['limitTurn'] || 0;
+	
+	if (mission === 0) { // Win
+		if (limitTurn > 0) {
+			return toLocalizes("{0}턴 이내 전투 승리", langSep).format(limitTurn);
+		}
+		return toLocalizes("전투 승리", langSep);
+	}
+	else if (mission === 1) { // EntryCount
+		return toLocalizes("출진 장수 {0}인 이하", langSep).format(count);
+	}
+	else if (mission === 2) { // DuelCount
+		if (limitTurn > 0)
+			return toLocalizes("{0}턴 이내 일기토 {1}회 이상 진행", langSep).format(limitTurn, count);
+		return toLocalizes("일기토 {0}회 이상 진행", langSep).format(count);
+	}
+	else if (mission === 3) { // Duel
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1}VS{2} 일기토 진행", langSep, limitTurn, unit1, unit2);
+		return toLocalizesFormat("{0}VS{1} 일기토 진행", langSep, unit1, unit2);
+	}
+	else if (mission === 4) { // Meet
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1}, {2}의 대화", langSep, limitTurn, unit1, unit2);
+		return toLocalizesFormat("{0}, {1}의 대화", langSep, unit1, unit2);
+	}
+	else if (mission === 5) { // Kill
+		if (limitTurn > 0) {
+			if (unit3 !== 0)
+				return toLocalizesFormat("{0}턴 이내 {1},{2},{3} 퇴각", langSep, limitTurn, unit1, unit2, unit3);
+			if (unit2 !== 0)
+				return toLocalizesFormat("{0}턴 이내 {1},{2} 퇴각", langSep, limitTurn, unit1, unit2);
+			return toLocalizesFormat("{0}턴 이내 {1} 퇴각", langSep, limitTurn, unit1);
+		}
+		if (unit3 !== 0)
+			return toLocalizesFormat("{0},{1},{2} 퇴각", langSep, unit1, unit2, unit3);
+		if (unit2 !== 0)
+			return toLocalizesFormat("{0},{1} 퇴각", langSep, unit1, unit2);
+		return toLocalizesFormat("{0} 퇴각", langSep, unit1);
+	}
+	else if (mission === 6) { // KillTarget
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1}이(가) {2} 처치", langSep, limitTurn, unit1, unit2);
+		return toLocalizesFormat("{0}이(가) {1} 처치", langSep, unit1, unit2);
+	}
+	else if (mission === 7) { // KillCount
+		if (limitTurn > 0)
+			return toLocalizesFormat("{0}턴 이내 {1} {2}부대 이상 퇴각", langSep, limitTurn, forceType, count);
+		return toLocalizesFormat("{0} {1}부대 이상 퇴각", langSep, forceType, count);
+	}
+	else if (mission === 8) { // KillAll
+		return toLocalizesFormat("{0} 전원 퇴각", langSep, forceType);
+	}
+	else if (mission === 9) { // Survive
+		if (unit3 !== 0)
+			return toLocalizesFormat("{0},{1},{2} 생존", langSep, unit1, unit2, unit3);
+		if (unit2 !== 0)
+			return toLocalizesFormat("{0},{1} 생존", langSep, unit1, unit2);
+		return toLocalizesFormat("{0} 생존", langSep, unit1);
+	}
+	else if (mission === 10) { // SurviveAll
+		return toLocalizesFormat("{0} 전원 생존", langSep, forceType);
+	}
+	else if (mission === 11) { // SurviveCount
+		return toLocalizesFormat("{0} {1}부대 미만 퇴각", langSep, forceType, count);
+	}
+	else if (mission === 13) { // NoPocket
+		return toLocalizes("주머니 미착용", langSep);
+	}
+	else if (mission === 14) { // NoConsumables
+		return toLocalizes("소모품 미사용", langSep);
+	}
+	else if (mission === 15) { // NoTreasure
+		return toLocalizes("전략보물 미착용", langSep);
+	}
+	else if (mission === 16) { // LessCost
+		return toLocalizesFormat("{0} COST 미만으로 편성", langSep, count);
+	}
+	else if (mission === 17) { // ExcludeJob
+		var jobType = unitTypes[info['jobType']]['name'];
+		return toLocalizesFormat("{0} 미편성", langSep, jobType);
+	}
+	else if (mission === 18) { // NoTreasureItemType
+		var itemType = itemTypes[info['treasureType']];
+		return toLocalizesFormat("{0} 미착용", langSep, itemType);
+	}
+	
+	return null;
+}
+
+function missionsHtml(missionIds, unitsInfo, langSep=' &nbsp; ') {
+	var txts = [];
+	for (var i = 0; i < missionIds.length; i++) {
+		missionInfo = missions[missionIds[i]];
+		txts.push('- ' + missionText(missionInfo, unitsInfo, langSep));
+	}
+	return txts.join('<br/>');
 }

@@ -1,7 +1,6 @@
 var attrNames = [ 'str', 'int', 'cmd', 'dex', 'lck' ]; // attribute name
 var statNames = [ 'atk', 'wis', 'def', 'agi', 'mrl' ]; // stat name
 var slotNames = { 4: 'weapon', 5: 'armor', 6: 'kit' }; // artifact slot name
-var weatherNames = [ '맑음', '흐림', '비', '연환뢰', '눈' ]; // Sun, Clouds, Rain, Thunderstorm, Snow
 
 var banTactics = [ 2000010, 2000015, 2000022, 2000078, 2000079, 2000090, 2000094, 2000099, 2000110 ];
 var epTactics = [ 2000120, 2000121, 2000122 ];

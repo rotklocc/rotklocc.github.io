@@ -532,7 +532,7 @@ function _popupPassiveInfo(passiveId, passiveVal) {
 	var passive = passives[passiveId];
 	var hdr = makePreTxtIconHtml(getPassiveIconHtml(passiveId, passiveVal)) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
 	document.getElementById("modalHeader").innerHTML = hdr;
-	document.getElementById("modalContent").innerHTML = getHtmlPassiveDesc(passiveId, passiveVal);
+	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveId, passiveVal);
 	document.getElementById("modalDiv").style.display = "block";
 }
 
@@ -2304,7 +2304,7 @@ function createWeatherSelection() {
 	var eleSel = document.getElementById('weather');
 	eleSel.innerHTML = '';
 	var mapWeather = getCurrentMapInfo().weather;
-	for (var i = 0; i < weatherNames.length; i++) {
+	for (var i = 0; i < mapWeather.length; i++) {
 		var pct = mapWeather[i];
 		if (pct !== 0)
 			eleSel.add(createOptionNode(toLocalize(weatherNames[i]) + ' (' + pct + '%)', i));
@@ -2857,7 +2857,7 @@ function applyCodeFromUrl() {
 	var parts = url.split('?');
 	if (parts.length === 1)
 		return; // no argument. do nothing
-	var paramTxt = parts[1];
+	var paramTxt = parts[1].split('#')[0];
 	var paramArr = paramTxt.split('&');
 	for (var i = 0; i < paramArr.length; i++) {
 		parts = paramArr[i].split('=');

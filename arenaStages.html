@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link href="style.css" rel="stylesheet" type="text/css">
+<title>ROTK LoCC - Officer Battle (Stages)</title>
+<script type="text/javascript" src="js/localizes.js"></script>
+<script type="text/javascript" src="js/data.js"></script>
+<script type="text/javascript" src="js/rtkcommon.js"></script>
+<script type="text/javascript" src="js/utils.js"></script>
+<script type="text/javascript" src="imgs/magic.js"></script>
+<script type="text/javascript" src="imgs/passive.js"></script>
+<script type="text/javascript" src="imgs/artifact.js"></script>
+<script type="text/javascript" src="imgs/face.js"></script>
+<script type="text/javascript" src="js/arena.js"></script>
+<script type="text/javascript" src="js/arenaCommon.js"></script>
+<script type="text/javascript">
+var displayLv = 0;
+var filterTile = 0;
+
+function popupStageInfo(td) {
+	_popupStageInfo(td.parentElement.stage);
+}
+
+function _popupCommander() {
+	var unit = this.unit;
+	
+	var faceHtml = makePreTxtIconHtml('<span class="face-mini frame-blue">' + getFaceIconHtml(unit['face']) + '</span>');
+	document.getElementById("modalHeader").innerHTML = faceHtml + toLocalizes(unit['name'], " &nbsp; ");
+	
+	document.getElementById("modalContent").innerHTML = _getUnitInfoHtml(unit);
+	document.getElementById("modalDiv").style.display = "block";
+}
+
+function doFilter() {
+	var txt = document.getElementById("filterTxt").value.trim();
+	doFilter2(txt);
+}
+
+function doFilter2(txt) {
+	txt = txt.trim();
+	
+	for (var i = 0; i < arenaStages.length; i++) {
+		var stage = arenaStages[i];
+		var tr = document.getElementById(stage['id']);
+		
+		if (displayLv !== 0 && displayLv !== stage['lv']) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		if (filterTile !== 0 && filterTile !== stage['tile']) {
+			tr.style.display = "none";
+			continue;
+		}
+		
+		if (txt === "") {
+			tr.style.display = "";
+			continue;
+		}
+		
+		if (inLocalizeText(stage["name"], txt)) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		leaderUnitIds = stage['npcs'][stage['leaderNo']]['unit'];
+		var found = false;
+		for (var j = 0; j < leaderUnitIds.length; j++) {
+			if (inLocalizeText(arenaUnits[leaderUnitIds[j]]['name'], txt)) {
+				found = true;
+				break;
+			}
+		}
+		if (found) {
+			tr.style.display = "";
+			continue;
+		}
+		
+		tr.style.display = "none";
+	}
+}
+
+function filterStage(idx) {
+	displayLv = Number(idx);
+	doFilter();
+}
+
+function filterMap(tileId) {
+	filterTile = Number(tileId);
+	doFilter();
+}
+
+function generateTableRows() {
+	var tbody = document.getElementById("cbody");
+	tbody.innerHTML = "";
+	
+	for (var i = 0; i < arenaStages.length; i++) {
+		var stage = arenaStages[i];
+		var tr = document.createElement("tr");
+		tr.id = stage['id'];
+		tr.stage = stage;
+		
+		tr.appendChild(createTdTextNode(stage['lv']));
+		
+		tr.appendChild(createTdHtmlNode('<span class="info" onclick="popupStageInfo(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(stage['name']) + '</span>'));
+		
+		// possible leader faces
+		leaderUnitIds = stage['npcs'][stage['leaderNo']]['unit'];
+		var td = document.createElement('td');
+		for (var j = 0; j < leaderUnitIds.length; j++) {
+			var unit = arenaUnits[leaderUnitIds[j]];
+			var span = _createUnitSmallFaceSpan(unit['face'], 'frame-blue');
+			span.style.marginRight = "3px";
+			span.unit = unit;
+			span.onclick = _popupCommander;
+			td.appendChild(span);
+		}
+		tr.appendChild(td);
+		
+		tr.appendChild(createTdHtmlNode(toLocalizes(tiles[stage['tile']])));
+		tr.appendChild(createTdHtmlNode(weatherIds2Names(stage['weather'])));
+		
+		td = document.createElement('td');
+		for (var j = 0; j < stage['gPassive'].length; j++)
+			td.appendChild(_createGlobalPassiveSpan(stage['gPassive'][j]));
+		tr.appendChild(td);
+		
+		tr.appendChild(createTdHtmlNode('<a href="arenaStageDetail.html?id='+stage['id']+'">Detail</a>'));
+		
+		tbody.appendChild(tr);
+	}
+
+	doFilter();
+}
+
+function onLangChanged() {
+	setFilterMapText();
+	
+	var table = document.getElementById("table-content");
+	var rows = table.rows;
+	var nrow = rows.length;
+	
+	for (var i = 0; i < nrow; i++) {
+		var tr = rows[i];
+		var cells = tr.cells;
+		var stage = tr.stage;
+		
+		cells[1].lastChild.innerHTML = toLocalizes(stage['name']);
+		cells[3].innerHTML = toLocalizes(tiles[stage['tile']]);
+		cells[4].innerHTML = weatherIds2Names(stage['weather']);
+	}
+}
+
+function setFilterMapText() {
+	var sel = document.getElementById('filterMap');
+	for (var i = 1; i < sel.length; i++)
+		sel[i].innerText = toLocalize(tiles[Number(sel[i].value)]);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	rtkWebCommonInit();
+	
+	setLangChangeCallback(onLangChanged);
+	setFilterMapText();
+	displayLv = Number(document.getElementById('filterLv').value);
+	filterTile = Number(document.getElementById('filterMap').value);
+	
+	generateTableRows();
+	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";
+}, false);
+</script>
+</head>
+
+<body>
+<div id="searchBar">
+<div id="filterTool" class="topbar">
+  <div class="topbar-left">
+    Filter: <input type="text" id="filterTxt" oninput="doFilter()" />
+    Lv: <select id="filterLv" onchange="filterStage(this.value)"><option value="0">All</option>
+      <option value="1">1</option><option value="2">2</option>
+      <option value="3">3</option><option value="4">4</option>
+      <option value="5">5</option><option value="6">6</option>
+      <option value="7">7</option><option value="8">8</option>
+      <option value="9">9</option><option value="10">10</option>
+      <option value="11">11</option><option value="12">12</option>
+    </select>
+    Map: <select id="filterMap" onchange="filterMap(this.value)"><option value="0">All</option>
+      <option value="4200064">Arena</option>
+      <option value="4200065">Yellow Sun</option>
+      <option value="4200066">Green Mountain</option>
+      <option value="4200067">Azure Sky</option>
+      <option value="4200068">White Frost</option>
+    </select>
+  </div>
+  <div class="topbar-right" id="langSelection"></div>
+</div>
+
+<div id="advanceTool" style="padding-top: 5px">
+</div>
+
+<div class="table-header" style="padding-top: 5px">
+<table class="table-container">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:270px"/>
+	<col/>
+	<col style="width:130px"/>
+	<col style="width:160px"/>
+	<col style="width:200px"/>
+	<col style="width:55px"/>
+  </colgroup>
+  <thead>
+	<tr>
+	  <th>Lv</th>
+	  <th>Name</th>
+	  <th>Possible Leaders</th>
+	  <th>Map</th>
+	  <th>Weather</th>
+	  <th>Global Passive</th>
+	  <th></th>
+	</tr>
+  </thead>
+</table>
+</div>
+
+</div>
+
+<div id="content">
+<table id="table-content" class="table-container">
+  <colgroup>
+	<col style="width:40px"/>
+	<col style="width:270px"/>
+	<col/>
+	<col style="width:130px"/>
+	<col style="width:160px"/>
+	<col style="width:200px"/>
+	<col style="width:55px"/>
+  </colgroup>
+  <tbody id="cbody">
+  </tbody>
+</table>
+</div>
+
+
+<!-- Modal box -->
+<div id="modalDiv" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+	  <span id="closeModal" class="close">&times;</span>
+	  <h2 id="modalHeader">Modal Header</h2>
+	</div>
+	<div class="modal-body">
+	  <p id="modalContent"></p>
+	</div>
+  </div>
+</div>
+</body>
+</html>

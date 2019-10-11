@@ -515,6 +515,10 @@ span.resultDmg {
   border: 1px solid #666;
 }
 
+.frame-green {
+  border: 1px solid green;
+}
+
 .frame-face {
   border: 2px solid blue;
 }
@@ -541,6 +545,18 @@ span.absInside {
   font-size: 11px;
   top: 0px;
   right: 2px;
+}
+
+.turnOrderTxt {
+  position: absolute;
+  color: white;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 14px;
+  background-color: red;
+  top: 0px;
+  right: 0px;
+  padding: 0 1px 0 0;
 }
 
 /* sprite image */
@@ -643,6 +659,17 @@ span.face-mini {
 
 span.face-mini span {
   transform: scale(0.5);
+}
+
+span.face-small {
+  display: inline-block;
+  width: 60px;
+  height: 61.5px;
+  overflow: hidden;
+}
+
+span.face-small span {
+  transform: scale(0.75);
 }
 
 span.icon-pretxt {
@@ -975,4 +1002,17 @@ td.relationTrigger:after {
   -webkit-transform: rotate(45deg);
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
+}
+
+table.arenaFormation {
+  cellspacing: 10px;
+  border: none
+}
+
+table.arenaFormation td {
+  width: 60px;
+  height: 65.5px;
+  padding: 3px 0 0 0;
+  border: 1.5px solid #888;
+  background-color: #fefeed;
 }
