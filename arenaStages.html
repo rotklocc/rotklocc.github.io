@@ -119,7 +119,11 @@ function generateTableRows() {
 		tr.appendChild(td);
 		
 		tr.appendChild(createTdHtmlNode(toLocalizes(tiles[stage['tile']])));
-		tr.appendChild(createTdHtmlNode(weatherIds2Names(stage['weather'])));
+		var txt = weatherIds2Names(stage['weather']);
+		if (Object.keys(stage['weatherFix']).length !== 0) {
+			txt += '<span class="info" onclick="popupStageInfo(this.parentNode)">&CirclePlus;</span>';
+		}
+		tr.appendChild(createTdHtmlNode(txt));
 		
 		td = document.createElement('td');
 		for (var j = 0; j < stage['gPassive'].length; j++)
