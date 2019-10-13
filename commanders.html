@@ -47,9 +47,8 @@ function popupPrefect(td) {
 
 function popupPassive(td) {
 	var passiveList = td.passiveList;
-	var passive = passives[passiveList['passiveId']];
 	
-	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveListIconHtml(passiveList, 'frame-blue')) + "&nbsp;" + toLocalizes(passive['name'], " &nbsp; ");
+	document.getElementById("modalHeader").innerHTML = makePreTxtIconHtml(getPassiveListIconHtml(passiveList, 'frame-blue')) + "&nbsp;" + localizePassiveListName(passiveList, " &nbsp; ");
 	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveList);
 	document.getElementById("modalDiv").style.display = "block";
 }
@@ -91,7 +90,7 @@ function popupUnitType(td) {
 	for (var i = 0; i < utypePassiveLists.length; i++) {
 		var passiveList = passiveLists[utypePassiveLists[i]];
 		txt += '<tr><td>' + passivePoints[i] + '</td>';
-		txt += '<td>' + localizePassiveName(passiveList["passiveId"], passiveList["val"]) + '</td>';
+		txt += '<td>' + localizePassiveListName(passiveList) + '</td>';
 		txt += '<td>' + localizePassiveListDesc(passiveList) + '</td>';
 		txt += '</tr>';
 	}

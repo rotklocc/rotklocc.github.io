@@ -529,10 +529,9 @@ function popupSelectArtifact(uid, slotNo) {
 }
 
 function _popupPassiveInfo(passiveId, passiveVal) {
-	var passive = passives[passiveId];
-	var hdr = makePreTxtIconHtml(getPassiveIconHtml(passiveId, passiveVal)) + "&nbsp;" + toLocalizes(passive["name"], " &nbsp; ");
+	var hdr = makePreTxtIconHtml(getPassiveIconHtml(passiveId, passiveVal)) + "&nbsp;" + localizePassiveName(passiveId, passiveVal, " &nbsp;");
 	document.getElementById("modalHeader").innerHTML = hdr;
-	document.getElementById("modalContent").innerHTML = getHtmlPassiveListDesc(passiveId, passiveVal);
+	document.getElementById("modalContent").innerHTML = getHtmlPassiveDesc(passiveId, passiveVal);
 	document.getElementById("modalDiv").style.display = "block";
 }
 
@@ -576,7 +575,7 @@ function popupSelectCraftArtifactPassive(uid, slotNo, idx) {
 	function getArtifactPassiveInfoHtml(passiveListId) {
 		if (!passiveListId) return '';
 		var passiveList = passiveLists[passiveListId];
-		var html = '<b>'+localizePassiveName(passiveList['passiveId'], -1, ' ')+'</b><br/>';
+		var html = '<b>'+localizePassiveListName(passiveList, ' ')+'</b><br/>';
 		html += getHtmlPassiveListDesc(passiveList, true);
 		return html;
 	}
@@ -685,7 +684,7 @@ function popupSelectArtifactUpgradePassive(uid, slotNo, passiveLv) {
 	function getArtifactPassiveInfoHtml(itemPassive) {
 		if (!itemPassive) return '';
 		var passiveList = passiveLists[itemPassive['passiveListId']];
-		var html = '<b>'+localizePassiveName(passiveList['passiveId'], -1, ' ')+'</b><br/>';
+		var html = '<b>'+localizePassiveListName(passiveList, ' ')+'</b><br/>';
 		html += getHtmlPassiveListDesc(passiveList, (passiveLv == 6) ? true : false);
 		return html;
 	}
@@ -756,7 +755,7 @@ function popupSelectCommanderPassive(uid, slotIdx) {
 	}
 	
 	function getCommanderPassiveInfoHtml(passiveList) {
-		var html = '<b>'+localizePassiveName(passiveList['passiveId'], -1, ' ')+'</b><br/>';
+		var html = '<b>'+localizePassiveListName(passiveList, ' ')+'</b><br/>';
 		html += getHtmlPassiveListDesc(passiveList);
 		return html;
 	}
