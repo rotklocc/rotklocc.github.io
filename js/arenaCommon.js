@@ -1,4 +1,4 @@
-var gpTypeFrameClasses = ["", "frame-green", "frame-red", "frame-blue"];
+var gpTypeFrameClasses = ["", "frame-blue", "frame-green", "frame-red"];
 
 // init arena units by merging banner units
 for (var i = 0; i < units.length; i++)

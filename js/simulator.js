@@ -2819,6 +2819,7 @@ function TacticDmgActionList(atkInfo) {
 		new TacticDmgSp607(this, 2200607), // Hail the Yellow Sky
 		new AttackDmgSp434(this, 2200434), // Impose (Emperor passive)
 		new TacticDmgSp056(this, 2200056), // Tactics Damage -%
+		new TacticDmgSp678(this, 2200678), // Rolling with the Punches
 		new AttackDmgSp624(this, 2200624), // Damage Taken +%
 		new TacticDmgSpTaken(this, 2200631, null), // Tactics Vulnerability %
 		new TacticDmgSpTaken(this, 2200632, [16,17]), // Interrupt Tactics Vulnerability %
@@ -3040,6 +3041,26 @@ function TacticDmgSp056(actList, actId) { // Tactics Damage -%
 	this.adjustValue = function(dmg) {
 		this.modPct = this.getPassiveTotalVal();
 		this.result = dmg - dmg * (this.modPct / 100);
+	};
+}
+
+function TacticDmgSp678(actList, actId) { // Rolling with the Punches
+	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 0);
+	this.canApply = function() {
+		return this.getTactic().damageType !== 'Physical';
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg - dmg * (this.modPct / 100);
+		if (this.getDefInfo().hpPct >= 50) {
+			this.modPct = this.getPassiveTotalVal();
+			this.result = dmg * (1 - this.modPct * 0.01);
+		}
+		else {
+			this.modPct = 0;
+			this.result = dmg;
+		}
 	};
 }
 
@@ -3475,6 +3496,8 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp057(this, 2200057), // MP Attack
 		new AttackDmgSp608(this, 2200608), // MP ATK%
 		new AttackDmgSp592(this, 2200592), // Desperate Countermeasure
+		new AttackDmgSp677(this, 2200677), // Finishing Strike
+		new AttackDmgSp679(this, 2200679), // No Excuses
 		new AttackDmgSp617(this, 2200617), // Lucky Feint
 		new AttackDmgSp674(this, 2200674), // Wild Agility
 		//new AttackDmgTech1019(this, 2501019), // Enhance Keep
@@ -3487,9 +3510,11 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmg2ndHit(this, 24), // 2hit damage for (counter, reversal, phalanx, joint)
 		new AttackDmgTech014(this, 2500014), // Research: Counter Archery 1
 		new AttackDmgTech024(this, 2500024), // Research: Counter Riding
+		new AttackDmgCounterSp680(this, 2200680), // Counterattack %
 		new AttackDmgCounter(this, 25), // Counterattack damage without sp096 (counterattack+)
 		new AttackDmgCounterSp096(this, 2200096), // Counterattack+
 		new AttackDmgReversal(this, 28), // Reversal damage without sp096 (counterattack+)
+		new AttackDmgReversalSp680(this, 2200680), // Counterattack %
 		new AttackDmgReversalSp096(this, 2200096), // Counterattack+ (reversal)
 		new AttackDmgReversalSp533(this, 2200533), // Vermilion Bird: Quick Reflexes (for 4god and boss) (Reversal Phalanx)
 		new AttackDmgReversalSp581(this, 2200581), // Quick Reflexes % (Reversal Phalanx)
@@ -3812,6 +3837,33 @@ function AttackDmgSp592(actList, actId) { // Desperate Countermeasure
 	};
 }
 
+function AttackDmgSp677(actList, actId) { // Finishing Strike
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	
+	this.adjustValue = function(dmg) {
+		if (this.getDefInfo().hpPct < 35) {
+			this.modVal = this.getPassiveTotalVal();
+			this.result = dmg + this.modVal;
+		}
+		else {
+			this.modVal = 0;
+			this.result = dmg;
+		}
+	};
+}
+
+function AttackDmgSp679(actList, actId) { // No Excuses
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	
+	this.adjustValue = function(dmg) {
+		var defWis = this.getDefInfo().stat['wis'];
+		this.modPct = this.getPassiveTotalVal();
+		this.modVal = defWis;
+		var val = Math.min(this.getPassiveTotalVal() * defWis, 200);
+		this.result = dmg + val;
+	};
+}
+
 function AttackDmgSp617(actList, actId) { // Lucky Feint
 	AttackAccActionBase.call(this, actList, actId, SIDE_DEF, 1, 0, 'bool');
 	this.userText = 'Activate';
@@ -3984,6 +4036,18 @@ function AttackDmgTech024(actList, actId) { // Research: Counter Riding
 	};
 }
 
+function AttackDmgCounterSp680(actList, actId) { // Counterattack %
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.canApply = function() {
+		return this.getAtkInfo().attackType === 1;
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg + (dmg * this.modPct * 0.01);
+	};
+}
+
 function AttackDmgCounter(actList, actId) { // Counterattack without counterattack+
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.displayName = 'Counterattack Damage';
@@ -4024,6 +4088,18 @@ function AttackDmgReversal(actList, actId) { // Reversal without counterattack+
 	this.adjustValue = function(dmg) {
 		this.modPct = _getDoubleAttackModPct(this.getAtkInfo(), this.getDefInfo());;
 		this.result = dmg * this.modPct / 100;
+	};
+}
+
+function AttackDmgReversalSp680(actList, actId) { // Counterattack % (reversal case)
+	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
+	this.canApply = function() {
+		return this.getAtkInfo().attackType === 3;
+	};
+	
+	this.adjustValue = function(dmg) {
+		this.modPct = this.getPassiveTotalVal();
+		this.result = dmg + (dmg * this.modPct * 0.01);
 	};
 }
 
