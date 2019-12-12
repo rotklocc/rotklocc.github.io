@@ -1314,9 +1314,14 @@ function UserUnit(unit, id) {
 	
 	this.battlePassives = [
 		new BattleSp007(),  // unstoppable
+		//new BattleSp690(),  // TODO: Burning Books, Burying Scholars
 		new BattleSp008(),  // union
 		new BattleSp583(),  // God of War Guan Yu
 		new BattleSp535(),  // swift cavalry passive
+		// 636: Tactical Formation (only in Officer Battle)
+		// 637: Archery Formation (only in Officer Battle)
+		// 638: Cavalry Formation (only in Officer Battle)
+		// 639: United Front (only in Officer Battle)
 		new BattleSp440(),  // Quantify
 		new BattleSp433(),  // MRL Surge
 		new BattleSp011(),  // gfe
@@ -1336,7 +1341,9 @@ function UserUnit(unit, id) {
 		new BattleSp442(),  // give and take
 		new BattleSp589(),  // Little Conquerer (sun ce)
 		new BattleSp593(),  // Solitary Ride (taishi ci)
+		new BattleSp692(),  // Impregnable (Ying Zheng)
 		new BattleSp596(),  // Charge Fortification % (heavy cav, move count part)
+		new BattleSp698(),  // Combat Power Boost %
 	];
 	
 	this.conditions = [
@@ -1411,10 +1418,22 @@ function BattleSp007() { // unstoppable
 	};
 }
 
+function BattleSp690() { // Burning Books, Burying Scholars
+	BattleSpAction.call(this, 2200690, 2, 0);
+	// TODO: atk+10% for allies. wis -val% for enemies  (do truncate)
+	//this.userValMin = -7;
+	//this.userText = 'Number of ally';
+	this.calculate = function(uinfo) {
+		this.modPct = this.userVal * 10;
+		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
+	};
+}
+
 function BattleSp008() { // union
 	BattleSpAction.call(this, 2200008, 2, 0);
 	this.userValMin = -7;
 	this.userText = 'Number of ally';
+	// TODO: deactivate if Burning books is active
 	this.calculate = function(uinfo) {
 		this.modPct = this.userVal * 3;
 		this.calculateStatTrunc(uinfo.statBasic, this.modPct);
@@ -1622,6 +1641,18 @@ function BattleSp593() { // Solitary Ride (taishi ci)
 	};
 }
 
+function BattleSp692() { // Impregnable (Ying Zheng)
+	BattleSpAction.call(this, 2200692, 1, 5);
+	this.userText = 'Number of allies';
+	this.userValMax = 5;
+	this.calculate = function(uinfo) {
+		this.modPct = this.userVal * uinfo.getPassiveTotalVal(this.id);
+		this.def = monoMathRound(uinfo.statBasic.def * this.modPct / 100);
+		this.wis = monoMathRound(uinfo.statBasic.wis * this.modPct / 100);
+		this.mrl = monoMathRound(uinfo.statBasic.mrl * this.modPct / 100);
+	};
+}
+
 function BattleSp596() { // Charge Fortification % (heavy cav, move count part)
 	BattleSpAction.call(this, 2200596, 1, 0);
 	this.userValMax = 13;
@@ -1629,6 +1660,18 @@ function BattleSp596() { // Charge Fortification % (heavy cav, move count part)
 	this.calculate = function(uinfo) {
 		this.modPct = this.userVal * 2; // Note: 2% is hard code
 		this.def = monoMathRound(uinfo.statBasic.def * this.modPct / 100);
+	};
+}
+
+function BattleSp698() { // Combat Power Boost %
+	BattleSpAction.call(this, 2200698, 2, 0);
+	this.calculate = function(uinfo) {
+		this.modPct = uinfo.getPassiveTotalVal(this.id);
+		this.atk = monoMathRound(uinfo.statBasic.atk * this.modPct / 100);
+		this.wis = monoMathRound(uinfo.statBasic.wis * this.modPct / 100);
+		this.def = monoMathRound(uinfo.statBasic.def * this.modPct / 100);
+		this.agi = monoMathRound(uinfo.statBasic.agi * this.modPct / 100);
+		this.mrl = monoMathRound(uinfo.statBasic.mrl * this.modPct / 100);
 	};
 }
 

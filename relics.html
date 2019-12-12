@@ -12,9 +12,8 @@
 <script type="text/javascript" src="imgs/relic.js"></script>
 <script type="text/javascript">
 var filterTiers = new Array(4).fill(false);
-var filterGods = new Array(2).fill(true);
+var filterGods = new Array(3).fill(true);
 
-var relicTypes = [ "청룡", "주작" ];
 function generateTableRows() {
 	var tbody = document.getElementById("cbody");
 	tbody.innerHTML = "";
@@ -55,6 +54,7 @@ function generateTableRows() {
 function _updateCheckboxLabelLanguage() {
 	document.getElementById("g0Txt").innerText = toLocalize(relicTypes[0]);
 	document.getElementById("g1Txt").innerText = toLocalize(relicTypes[1]);
+	document.getElementById("g2Txt").innerText = toLocalize(relicTypes[2]);
 	document.getElementById("content").style.marginTop = (document.getElementById("searchBar").offsetHeight-1) + "px";	
 }
 
@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		<div style="padding-top: 3px">
 		Gods: <input type="checkbox" id="god0" value="0" onchange="onGodChange(this)" checked><label id="g0Txt" for="god0">Dragon</label>
 		<input type="checkbox" id="god1" value="1" onchange="onGodChange(this)" checked><label id="g1Txt" for="god1">Bird</label>
+		<input type="checkbox" id="god2" value="2" onchange="onGodChange(this)" checked><label id="g2Txt" for="god2">Tiger</label>
 		&nbsp; &nbsp; &nbsp;
 		Star: <input type="checkbox" id="tier4" value="4" onchange="onTierChange(this)" checked><label for="tier4">4</label>
 		<input type="checkbox" id="tier3" value="3" onchange="onTierChange(this)"><label for="tier3">3</label>
