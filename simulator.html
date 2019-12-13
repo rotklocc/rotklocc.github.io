@@ -2659,6 +2659,8 @@ function popupAttackDmg(uid) {
 		html += '<br/>Passive: '+toLocalize(passives[2200625]['name'])+' ('+uinfo.getPassiveTotalVal(2200625)+')';
 	if (uinfo.hasPassive(2200613)) // destroy
 		html += '<br/>Passive: '+toLocalize(passives[2200613]['name'])+' ('+uinfo.getPassiveTotalVal(2200613)+')';
+	if (uinfo.hasPassive(2200705) && uinfo.isDoubleAttack) // TODO: future passive
+		html += '<br/>Passive: '+toLocalize(passives[2200705]['name'])+' ('+uinfo.getPassiveTotalVal(2200705)+')';
 	html += '<br/>';
 	if (uinfo.hasResearch())
 		html += toLocalize('연구')+': ATK +'+getResearchAtkBonus(uinfo.allowItemTypes[0])+', ';
