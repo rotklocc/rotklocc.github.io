@@ -2164,7 +2164,7 @@ function getAttackBasicDmg(atkInfo, defInfo) {
 	if (atkInfo.hasPassive(2200613)) { // destroy
 		defDef = monoMathRound(defDef * (1 - atkInfo.getPassiveTotalVal(2200613) / 100));
 	}
-	if (atkInfo.hasPassive(2200705) && atkInfo.isDoubleAttack) { // TODO: future passive
+	if (atkInfo.hasPassive(2200705) && atkInfo.isDoubleAttack) { // Dual Swordsmanship
 		defDef = monoMathRound(defDef * (1 - atkInfo.getPassiveTotalVal(2200705) / 100));
 	}
 	
@@ -3565,7 +3565,7 @@ function AttackDmgActionList(atkInfo) {
 		new AttackDmgSp045(this, 2200448), // Azure Dragon's Protection (calculation same as 045)
 		new AttackDmgSp045(this, 2200449), // Azure Dragon's Blessing (calculation same as 045)
 		new AttackDmgSp624(this, 2200624), // Damage Taken +%
-		new AttackDmgSp704(this, 2200704), // TODO: future passive (increase phalanx dmg)
+		new AttackDmgSp704(this, 2200704), // Phalanx Strike Damage Dealt %
 		new AttackDmgSp634(this, 2200634), // Ranged Attack Vulnerability %
 		new AttackDmgSp280(this, 2200280), // Decrease Physical Damage
 		new AttackDmgSp500(this, 2200500), // Relic: Melee Damage -
@@ -3769,7 +3769,8 @@ function AttackDmgSp694(actList, actId) { // Strange Tactics
 	this.userValMax = 3;
 	
 	this.adjustValue = function(dmg) {
-		this.modPct = this.userVal * this.getPassiveTotalVal();
+		// this dmg pct is fixed value (have to updated manually)
+		this.modPct = this.userVal * 100;
 		this.result = dmg + dmg * this.modPct / 100;
 	};
 }
@@ -3839,7 +3840,7 @@ function AttackDmgSp624(actList, actId) { // Damage Taken +%
 	};
 }
 
-function AttackDmgSp704(actList, actId) { // TODO: future passive (increase phalanx dmg)
+function AttackDmgSp704(actList, actId) { // Phalanx Strike Damage Dealt %
 	AttackAccActionBase.call(this, actList, actId, SIDE_ATK, 0);
 	this.canApply = function() {
 		return this.getAtkInfo().attackType === 4;
