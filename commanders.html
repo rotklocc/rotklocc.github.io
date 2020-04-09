@@ -276,22 +276,27 @@ function generateTableRows() {
 		
 		td = createTdNumberColorTagNode('statAtk', unit['str']);
 		td.style.display = "none";
+		td.svalue = unit['str'];
 		tr.appendChild(td);
 		
 		td = createTdNumberColorTagNode('statWis', unit['int']);
 		td.style.display = "none";
+		td.svalue = unit['int'];
 		tr.appendChild(td);
 		
 		td = createTdNumberColorTagNode('statDef', unit['cmd']);
 		td.style.display = "none";
+		td.svalue = unit['cmd'];
 		tr.appendChild(td);
 		
 		td = createTdNumberColorTagNode('statAgi', unit['dex']);
 		td.style.display = "none";
+		td.svalue = unit['dex'];
 		tr.appendChild(td);
 		
 		td = createTdNumberColorTagNode('statMrl', unit['lck']);
 		td.style.display = "none";
+		td.svalue = unit['lck'];
 		tr.appendChild(td);
 		
 		td = createTdHtmlNode('<span class="info" onclick="popupPrefect(this.parentNode)">&#x1f6c8;</span><span>' + toLocalizes(prefectSkills[unit["prefectId"]]['name']) + '</span>');
@@ -586,11 +591,11 @@ function sortTable(n) {
 	  <th>Lv50 Passive (48)</th>
 	  <th>Lv70 Passive (72)</th>
 	  <th>Lv90 Passive (84)</th>
-	  <th style="display:none">STR</th>
-	  <th style="display:none">INT</th>
-	  <th style="display:none">CMD</th>
-	  <th style="display:none">DEX</th>
-	  <th style="display:none">LCK</th>
+	  <th class="clickable" onclick="sortTable(7)" style="display:none">STR</th>
+	  <th class="clickable" onclick="sortTable(8)" style="display:none">INT</th>
+	  <th class="clickable" onclick="sortTable(9)" style="display:none">CMD</th>
+	  <th class="clickable" onclick="sortTable(10)" style="display:none">DEX</th>
+	  <th class="clickable" onclick="sortTable(11)" style="display:none">LCK</th>
 	  <th class="clickable" onclick="sortTable(12)" style="display:none">Prefect Passive</th>
 	  <th class="clickable" onclick="sortTable(13)" style="display:none">Warlord Passive</th>
 	</tr>
